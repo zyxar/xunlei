@@ -156,7 +156,7 @@ func IsOn() bool {
 	}
 	r, _ := get(fmt.Sprintf("%suser_task?userid=%s&st=0", DOMAIN_LIXIAN, uid))
 	if ok, _ := regexp.Match(`top.location='http://cloud.vip.xunlei.com/task.html\?error=`, r); ok {
-		log.Println("previous login timeout")
+		// log.Println("previous login timeout")
 		return false
 	}
 	if len(M.Uid) == 0 {
@@ -665,11 +665,8 @@ func addTorrentTask(filename string) (err error) {
 	return btTaskAlreadyErr
 }
 
-func ProcessTask(j time.Duration, ch chan byte) {
-	// TODO: add callback
-	if j <= 0 {
-		j = 5
-	}
+func ProcessTask(ch chan byte, callback func(*Task)) {
+	var j time.Duration = 20
 
 	if len(M.Tasks) == 0 {
 		GetIncompletedTasks()
@@ -679,21 +676,24 @@ func ProcessTask(j time.Duration, ch chan byte) {
 		for {
 			select {
 			case <-ch:
-				err := process_task(M.Tasks)
+				err := process_task(M.Tasks, callback)
 				if err != nil {
 					log.Println("error in ProcessTask():", err)
 				}
 			case <-time.After(j * time.Second):
-				err := process_task(M.Tasks)
+				err := process_task(M.Tasks, callback)
 				if err != nil {
 					log.Println("error in ProcessTask():", err)
+					j = 10
+				} else {
+					j = 20
 				}
 			}
 		}
 	}()
 }
 
-func process_task(tasks map[string]*Task) error {
+func process_task(tasks map[string]*Task, callback func(*Task)) error {
 	l := len(tasks)
 	if l == 0 {
 		return errors.New("No tasks in progress.")
@@ -733,13 +733,12 @@ func process_task(tasks map[string]*Task) error {
 	if err != nil {
 		return err
 	}
-	tm := make(map[string]*Task)
-	for i, _ := range tasks {
-		tm[tasks[i].Id] = tasks[i]
-	}
 	for i, _ := range res.List {
-		task := tm[res.List[i].Id]
+		task := tasks[res.List[i].Id]
 		task.update(&res.List[i])
+		if callback != nil {
+			callback(task)
+		}
 	}
 	return nil
 }
