@@ -51,7 +51,7 @@ func TestTaskNoFresh(t *testing.T) {
 
 func TestProcessTask(t *testing.T) {
 	ch := make(chan byte)
-	ProcessTask(ch, func(t *Task) {
+	ProcessTaskDaemon(ch, func(t *Task) {
 		log.Printf("%s %sB/s %.2f%%\n", t.Id, t.Speed, t.Progress)
 	})
 	go func() {

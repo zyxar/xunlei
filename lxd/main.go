@@ -74,7 +74,7 @@ func init() {
 	api.GetGdriveId()
 	api.GetTasks()
 	ch := make(chan byte)
-	api.ProcessTask(ch, func(t *api.Task) {
+	api.ProcessTaskDaemon(ch, func(t *api.Task) {
 		log.Printf("%s %sB/s %.2f%%\n", t.Id, t.Speed, t.Progress)
 	})
 }

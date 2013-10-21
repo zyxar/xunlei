@@ -7,11 +7,72 @@ import (
 	"log"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
+var stats []string
+var coloring []string
+
+func init() {
+	coloring = make([]string, 8)
+	stats = make([]string, 8)
+	coloring[0] = color_front_yellow
+	coloring[1] = color_front_magenta
+	coloring[2] = color_front_green
+	coloring[3] = color_front_red
+	coloring[6] = color_front_cyan
+	coloring[5] = color_front_blue
+	coloring[4] = color_reset
+	stats[0] = color_bg_yellow + "waiting" + color_reset
+	stats[1] = color_bg_magenta + "downloading" + color_reset
+	stats[2] = color_bg_green + "completed" + color_reset
+	stats[3] = color_bg_red + "failed" + color_reset
+	stats[5] = color_bg_blue + "pending" + color_reset
+	stats[6] = color_bg_cyan + "expired" + color_reset
+}
+
+func trim(raw string) string {
+	exp := regexp.MustCompile(`<font color='([a-z]*)'>(.*)</font>`)
+	s := exp.FindStringSubmatch(raw)
+	if s == nil {
+		return raw
+	}
+	return s[2]
+}
+
+func (this Task) String() string {
+	j, _ := strconv.Atoi(this.DownloadStatus)
+	k, _ := strconv.Atoi(this.Flag)
+	if k == 4 {
+		j += k
+	}
+	status := stats[j]
+	return fmt.Sprintf("%s%s %s %s %s%s %.1f%% %s%s", coloring[j], this.Id, this.TaskName, status, coloring[j], this.FileSize, this.Progress, trim(this.LeftLiveTime), color_reset)
+}
+
+func (this Task) Repr() string {
+	j, _ := strconv.Atoi(this.DownloadStatus)
+	k, _ := strconv.Atoi(this.Flag)
+	if k == 4 {
+		j += k
+	}
+	status := stats[j]
+	ret := coloring[j] + this.Id + " " + this.TaskName + " " + status + coloring[j] + " " + this.FileSize + " " + trim(this.LeftLiveTime) + "\n"
+	if this.Cid != "" {
+		ret += this.Cid + " "
+	}
+	if this.GCid != "" {
+		ret += this.GCid + "\n"
+	}
+	ret += this.URL
+	if this.LixianURL != "" {
+		ret += "\n" + this.LixianURL
+	}
+	return ret + color_reset
+}
+
 func (this Task) expired() bool {
-	// this.Flag == "4"
 	return this.status() == _FLAG_expired
 }
 
@@ -60,6 +121,13 @@ func (this *Task) update(t *_ptask_record) {
 	this.Progress = t.Progress
 	this.DownloadStatus = t.DownloadStatus
 	this.LixianURL = t.LixianURL
+}
+
+func (this *Task) FillBtList() (*_bt_list, error) {
+	if !this.IsBt() {
+		return nil, errors.New("Not BT task.")
+	}
+	return FillBtList(this.Id, this.Cid)
 }
 
 func (this *Task) Remove() error {

@@ -665,7 +665,7 @@ func addTorrentTask(filename string) (err error) {
 	return btTaskAlreadyErr
 }
 
-func ProcessTask(ch chan byte, callback func(*Task)) {
+func ProcessTaskDaemon(ch chan byte, callback func(*Task)) {
 	var j time.Duration = 20
 
 	if len(M.Tasks) == 0 {
@@ -691,6 +691,10 @@ func ProcessTask(ch chan byte, callback func(*Task)) {
 			}
 		}
 	}()
+}
+
+func ProcessTask(callback func(*Task)) error {
+	return process_task(M.Tasks, callback)
 }
 
 func process_task(tasks map[string]*Task, callback func(*Task)) error {
