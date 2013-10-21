@@ -105,7 +105,7 @@ type _userinfo struct {
 }
 
 type _bt_list struct {
-	Tid      string       `json:"Tid"`
+	Id       string       `json:"Tid"`
 	InfoId   string       `json:"Infoid"`
 	BtNum    string       `json:"btnum"`
 	BtPerNum int          `json:"btpernum"`

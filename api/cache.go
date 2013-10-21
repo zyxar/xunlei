@@ -23,6 +23,10 @@ func (c *cache) getTaskbyId(taskid string) *Task {
 	return c.Tasks[taskid]
 }
 
+func (c *cache) DispatchTasks(pattern string) map[string]*Task {
+	return nil
+}
+
 func (c *cache) getTasksByIds(ids []string) []*Task {
 	ts := make([]*Task, 0, len(ids))
 	for i, _ := range ids {

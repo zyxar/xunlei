@@ -19,6 +19,26 @@ func (this Task) deleted() bool {
 	return this.status() == _FLAG_deleted
 }
 
+func (this Task) IsBt() bool {
+	return this.TaskType == 0
+}
+
+func (this Task) completed() bool {
+	return this.DownloadStatus == "2"
+}
+
+func (this Task) downloading() bool {
+	return this.DownloadStatus == "1"
+}
+
+func (this Task) failed() bool {
+	return this.DownloadStatus == "3"
+}
+
+func (this Task) pending() bool {
+	return this.DownloadStatus == "5"
+}
+
 func (this Task) status() byte {
 	switch len(this.Flag) {
 	case 0:
@@ -127,4 +147,12 @@ func (this *Task) Purge() error {
 		return err
 	}
 	return this.Remove()
+}
+
+func (this _bt_list) String() string {
+	r := fmt.Sprintf("%s %s %s/%d\n", this.Id, this.InfoId, this.BtNum, this.BtPerNum)
+	for i, _ := range this.Record {
+		r += fmt.Sprintf("#%d %s %s %s\n", this.Record[i].Id, this.Record[i].FileName, this.Record[i].SizeReadable, this.Record[i].Status)
+	}
+	return r
 }

@@ -51,7 +51,17 @@ func TestTaskNoFresh(t *testing.T) {
 
 func TestProcessTask(t *testing.T) {
 	ch := make(chan byte)
-	ProcessTask(2, ch)
+	ProcessTask(ch, func(t *Task) {
+		log.Printf("%s %sB/s %.2f%%\n", t.Id, t.Speed, t.Progress)
+	})
+	go func() {
+		for {
+			select {
+			case <-time.After(2 * time.Second):
+				ch <- 1
+			}
+		}
+	}()
 	select {
 	case <-time.After(2 * time.Second):
 		break
@@ -87,7 +97,7 @@ func TestGetIncompletedTasks(t *testing.T) {
 	}
 	for _, v := range ts {
 		// downloading || failed || pending
-		if v.DownloadStatus != "1" && v.DownloadStatus != "3" && v.DownloadStatus != "5" {
+		if !v.downloading() && !v.failed() && !v.pending() {
 			t.Error("Invalid download status")
 		}
 	}
@@ -99,7 +109,7 @@ func TestGetExpiredTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, v := range b {
-		if v.DownloadStatus != "2" && v.status() != _FLAG_expired { // expired must be completed
+		if !v.completed() && v.status() != _FLAG_expired { // expired must be completed
 			t.Error("Invalid download status")
 		}
 	}
@@ -134,4 +144,17 @@ func TestTorrent(t *testing.T) {
 		t.Error(err)
 	}
 	os.Remove("test.torrent")
+}
+
+func TestFillBtListAsync(t *testing.T) {
+	for i, _ := range M.Tasks {
+		t := M.Tasks[i]
+		if t.status() == _FLAG_normal && t.IsBt() {
+			FillBtListAsync(t.Id, t.Cid, nil)
+		}
+	}
+	select {
+	case <-time.After(5 * time.Second):
+		return
+	}
 }
