@@ -84,8 +84,16 @@ func (this Task) deleted() bool {
 	return this.status() == _FLAG_deleted
 }
 
+func (this Task) normal() bool {
+	return this.status() == _FLAG_normal
+}
+
 func (this Task) IsBt() bool {
 	return this.TaskType == 0
+}
+
+func (this Task) waiting() bool {
+	return this.DownloadStatus == "0"
 }
 
 func (this Task) completed() bool {

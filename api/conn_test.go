@@ -158,3 +158,46 @@ func TestFillBtListAsync(t *testing.T) {
 		return
 	}
 }
+
+func TestDispatch(t *testing.T) {
+	m, err := DispatchTasks("group=completed")
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println("----- group=completed -----")
+	for i, _ := range m {
+		log.Printf("%v\n", m[i])
+	}
+	m, err = DispatchTasks("status=deleted")
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println("----- status=deleted -----")
+	for i, _ := range m {
+		log.Printf("%v\n", m[i])
+	}
+	m, err = DispatchTasks("type=bt")
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println("----- type=bt -----")
+	for i, _ := range m {
+		log.Printf("%v\n", m[i])
+	}
+	m, err = DispatchTasks("name=monsters")
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println("----- name=monsters -----")
+	for i, _ := range m {
+		log.Printf("%v\n", m[i])
+	}
+	m, err = DispatchTasks("name=monsters&group=completed&status=deleted&type=bt")
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println("----- name=monsters&group=completed&status=deleted&type=bt -----")
+	for i, _ := range m {
+		log.Printf("%v\n", m[i])
+	}
+}

@@ -1,6 +1,9 @@
 package api
 
 import (
+	"errors"
+	"net/url"
+	"regexp"
 	"sync"
 )
 
@@ -14,6 +17,7 @@ type cache struct {
 }
 
 var M cache
+var invalidQueryErr = errors.New("Invalid query string.")
 
 func init() {
 	M.Tasks = make(map[string]*Task)
@@ -23,14 +27,128 @@ func (c *cache) getTaskbyId(taskid string) *Task {
 	return c.Tasks[taskid]
 }
 
-func (c *cache) DispatchTasks(pattern string) map[string]*Task {
-	return nil
+// get tasks in local cache by query: `name=xxx`, `group=g`, `status=s`, `type=t`
+// name: `xxx` is considered as a regular expression.
+// group: waiting, downloading, completed, failed, pending
+// status: normal, expired, deleted
+// type: bt, nbt
+// e.g. pattern == "name=abc&group=completed&status=normal&type=bt"
+func DispatchTasks(pattern string) (map[string]*Task, error) {
+	v, err := url.ParseQuery(pattern)
+	if err != nil {
+		return nil, err
+	}
+	var ts map[string]*Task = M.Tasks
+	n := v.Get("name")
+	g := v.Get("group")
+	s := v.Get("status")
+	t := v.Get("type")
+	if len(t) > 0 {
+		tr := make(map[string]*Task)
+		switch t {
+		case "bt":
+			for i, _ := range ts {
+				if ts[i].IsBt() {
+					tr[i] = ts[i]
+				}
+			}
+		case "nbt":
+			for i, _ := range ts {
+				if !ts[i].IsBt() {
+					tr[i] = ts[i]
+				}
+			}
+		default:
+			return nil, invalidQueryErr
+		}
+		ts = tr
+	}
+	if len(s) > 0 {
+		tr := make(map[string]*Task)
+		switch s {
+		case "normal":
+			for i, _ := range ts {
+				if ts[i].normal() {
+					tr[i] = ts[i]
+				}
+			}
+		case "expired":
+			for i, _ := range ts {
+				if ts[i].expired() {
+					tr[i] = ts[i]
+				}
+			}
+		case "deleted":
+			for i, _ := range ts {
+				if ts[i].deleted() {
+					tr[i] = ts[i]
+				}
+			}
+		default:
+			return nil, invalidQueryErr
+		}
+		ts = tr
+	}
+	if len(g) > 0 {
+		tr := make(map[string]*Task)
+		switch g {
+		case "waiting":
+			for i, _ := range ts {
+				if ts[i].waiting() {
+					tr[i] = ts[i]
+				}
+			}
+		case "downloading":
+			for i, _ := range ts {
+				if ts[i].downloading() {
+					tr[i] = ts[i]
+				}
+			}
+		case "completed":
+			for i, _ := range ts {
+				if ts[i].completed() {
+					tr[i] = ts[i]
+				}
+			}
+		case "failed":
+			for i, _ := range ts {
+				if ts[i].failed() {
+					tr[i] = ts[i]
+				}
+			}
+		case "pending":
+			for i, _ := range ts {
+				if ts[i].pending() {
+					tr[i] = ts[i]
+				}
+			}
+		default:
+			return nil, invalidQueryErr
+		}
+		ts = tr
+	}
+	if len(n) > 0 {
+		exp, err := regexp.Compile(`(?i)` + n)
+		if err != nil {
+			return nil, invalidQueryErr
+		}
+		tr := make(map[string]*Task)
+		for i, _ := range ts {
+			if exp.MatchString(ts[i].TaskName) {
+				tr[i] = ts[i]
+			}
+		}
+		ts = tr
+	}
+	return ts, nil
 }
 
-func (c *cache) getTasksByIds(ids []string) []*Task {
-	ts := make([]*Task, 0, len(ids))
+func (c *cache) GetTasksByIds(ids []string) map[string]*Task {
+	ts := make(map[string]*Task)
 	for i, _ := range ids {
-		ts = append(ts, c.Tasks[ids[i]])
+		if _, ok := c.Tasks[ids[i]]; ok {
+			ts[ids[i]] = c.Tasks[ids[i]]
+		}
 	}
 	return ts
 }
