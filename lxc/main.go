@@ -73,28 +73,28 @@ func main() {
 				ts, err := api.GetTasks()
 				if err == nil {
 					for i, _ := range ts {
-						fmt.Printf("%v\n", ts[i])
+						fmt.Printf("%v\n", ts[i].Coloring())
 					}
 				}
 			case "ld":
 				ts, err := api.GetDeletedTasks()
 				if err == nil {
 					for i, _ := range ts {
-						fmt.Printf("%v\n", ts[i])
+						fmt.Printf("%v\n", ts[i].Coloring())
 					}
 				}
 			case "le":
 				ts, err := api.GetExpiredTasks()
 				if err == nil {
 					for i, _ := range ts {
-						fmt.Printf("%v\n", ts[i])
+						fmt.Printf("%v\n", ts[i].Coloring())
 					}
 				}
 			case "lc":
 				ts, err := api.GetCompletedTasks()
 				if err == nil {
 					for i, _ := range ts {
-						fmt.Printf("%v\n", ts[i])
+						fmt.Printf("%v\n", ts[i].Coloring())
 					}
 				}
 			case "ll":

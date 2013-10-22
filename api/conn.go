@@ -388,23 +388,15 @@ func DelayTask(taskid string) error {
 
 func redownload(tasks []*Task) error {
 	form := make([]string, 0, len(tasks)+2)
-	// k := 0
 	for i, _ := range tasks {
-		status := tasks[i].DownloadStatus
-		if status != "5" && status != "3" {
-			continue // only valid for `pending` and `failed` tasks
-		}
-		if tasks[i].expired() {
+		if tasks[i].expired() || !tasks[i].failed() || !tasks[i].pending() {
 			continue
 		}
-		// if status == "3" {
-		// 	k++
-		// }
 		v := url.Values{}
 		v.Add("id[]", tasks[i].Id)
 		v.Add("url[]", tasks[i].URL)
 		v.Add("cid[]", tasks[i].Cid)
-		v.Add("download_status[]", status)
+		v.Add("download_status[]", tasks[i].DownloadStatus)
 		v.Add("taskname[]", tasks[i].TaskName)
 		form = append(form, v.Encode())
 	}

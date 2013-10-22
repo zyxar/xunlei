@@ -41,7 +41,7 @@ func trim(raw string) string {
 	return s[2]
 }
 
-func (this Task) String() string {
+func (this Task) Coloring() string {
 	j, _ := strconv.Atoi(this.DownloadStatus)
 	k, _ := strconv.Atoi(this.Flag)
 	if k == 4 {
@@ -49,6 +49,10 @@ func (this Task) String() string {
 	}
 	status := stats[j]
 	return fmt.Sprintf("%s%s %s %s %s%s %.1f%% %s%s", coloring[j], this.Id, this.TaskName, status, coloring[j], this.FileSize, this.Progress, trim(this.LeftLiveTime), color_reset)
+}
+
+func (this Task) String() string {
+	return fmt.Sprintf("%s %s [%s] %s %.1f%% %s", this.Id, this.TaskName, this.DownloadStatus, this.FileSize, this.Progress, trim(this.LeftLiveTime))
 }
 
 func (this Task) Repr() string {
