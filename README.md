@@ -43,6 +43,8 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 
 支持以 `aria2c` 爲下載工具，或者自行定製
 
+![](http://farm4.staticflickr.com/3697/10421561225_aa3ea3f4e5_c.jpg)
+
 ## xunlei/lxd
 
 後臺工具
