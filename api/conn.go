@@ -447,7 +447,7 @@ func FillBtList(taskid, infohash string) (*_bt_list, error) {
 	}
 	var bt_list _bt_list
 	json.Unmarshal(s[1], &bt_list)
-	fmt.Printf("%v\n", bt_list)
+	// fmt.Printf("%v\n", bt_list)
 	return &bt_list, nil
 }
 

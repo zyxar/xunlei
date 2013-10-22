@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/matzoe/xunlei/api"
@@ -15,6 +16,16 @@ import (
 type Term interface {
 	ReadLine() (string, error)
 	Restore()
+}
+
+func dispatch(req string) (map[string]*api.Task, error) {
+	if t, ok := api.M.Tasks[req]; ok {
+		return map[string]*api.Task{req: t}, nil
+	}
+	if ok, _ := regexp.MatchString(`(.+=.+)+`, req); ok {
+		return api.DispatchTasks(req)
+	}
+	return nil, errors.New("Invalid dispatch query.")
 }
 
 func main() {
@@ -105,10 +116,24 @@ func main() {
 					}
 				}
 			case "info":
-				if len(cmds) < 2 {
+				if len(cmds) != 2 {
 					err = insufficientArgErr
 				} else {
-
+					var ts map[string]*api.Task
+					ts, err = dispatch(cmds[1])
+					if err == nil {
+						for i, _ := range ts {
+							if ts[i].IsBt() {
+								m, err := ts[i].FillBtList()
+								fmt.Printf("%v\n", ts[i].Repr())
+								if err == nil {
+									fmt.Printf("%v\n", m)
+								}
+							} else {
+								fmt.Printf("%v\n", ts[i].Repr())
+							}
+						}
+					}
 				}
 			case "dl":
 				fallthrough
@@ -158,21 +183,58 @@ func main() {
 				fallthrough
 			case "mv":
 				if len(cmds) == 3 {
-
+					// must be task id here
+					if t, ok := api.M.Tasks[cmds[1]]; ok {
+						t.Rename(cmds[2])
+					} else {
+						err = errors.New("No such TaskId in list.")
+					}
 				} else {
 					err = insufficientArgErr
 				}
 			case "delay":
 				if len(cmds) == 2 {
-
+					var ts map[string]*api.Task
+					ts, err = dispatch(cmds[1])
+					if err == nil {
+						for i, _ := range ts {
+							ts[i].Delay()
+						}
+					}
 				} else {
 					err = insufficientArgErr
 				}
 			case "link":
-				// get lixian_URL of a task
+				if len(cmds) == 2 {
+					var ts map[string]*api.Task
+					ts, err = dispatch(cmds[1])
+					if err == nil {
+						for i, _ := range ts {
+							if !ts[i].IsBt() {
+								fmt.Printf("%s: %v\n", ts[i].Id, ts[i].LixianURL)
+							} else {
+								m, err := ts[i].FillBtList()
+								if err == nil {
+									fmt.Printf("%s:\n", ts[i].Id)
+									for j, _ := range m.Record {
+										fmt.Printf("  #%d %s\n", m.Record[j].Id, m.Record[j].DownURL)
+									}
+								}
+							}
+						}
+					}
+				} else {
+					err = insufficientArgErr
+				}
 			case "dispatch":
 				if len(cmds) == 2 {
-
+					var ts map[string]*api.Task
+					ts, err = dispatch(cmds[1])
+					if err == nil {
+						for i, _ := range ts {
+							fmt.Printf("%v\n", ts[i].Coloring())
+						}
+					}
 				} else {
 					err = insufficientArgErr
 				}
