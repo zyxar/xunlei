@@ -145,8 +145,10 @@ func (this *Task) FillBtList() (*_bt_list, error) {
 func (this *Task) Remove() error {
 	tids := this.Id + ","
 	var del_type byte = this.status()
-	if del_type == _FLAG_invalid || del_type == _FLAG_purged {
+	if del_type == _FLAG_invalid {
 		return errors.New("Invalid flag in task.")
+	} else if del_type == _FLAG_purged {
+		return errors.New("Task purged.")
 	}
 	uri := fmt.Sprintf(TASKDELETE_URL, current_timestamp(), del_type, current_timestamp())
 	data := url.Values{}

@@ -18,14 +18,23 @@ type Term interface {
 	Restore()
 }
 
-func dispatch(req string) (map[string]*api.Task, error) {
+func _dispatch(req string) (map[string]*api.Task, error) {
 	if t, ok := api.M.Tasks[req]; ok {
 		return map[string]*api.Task{req: t}, nil
 	}
 	if ok, _ := regexp.MatchString(`(.+=.+)+`, req); ok {
 		return api.DispatchTasks(req)
 	}
-	return nil, errors.New("Invalid dispatch query.")
+	return api.DispatchTasks("name=" + req)
+}
+
+func dispatch(req []string) (map[string]*api.Task, error) {
+	if len(req) == 0 {
+		return nil, errors.New("Empty dispatch query.")
+	} else if len(req) == 1 {
+		return _dispatch(req[0])
+	}
+	return _dispatch("name=" + strings.Join(req, "|"))
 }
 
 func main() {
@@ -59,7 +68,7 @@ func main() {
 	{
 		var err error
 		insufficientArgErr := errors.New("Insufficient arguments.")
-		// noTasksMatchesErr := errors.New("No task matches.")
+		noTasksMatchesErr := errors.New("No task matches.")
 		var line string
 		var cmds []string
 		clearscr()
@@ -74,153 +83,193 @@ func main() {
 				continue
 			}
 			switch cmds[0] {
-			case "cls":
-				fallthrough
-			case "clear":
+			case "cls", "clear":
 				clearscr()
-			case "show":
-				fallthrough
 			case "ls":
 				ts, err := api.GetTasks()
 				if err == nil {
+					k := 0
 					for i, _ := range ts {
-						fmt.Printf("%v\n", ts[i].Coloring())
+						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
+						k++
 					}
 				}
 			case "ld":
 				ts, err := api.GetDeletedTasks()
 				if err == nil {
+					k := 0
 					for i, _ := range ts {
-						fmt.Printf("%v\n", ts[i].Coloring())
+						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
+						k++
 					}
 				}
 			case "le":
 				ts, err := api.GetExpiredTasks()
 				if err == nil {
+					k := 0
 					for i, _ := range ts {
-						fmt.Printf("%v\n", ts[i].Coloring())
+						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
+						k++
 					}
 				}
 			case "lc":
 				ts, err := api.GetCompletedTasks()
 				if err == nil {
+					k := 0
 					for i, _ := range ts {
-						fmt.Printf("%v\n", ts[i].Coloring())
+						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
+						k++
 					}
 				}
 			case "ll":
 				ts, err := api.GetTasks()
 				if err == nil {
+					k := 0
 					for i, _ := range ts {
-						fmt.Printf("%v\n", ts[i].Repr())
+						fmt.Printf("#%d %v\n", k, ts[i].Repr())
+						k++
 					}
 				}
 			case "info":
-				if len(cmds) != 2 {
+				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
 					var ts map[string]*api.Task
-					ts, err = dispatch(cmds[1])
-					if err == nil {
+					if ts, err = dispatch(cmds[1:]); err == nil {
+						j := 0
 						for i, _ := range ts {
 							if ts[i].IsBt() {
 								m, err := ts[i].FillBtList()
-								fmt.Printf("%v\n", ts[i].Repr())
+								fmt.Printf("#%d %v\n", j, ts[i].Repr())
 								if err == nil {
 									fmt.Printf("%v\n", m)
 								}
 							} else {
-								fmt.Printf("%v\n", ts[i].Repr())
+								fmt.Printf("#%d %v\n", j, ts[i].Repr())
 							}
+							j++
 						}
 					}
 				}
-			case "dl":
-				fallthrough
-			case "download":
+			case "dl", "download":
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
 
 				}
 			case "add":
-				if len(cmds) >= 2 {
-
-				} else {
+				if len(cmds) < 2 {
 					err = insufficientArgErr
+				} else {
+					req := cmds[1:]
+					for j, _ := range req {
+						if err = api.AddTask(req[j]); err != nil {
+							fmt.Println(err)
+						}
+						err = nil
+					}
 				}
-			case "rm":
-				fallthrough
-			case "delete":
-				if len(cmds) == 2 {
-
-				} else if len(cmds) > 2 {
-
-				} else {
+			case "rm", "delete":
+				if len(cmds) < 2 {
 					err = insufficientArgErr
+				} else {
+					var ts map[string]*api.Task
+					if ts, err = dispatch(cmds[1:]); err == nil {
+						for i, _ := range ts {
+							if err = ts[i].Remove(); err != nil {
+								fmt.Println(err)
+							}
+						}
+						err = nil
+					}
 				}
 			case "purge":
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
-
+					var ts map[string]*api.Task
+					if ts, err = dispatch(cmds[1:]); err == nil {
+						for i, _ := range ts {
+							if err = ts[i].Purge(); err != nil {
+								fmt.Println(err)
+							}
+						}
+						err = nil
+					}
 				}
 			case "readd":
 				// re-add tasks from deleted or expired
 			case "pause":
 				if len(cmds) > 1 {
-
+					var ts map[string]*api.Task
+					if ts, err = dispatch(cmds[1:]); err == nil {
+						for i, _ := range ts {
+							if err = ts[i].Pause(); err != nil {
+								fmt.Println(err)
+							}
+						}
+						err = nil
+					}
 				} else {
 					err = insufficientArgErr
 				}
 			case "restart":
 				if len(cmds) > 1 {
-
+					var ts map[string]*api.Task
+					if ts, err = dispatch(cmds[1:]); err == nil {
+						for i, _ := range ts {
+							if err = ts[i].Restart(); err != nil {
+								fmt.Println(err)
+							}
+						}
+						err = nil
+					}
 				} else {
 					err = insufficientArgErr
 				}
-			case "rename":
-				fallthrough
-			case "mv":
+			case "rename", "mv":
 				if len(cmds) == 3 {
 					// must be task id here
 					if t, ok := api.M.Tasks[cmds[1]]; ok {
 						t.Rename(cmds[2])
 					} else {
-						err = errors.New("No such TaskId in list.")
+						err = noTasksMatchesErr
 					}
 				} else {
 					err = insufficientArgErr
 				}
 			case "delay":
-				if len(cmds) == 2 {
-					var ts map[string]*api.Task
-					ts, err = dispatch(cmds[1])
-					if err == nil {
-						for i, _ := range ts {
-							ts[i].Delay()
-						}
-					}
-				} else {
+				if len(cmds) < 2 {
 					err = insufficientArgErr
+				} else {
+					var ts map[string]*api.Task
+					if ts, err = dispatch(cmds[1:]); err == nil {
+						for i, _ := range ts {
+							if err = ts[i].Delay(); err != nil {
+								fmt.Println(err)
+							}
+						}
+						err = nil
+					}
 				}
 			case "link":
 				if len(cmds) == 2 {
 					var ts map[string]*api.Task
-					ts, err = dispatch(cmds[1])
-					if err == nil {
+					if ts, err = dispatch(cmds[1:]); err == nil {
+						k := 0
 						for i, _ := range ts {
 							if !ts[i].IsBt() {
-								fmt.Printf("%s: %v\n", ts[i].Id, ts[i].LixianURL)
+								fmt.Printf("#%d %s: %v\n", k, ts[i].Id, ts[i].LixianURL)
 							} else {
 								m, err := ts[i].FillBtList()
 								if err == nil {
-									fmt.Printf("%s:\n", ts[i].Id)
+									fmt.Printf("#%d %s:\n", k, ts[i].Id)
 									for j, _ := range m.Record {
 										fmt.Printf("  #%d %s\n", m.Record[j].Id, m.Record[j].DownURL)
 									}
 								}
 							}
+							k++
 						}
 					}
 				} else {
@@ -229,10 +278,11 @@ func main() {
 			case "dispatch":
 				if len(cmds) == 2 {
 					var ts map[string]*api.Task
-					ts, err = dispatch(cmds[1])
-					if err == nil {
+					if ts, err = dispatch(cmds[1:]); err == nil {
+						k := 0
 						for i, _ := range ts {
-							fmt.Printf("%v\n", ts[i].Coloring())
+							fmt.Printf("#%d %v\n", k, ts[i].Coloring())
+							k++
 						}
 					}
 				} else {
@@ -244,9 +294,7 @@ func main() {
 				err = api.ProcessTask(func(t *api.Task) {
 					log.Printf("%s %sB/s %.2f%%\n", t.Id, t.Speed, t.Progress)
 				})
-			case "quit":
-				fallthrough
-			case "exit":
+			case "quit", "exit":
 				break LOOP
 			default:
 				err = fmt.Errorf("Unrecognised command: %s", cmds[0])

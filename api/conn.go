@@ -320,6 +320,7 @@ func GetDeletedTasks() ([]*Task, error) {
 		tss = append(tss, ts...)
 	}
 	M.invalidateGroup(_FLAG_deleted)
+	M.invalidateGroup(_FLAG_purged)
 	M.pushTasks(tss)
 	return tss, err
 }

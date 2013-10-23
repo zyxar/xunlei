@@ -8,6 +8,11 @@
 
 Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunlei-lixian](https://github.com/iambus/xunlei-lixian)
 
+## Package Status
+
+- api:  **✏**
+- lxc:  **✍**
+- lxd:  **✍**
 
 ## xunlei/api
 
@@ -19,27 +24,35 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 
 支持命令列表：
 
-- `cls`, `clear`
-- `ls`
-- `ld`
-- `le`
-- `lc`
-- `ll`
-- `info`
-- `dl`, `download`
-- `add`
-- `rm`, `delete`
-- `purge`
-- `readd`
-- `pause`
-- `restart`
-- `rename`, `mv`
-- `delay`
-- `link`
-- `dispatch`
-- `version`
-- `update`
-- `quit`, `exit`
+- Utility Level:
+
+    - `cls`, `clear`:   **✓**
+    - `quit`, `exit`:   **✓**
+    - `version`:        **✓**
+
+- Service Level:
+
+    - `ls`:             **✓**
+    - `ld`:             **✓**
+    - `le`:             **✓**
+    - `lc`:             **✓**
+    - `ll`:             **✓**
+    - `add`:            **✓**
+    - `rm`, `delete`:   **✓**
+    - `purge`:          **✓**
+    - `readd`:
+    - `dispatch`:       **✓**
+    - `update`:         **✓**
+
+- Task Level:
+
+    - `info`:           **✓**
+    - `dl`, `download`:
+    - `pause`:          **✓**
+    - `restart`:        **✓**
+    - `rename`, `mv`:   **✓**
+    - `delay`:          **✓**
+    - `link`:           **✓**
 
 支持以 `aria2c` 爲下載工具，或者自行定製
 
