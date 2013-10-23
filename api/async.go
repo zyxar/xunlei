@@ -81,9 +81,9 @@ func AddTaskAsync(req string, callback func(error)) {
 	}()
 }
 
-func AddBatchTasksAsync(req []string, callback func(error)) {
+func AddBatchTasksAsync(req []string, callback func(error), oids ...string) {
 	go func() {
-		err := AddBatchTasks(req)
+		err := AddBatchTasks(req, oids...)
 		if callback != nil {
 			callback(err)
 		}
@@ -153,12 +153,12 @@ func DeleteTasksAsync(ids []string, callback func(error)) {
 	}()
 }
 
-func RestartTaskAsync(id string, callback func(error)) {
+func ResumeTaskAsync(id string, callback func(error)) {
 	go func() {
 		t := M.getTaskbyId(id)
 		var err error
 		if t != nil {
-			err = t.Restart()
+			err = t.Resume()
 		} else {
 			err = noSuchTaskErr
 		}
@@ -168,9 +168,9 @@ func RestartTaskAsync(id string, callback func(error)) {
 	}()
 }
 
-func RestartTasksAsync(pattern string, callback func(error)) {
+func ResumeTasksAsync(pattern string, callback func(error)) {
 	go func() {
-		err := RestartTasks(pattern)
+		err := ResumeTasks(pattern)
 		if callback != nil {
 			callback(err)
 		}

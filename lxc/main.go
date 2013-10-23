@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/matzoe/xunlei/api"
 )
@@ -18,23 +20,44 @@ type Term interface {
 	Restore()
 }
 
-func _dispatch(req string) (map[string]*api.Task, error) {
+func _find(req string) (map[string]*api.Task, error) {
 	if t, ok := api.M.Tasks[req]; ok {
 		return map[string]*api.Task{req: t}, nil
 	}
 	if ok, _ := regexp.MatchString(`(.+=.+)+`, req); ok {
-		return api.DispatchTasks(req)
+		return api.FindTasks(req)
 	}
-	return api.DispatchTasks("name=" + req)
+	return api.FindTasks("name=" + req)
 }
 
-func dispatch(req []string) (map[string]*api.Task, error) {
+func find(req []string) (map[string]*api.Task, error) {
 	if len(req) == 0 {
-		return nil, errors.New("Empty dispatch query.")
+		return nil, errors.New("Empty find query.")
 	} else if len(req) == 1 {
-		return _dispatch(req[0])
+		return _find(req[0])
 	}
-	return _dispatch("name=" + strings.Join(req, "|"))
+	return _find("name=" + strings.Join(req, "|"))
+}
+
+func fixedLengthName(name string, size int) string {
+	l := utf8.RuneCountInString(name)
+	var b bytes.Buffer
+	var i int = 0
+	for i < l && i < size {
+		r, s := utf8.DecodeRuneInString(name)
+		b.WriteRune(r)
+		name = name[s:]
+		if s > 1 {
+			i += 2
+		} else {
+			i++
+		}
+	}
+	for i < size {
+		b.WriteByte(' ')
+		i++
+	}
+	return b.String()
 }
 
 func main() {
@@ -135,7 +158,7 @@ func main() {
 					err = insufficientArgErr
 				} else {
 					var ts map[string]*api.Task
-					if ts, err = dispatch(cmds[1:]); err == nil {
+					if ts, err = find(cmds[1:]); err == nil {
 						j := 0
 						for i, _ := range ts {
 							if ts[i].IsBt() {
@@ -174,7 +197,7 @@ func main() {
 					err = insufficientArgErr
 				} else {
 					var ts map[string]*api.Task
-					if ts, err = dispatch(cmds[1:]); err == nil {
+					if ts, err = find(cmds[1:]); err == nil {
 						for i, _ := range ts {
 							if err = ts[i].Remove(); err != nil {
 								fmt.Println(err)
@@ -188,7 +211,7 @@ func main() {
 					err = insufficientArgErr
 				} else {
 					var ts map[string]*api.Task
-					if ts, err = dispatch(cmds[1:]); err == nil {
+					if ts, err = find(cmds[1:]); err == nil {
 						for i, _ := range ts {
 							if err = ts[i].Purge(); err != nil {
 								fmt.Println(err)
@@ -199,10 +222,18 @@ func main() {
 				}
 			case "readd":
 				// re-add tasks from deleted or expired
+				if len(cmds) > 1 {
+					var ts map[string]*api.Task
+					if ts, err = find(cmds[1:]); err == nil {
+						api.ReAddTasks(ts)
+					}
+				} else {
+					err = insufficientArgErr
+				}
 			case "pause":
 				if len(cmds) > 1 {
 					var ts map[string]*api.Task
-					if ts, err = dispatch(cmds[1:]); err == nil {
+					if ts, err = find(cmds[1:]); err == nil {
 						for i, _ := range ts {
 							if err = ts[i].Pause(); err != nil {
 								fmt.Println(err)
@@ -213,12 +244,12 @@ func main() {
 				} else {
 					err = insufficientArgErr
 				}
-			case "restart":
+			case "resume":
 				if len(cmds) > 1 {
 					var ts map[string]*api.Task
-					if ts, err = dispatch(cmds[1:]); err == nil {
+					if ts, err = find(cmds[1:]); err == nil {
 						for i, _ := range ts {
-							if err = ts[i].Restart(); err != nil {
+							if err = ts[i].Resume(); err != nil {
 								fmt.Println(err)
 							}
 						}
@@ -243,7 +274,7 @@ func main() {
 					err = insufficientArgErr
 				} else {
 					var ts map[string]*api.Task
-					if ts, err = dispatch(cmds[1:]); err == nil {
+					if ts, err = find(cmds[1:]); err == nil {
 						for i, _ := range ts {
 							if err = ts[i].Delay(); err != nil {
 								fmt.Println(err)
@@ -255,7 +286,7 @@ func main() {
 			case "link":
 				if len(cmds) == 2 {
 					var ts map[string]*api.Task
-					if ts, err = dispatch(cmds[1:]); err == nil {
+					if ts, err = find(cmds[1:]); err == nil {
 						k := 0
 						for i, _ := range ts {
 							if !ts[i].IsBt() {
@@ -275,10 +306,10 @@ func main() {
 				} else {
 					err = insufficientArgErr
 				}
-			case "dispatch":
+			case "find":
 				if len(cmds) == 2 {
 					var ts map[string]*api.Task
-					if ts, err = dispatch(cmds[1:]); err == nil {
+					if ts, err = find(cmds[1:]); err == nil {
 						k := 0
 						for i, _ := range ts {
 							fmt.Printf("#%d %v\n", k, ts[i].Coloring())
@@ -292,7 +323,7 @@ func main() {
 				printVersion()
 			case "update":
 				err = api.ProcessTask(func(t *api.Task) {
-					log.Printf("%s %sB/s %.2f%%\n", t.Id, t.Speed, t.Progress)
+					log.Printf("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
 				})
 			case "quit", "exit":
 				break LOOP

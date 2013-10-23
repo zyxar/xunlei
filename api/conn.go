@@ -481,22 +481,42 @@ func AddTask(req string) error {
 	panic(unexpectedErr.Error())
 }
 
-func AddBatchTasks(urls []string) error {
+func AddBatchTasks(urls []string, oids ...string) error {
 	// TODO: filter urls
 	v := url.Values{}
 	for i := 0; i < len(urls); i++ {
-		j := "[" + strconv.Itoa(i) + "]"
-		v.Add("cid"+j, "")
-		v.Add("url"+j, url.QueryEscape(urls[i]))
+		v.Add("cid[]", "")
+		v.Add("url[]", url.QueryEscape(urls[i]))
 	}
-	uri := fmt.Sprintf(BATCHTASKCOMMIT_URL, current_timestamp())
+	v.Add("class_id", "0")
+	if len(oids) > 0 {
+		var b bytes.Buffer
+		for i := 0; i < len(oids); i++ {
+			b.WriteString("0,")
+		}
+		v.Add("batch_old_taskid", strings.Join(oids, ","))
+		v.Add("batch_old_database", b.String())
+		v.Add("interfrom", "history")
+	} else {
+		v.Add("batch_old_taskid", "0,")
+		v.Add("batch_old_database", "0,")
+		v.Add("interfrom", "task")
+	}
+	tm := current_timestamp()
+	uri := fmt.Sprintf(BATCHTASKCOMMIT_URL, tm, tm)
 	r, err := post(uri, v.Encode())
 	fmt.Printf("%s\n", r)
 	return err
 }
 
-func addSimpleTask(uri string) error {
-	dest := fmt.Sprintf(TASKCHECK_URL, url.QueryEscape(uri), current_random(), current_timestamp())
+func addSimpleTask(uri string, oid ...string) error {
+	var from string
+	if len(oid) > 0 {
+		from = "history"
+	} else {
+		from = "task"
+	}
+	dest := fmt.Sprintf(TASKCHECK_URL, url.QueryEscape(uri), from, current_random(), current_timestamp())
 	r, err := get(dest)
 	if err == nil {
 		task_pre, err := getTaskPre(r)
@@ -522,8 +542,13 @@ func addSimpleTask(uri string) error {
 		v.Add("t", task_pre.FileName)
 		v.Add("url", uri)
 		v.Add("type", t_type)
-		v.Add("o_page", "task")
-		v.Add("o_taskid", "0")
+		if len(oid) > 0 {
+			v.Add("o_taskid", oid[0])
+			v.Add("o_page", "history")
+		} else {
+			v.Add("o_page", "task")
+			v.Add("o_taskid", "0")
+		}
 		dest = TASKCOMMIT_URL + v.Encode()
 		r, err = get(dest)
 		if err != nil {
@@ -545,7 +570,7 @@ func addBtTask(uri string) error {
 	return addTorrentTask(uri)
 }
 
-func addMagnetTask(link string) error {
+func addMagnetTask(link string, oid ...string) error {
 	uri := fmt.Sprintf(URLQUERY_URL, url.QueryEscape(link), current_random())
 	r, err := get(uri)
 	if err != nil {
@@ -569,7 +594,13 @@ func addMagnetTask(link string) error {
 	size := strings.Join(task.Sizes, "_")
 	v.Add("findex", findex)
 	v.Add("size", size)
-	v.Add("from", "0")
+	if len(oid) > 0 {
+		v.Add("from", "history")
+		v.Add("o_taskid", oid[0])
+		v.Add("o_page", "history")
+	} else {
+		v.Add("from", "task")
+	}
 	dest := fmt.Sprintf(BTTASKCOMMIT_URL, current_timestamp())
 	r, err = post(dest, v.Encode())
 	exp = regexp.MustCompile(`jsonp.*\(\{"id":"(\d+)","avail_space":"\d+".*\}\)`)
@@ -695,7 +726,8 @@ func process_task(tasks map[string]*Task, callback func(*Task)) error {
 	if l == 0 {
 		return errors.New("No tasks in progress.")
 	}
-	uri := fmt.Sprintf(TASKPROCESS_URL, current_timestamp(), current_timestamp())
+	ct := current_timestamp()
+	uri := fmt.Sprintf(TASKPROCESS_URL, ct, ct)
 	v := url.Values{}
 	list := make([]string, 0, l)
 	nm_list := make([]string, 0, l)
@@ -789,6 +821,35 @@ func ReAddAllExpiredTasks() error {
 	return nil
 }
 
+func ReAddTasks(ts map[string]*Task) {
+	nbt := make([]*Task, 0, len(ts))
+	bt := make([]*Task, 0, len(ts))
+	for i, _ := range ts {
+		if ts[i].expired() || ts[i].deleted() {
+			if ts[i].IsBt() {
+				bt = append(bt, ts[i])
+			} else {
+				nbt = append(nbt, ts[i])
+			}
+		}
+	}
+	if len(nbt) == 1 {
+		if err := nbt[0].Readd(); err != nil {
+			log.Println(err)
+		}
+	} else if len(nbt) > 1 {
+		urls, ids := extractTasks(nbt)
+		if err := AddBatchTasks(urls, ids...); err != nil {
+			log.Println(err)
+		}
+	}
+	for i, _ := range bt {
+		if err := addMagnetTask(fmt.Sprintf(GETTORRENT_URL, M.Uid, bt[i].Cid), bt[i].Id); err != nil {
+			log.Println(err)
+		}
+	}
+}
+
 func RenameTask(taskid, newname string) error {
 	t := M.getTaskbyId(taskid)
 	if t == nil {
@@ -843,6 +904,6 @@ func PurgeTask(taskid string) error {
 	return t.Purge()
 }
 
-func RestartTasks(pattern string) error {
+func ResumeTasks(pattern string) error {
 	return nil
 }

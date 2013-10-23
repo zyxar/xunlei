@@ -156,3 +156,13 @@ func evalParse(queryUrl []byte) *_bt_qtask {
 	task.Ret = string(s[12])
 	return &task
 }
+
+func extractTasks(ts []*Task) (urls []string, ids []string) {
+	ids = make([]string, 0, len(ts))
+	urls = make([]string, 0, len(ts))
+	for i, _ := range ts {
+		ids = append(ids, ts[i].Id)
+		urls = append(urls, ts[i].URL)
+	}
+	return
+}

@@ -27,103 +27,115 @@ func (c *cache) getTaskbyId(taskid string) *Task {
 	return c.Tasks[taskid]
 }
 
-// get tasks in local cache by query: `name=xxx`, `group=g`, `status=s`, `type=t`
+// Find tasks in local cache by query: `name=xxx`, `group=g`, `status=s`, `type=t`
 // name: `xxx` is considered as a regular expression.
 // group: waiting, downloading, completed, failed, pending
-// status: normal, expired, deleted
+// status: normal, expired, deleted, purged
 // type: bt, nbt
 // e.g. pattern == "name=abc&group=completed&status=normal&type=bt"
-func DispatchTasks(pattern string) (map[string]*Task, error) {
+func FindTasks(pattern string) (map[string]*Task, error) {
 	v, err := url.ParseQuery(pattern)
 	if err != nil {
 		return nil, err
 	}
 	var ts map[string]*Task = M.Tasks
 	n := v.Get("name")
-	g := v.Get("group")
-	s := v.Get("status")
-	t := v.Get("type")
-	if len(t) > 0 {
+	gg := v["group"]
+	ss := v["status"]
+	tt := v["type"]
+	if len(tt) > 0 {
 		tr := make(map[string]*Task)
-		switch t {
-		case "bt":
-			for i, _ := range ts {
-				if ts[i].IsBt() {
-					tr[i] = ts[i]
+		for k, _ := range tt {
+			switch tt[k] {
+			case "bt":
+				for i, _ := range ts {
+					if ts[i].IsBt() {
+						tr[i] = ts[i]
+					}
 				}
-			}
-		case "nbt":
-			for i, _ := range ts {
-				if !ts[i].IsBt() {
-					tr[i] = ts[i]
+			case "nbt":
+				for i, _ := range ts {
+					if !ts[i].IsBt() {
+						tr[i] = ts[i]
+					}
 				}
+			default:
+				return nil, invalidQueryErr
 			}
-		default:
-			return nil, invalidQueryErr
 		}
 		ts = tr
 	}
-	if len(s) > 0 {
+	if len(ss) > 0 {
 		tr := make(map[string]*Task)
-		switch s {
-		case "normal":
-			for i, _ := range ts {
-				if ts[i].normal() {
-					tr[i] = ts[i]
+		for k, _ := range ss {
+			switch ss[k] {
+			case "normal":
+				for i, _ := range ts {
+					if ts[i].normal() {
+						tr[i] = ts[i]
+					}
 				}
-			}
-		case "expired":
-			for i, _ := range ts {
-				if ts[i].expired() {
-					tr[i] = ts[i]
+			case "expired":
+				for i, _ := range ts {
+					if ts[i].expired() {
+						tr[i] = ts[i]
+					}
 				}
-			}
-		case "deleted":
-			for i, _ := range ts {
-				if ts[i].deleted() {
-					tr[i] = ts[i]
+			case "deleted":
+				for i, _ := range ts {
+					if ts[i].deleted() {
+						tr[i] = ts[i]
+					}
 				}
+			case "purged": // for rescue
+				for i, _ := range ts {
+					if ts[i].purged() {
+						tr[i] = ts[i]
+					}
+				}
+			default:
+				return nil, invalidQueryErr
 			}
-		default:
-			return nil, invalidQueryErr
 		}
 		ts = tr
 	}
-	if len(g) > 0 {
+	if len(gg) > 0 {
 		tr := make(map[string]*Task)
-		switch g {
-		case "waiting":
-			for i, _ := range ts {
-				if ts[i].waiting() {
-					tr[i] = ts[i]
+		for k, _ := range gg {
+			switch gg[k] {
+			case "waiting":
+				for i, _ := range ts {
+					if ts[i].waiting() {
+						tr[i] = ts[i]
+					}
 				}
-			}
-		case "downloading":
-			for i, _ := range ts {
-				if ts[i].downloading() {
-					tr[i] = ts[i]
+			case "downloading":
+				for i, _ := range ts {
+					if ts[i].downloading() {
+						tr[i] = ts[i]
+					}
 				}
-			}
-		case "completed":
-			for i, _ := range ts {
-				if ts[i].completed() {
-					tr[i] = ts[i]
+			case "completed":
+				for i, _ := range ts {
+					if ts[i].completed() {
+						tr[i] = ts[i]
+					}
 				}
-			}
-		case "failed":
-			for i, _ := range ts {
-				if ts[i].failed() {
-					tr[i] = ts[i]
+			case "failed":
+				for i, _ := range ts {
+					if ts[i].failed() {
+						tr[i] = ts[i]
+					}
 				}
-			}
-		case "pending":
-			for i, _ := range ts {
-				if ts[i].pending() {
-					tr[i] = ts[i]
+			case "pending":
+				for i, _ := range ts {
+					if ts[i].pending() {
+						tr[i] = ts[i]
+					}
 				}
+			default:
+				return nil, invalidQueryErr
 			}
-		default:
-			return nil, invalidQueryErr
 		}
 		ts = tr
 	}

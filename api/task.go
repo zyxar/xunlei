@@ -80,6 +80,10 @@ func (this Task) expired() bool {
 	return this.status() == _FLAG_expired
 }
 
+func (this Task) purged() bool {
+	return this.status() == _FLAG_purged
+}
+
 func (this Task) deleted() bool {
 	return this.status() == _FLAG_deleted
 }
@@ -143,16 +147,33 @@ func (this *Task) FillBtList() (*_bt_list, error) {
 }
 
 func (this *Task) Remove() error {
-	tids := this.Id + ","
+	return this.remove(0)
+}
+
+func (this *Task) Purge() error {
+	if this.deleted() {
+		return this.remove(1)
+	}
+	err := this.remove(0)
+	if err != nil {
+		return err
+	}
+	return this.remove(1)
+}
+
+func (this *Task) remove(flag byte) error {
 	var del_type byte = this.status()
 	if del_type == _FLAG_invalid {
 		return errors.New("Invalid flag in task.")
 	} else if del_type == _FLAG_purged {
-		return errors.New("Task purged.")
+		return errors.New("Task already purged.")
+	} else if flag == 0 && del_type == _FLAG_deleted {
+		return errors.New("Task already deleted.")
 	}
-	uri := fmt.Sprintf(TASKDELETE_URL, current_timestamp(), del_type, current_timestamp())
+	ct := current_timestamp()
+	uri := fmt.Sprintf(TASKDELETE_URL, ct, del_type, ct)
 	data := url.Values{}
-	data.Add("taskids", tids)
+	data.Add("taskids", this.Id+",")
 	data.Add("databases", "0,")
 	data.Add("interfrom", "task")
 	r, err := post(uri, data.Encode())
@@ -189,10 +210,16 @@ func (this *Task) Pause() error {
 }
 
 func (this *Task) Readd() error {
-	return nil
+	if this.normal() {
+		return errors.New("Task already in progress.")
+	}
+	if this.purged() {
+		return addSimpleTask(this.URL)
+	}
+	return addSimpleTask(this.URL, this.Id)
 }
 
-func (this *Task) Restart() error {
+func (this *Task) Resume() error {
 	if this.expired() {
 		return taskNoRedownCapErr
 	}
@@ -221,14 +248,6 @@ func (this *Task) Restart() error {
 
 func (this *Task) Delay() error {
 	return DelayTask(this.Id)
-}
-
-func (this *Task) Purge() error {
-	err := this.Remove()
-	if err != nil {
-		return err
-	}
-	return this.Remove()
 }
 
 func (this _bt_list) String() string {

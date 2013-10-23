@@ -38,7 +38,7 @@ var register = map[string]interface{}{
 	"PurgeTask":            api.PurgeTask,
 	"ReAddAllExpiredTasks": api.ReAddAllExpiredTasks,
 	"RenameTask":           api.RenameTask,
-	"RestartTasks":         api.RestartTasks,
+	"ResumeTasks":          api.ResumeTasks,
 }
 
 func Call(name string, params []string) (result []reflect.Value, err error) {

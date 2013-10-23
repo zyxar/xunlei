@@ -26,33 +26,33 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 
 - Utility Level:
 
-    - `cls`, `clear`:   **✓**
-    - `quit`, `exit`:   **✓**
-    - `version`:        **✓**
+    - `cls`, `clear`:       **✓**
+    - `quit`, `exit`:       **✓**
+    - `version`:            **✓**
 
 - Service Level:
 
-    - `ls`:             **✓**
-    - `ld`:             **✓**
-    - `le`:             **✓**
-    - `lc`:             **✓**
-    - `ll`:             **✓**
-    - `add`:            **✓**
-    - `rm`, `delete`:   **✓**
-    - `purge`:          **✓**
-    - `readd`:
-    - `dispatch`:       **✓**
-    - `update`:         **✓**
+    - `ls`:                 **✓**
+    - `ld`:                 **✓**
+    - `le`:                 **✓**
+    - `lc`:                 **✓**
+    - `ll`:                 **✓**
+    - `add`:                **✓**
+    - `rm`, `delete`:       **✓**
+    - `purge`:              **✓**
+    - `readd`:              **✓**
+    - `dispatch`, `find`:   **✓**
+    - `update`:             **✓**
 
 - Task Level:
 
-    - `info`:           **✓**
+    - `info`:               **✓**
     - `dl`, `download`:
-    - `pause`:          **✓**
-    - `restart`:        **✓**
-    - `rename`, `mv`:   **✓**
-    - `delay`:          **✓**
-    - `link`:           **✓**
+    - `pause`:              **✓**
+    - `resume`:             **✓**
+    - `rename`, `mv`:       **✓**
+    - `delay`:              **✓**
+    - `link`:               **✓**
 
 支持以 `aria2c` 爲下載工具，或者自行定製
 

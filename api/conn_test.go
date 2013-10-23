@@ -159,8 +159,8 @@ func TestFillBtListAsync(t *testing.T) {
 	}
 }
 
-func TestDispatch(t *testing.T) {
-	m, err := DispatchTasks("group=completed")
+func TestFind(t *testing.T) {
+	m, err := FindTasks("group=completed")
 	if err != nil {
 		t.Error(err)
 	}
@@ -168,7 +168,7 @@ func TestDispatch(t *testing.T) {
 	for i, _ := range m {
 		log.Printf("%v\n", m[i])
 	}
-	m, err = DispatchTasks("status=deleted")
+	m, err = FindTasks("status=deleted")
 	if err != nil {
 		t.Error(err)
 	}
@@ -176,7 +176,7 @@ func TestDispatch(t *testing.T) {
 	for i, _ := range m {
 		log.Printf("%v\n", m[i])
 	}
-	m, err = DispatchTasks("type=bt")
+	m, err = FindTasks("type=bt")
 	if err != nil {
 		t.Error(err)
 	}
@@ -184,7 +184,7 @@ func TestDispatch(t *testing.T) {
 	for i, _ := range m {
 		log.Printf("%v\n", m[i])
 	}
-	m, err = DispatchTasks("name=monsters")
+	m, err = FindTasks("name=monsters")
 	if err != nil {
 		t.Error(err)
 	}
@@ -192,7 +192,7 @@ func TestDispatch(t *testing.T) {
 	for i, _ := range m {
 		log.Printf("%v\n", m[i])
 	}
-	m, err = DispatchTasks("name=monsters&group=completed&status=deleted&type=bt")
+	m, err = FindTasks("name=monsters&group=completed&status=deleted&type=bt")
 	if err != nil {
 		t.Error(err)
 	}
