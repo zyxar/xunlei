@@ -11,7 +11,7 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 ## Package Status
 
 - api:  **✏**
-- lxc:  **✍**
+- lxc:  **✏**
 - lxd:  **✍**
 
 ## xunlei/api
@@ -41,7 +41,7 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 | `find`            | Service | **✓** |
 | `update`          | Service | **✓** |
 | `info`            | Task    | **✓** |
-| `dl`, `download`  | Task    |       |
+| `dl`, `download`  | Task    | **✓** |
 | `pause`           | Task    | **✓** |
 | `resume`          | Task    | **✓** |
 | `rename`, `mv`    | Task    | **✓** |

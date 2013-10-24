@@ -178,7 +178,34 @@ func main() {
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
-
+					pay := make(map[string]*struct {
+						t *api.Task
+						s string
+					})
+					for i, _ := range cmds[1:] {
+						p := strings.Split(cmds[1:][i], "/")
+						m, err := _find(p[0])
+						if err == nil {
+							for i, _ := range m {
+								var filter string
+								if len(p) == 1 {
+									filter = `.*`
+								} else {
+									filter = p[1]
+								}
+								pay[m[i].Id] = &struct {
+									t *api.Task
+									s string
+								}{m[i], filter}
+							}
+						}
+					}
+					for i, _ := range pay {
+						if err = download(pay[i].t, pay[i].s, true, true); err != nil {
+							fmt.Println(err)
+						}
+					}
+					err = nil
 				}
 			case "add":
 				if len(cmds) < 2 {
@@ -189,8 +216,8 @@ func main() {
 						if err = api.AddTask(req[j]); err != nil {
 							fmt.Println(err)
 						}
-						err = nil
 					}
+					err = nil
 				}
 			case "rm", "delete":
 				if len(cmds) < 2 {
@@ -327,6 +354,8 @@ func main() {
 				})
 			case "quit", "exit":
 				break LOOP
+			case "help":
+				// TODO
 			default:
 				err = fmt.Errorf("Unrecognised command: %s", cmds[0])
 			}

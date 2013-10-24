@@ -257,3 +257,7 @@ func (this _bt_list) String() string {
 	}
 	return r
 }
+
+func (this Task) Verify() bool {
+	return true
+}
