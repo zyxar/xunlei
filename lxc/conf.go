@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,8 +16,9 @@ var conf_file string
 var cookie_file string
 
 var conf struct {
-	Id   string `json:"account"`
-	Pass string `json:"password"`
+	Id        string `json:"account"`
+	Pass      string `json:"password"`
+	checkHash bool   `json:"check_hash"`
 }
 
 var printVer bool
@@ -28,14 +28,11 @@ func printVersion() {
 }
 
 func initConf() {
-	flag.StringVar(&conf.Id, "login", "", "login account")
-	flag.StringVar(&conf.Pass, "pass", "", "password/passhash")
-	flag.BoolVar(&printVer, "version", false, "print version")
-	flag.Parse()
 	initHome()
 	mkConfigDir()
 	conf_file = filepath.Join(home, "config.json")
 	cookie_file = filepath.Join(home, "cookie.json")
+	conf.checkHash = true
 }
 
 func mkConfigDir() (err error) {

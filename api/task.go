@@ -4,11 +4,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/url"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/zyxar/taipei"
 )
 
 var stats []string
@@ -258,6 +262,44 @@ func (this _bt_list) String() string {
 	return r
 }
 
-func (this Task) Verify() bool {
+func (this Task) Verify(path string) bool {
+	if this.IsBt() {
+		fmt.Println("Verifying [BT]", path)
+		tmp_torrent, err := ioutil.TempFile("", "xltorrent")
+		if err != nil {
+			fmt.Println(err)
+			return false
+		}
+		defer os.Remove(tmp_torrent.Name())
+		if b, err := GetTorrentByHash(this.Cid); err != nil {
+			fmt.Println(err)
+			return false
+		} else if err = ioutil.WriteFile(tmp_torrent.Name(), b, 0644); err != nil {
+			fmt.Println(err)
+			return false
+		}
+		if m, err := taipei.GetMetaInfo(tmp_torrent.Name()); err != nil {
+			fmt.Println(err)
+			return false
+		} else {
+			taipei.SetEcho(true)
+			g, err := taipei.VerifyContent(m, path)
+			taipei.SetEcho(false)
+			if err != nil {
+				fmt.Println(err)
+			}
+			return g
+		}
+	} else if strings.HasPrefix(this.URL, "ed2k://") {
+		fmt.Println("Verifying [ED2K]", path)
+		h, err := getEd2kHash(path)
+		if err != nil {
+			fmt.Println(err)
+			return false
+		}
+		if !strings.EqualFold(h, getEd2kHashFromURL(this.URL)) {
+			return false
+		}
+	}
 	return true
 }

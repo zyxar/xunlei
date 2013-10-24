@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -62,16 +63,19 @@ func fixedLengthName(name string, size int) string {
 
 func main() {
 	initConf()
+	f, _ := ioutil.ReadFile(conf_file)
+	json.Unmarshal(f, &conf)
+	flag.StringVar(&conf.Id, "login", conf.Id, "login account")
+	flag.StringVar(&conf.Pass, "pass", conf.Pass, "password/passhash")
+	flag.BoolVar(&printVer, "version", false, "print version")
+	flag.Parse()
 	if printVer {
 		printVersion()
 		return
 	}
 	if err := api.ResumeSession(cookie_file); err != nil {
 		log.Println(err)
-		f, _ := ioutil.ReadFile(conf_file)
-		json.Unmarshal(f, &conf)
-		err := api.Login(conf.Id, conf.Pass)
-		if err != nil {
+		if err = api.Login(conf.Id, conf.Pass); err != nil {
 			log.Println(err)
 			os.Exit(1)
 		}
@@ -80,11 +84,6 @@ func main() {
 		}
 	}
 	api.GetGdriveId()
-	api.GetTasks()
-	// ch := make(chan byte)
-	// api.ProcessTask(ch, func(t *api.Task) {
-	// 	log.Printf("%s %sB/s %.2f%%\n", t.Id, t.Speed, t.Progress)
-	// })
 
 	term := newTerm()
 	defer term.Restore()
@@ -182,27 +181,44 @@ func main() {
 						t *api.Task
 						s string
 					})
+					del := false
+					check := conf.checkHash
 					for i, _ := range cmds[1:] {
-						p := strings.Split(cmds[1:][i], "/")
-						m, err := _find(p[0])
-						if err == nil {
-							for i, _ := range m {
-								var filter string
-								if len(p) == 1 {
-									filter = `.*`
-								} else {
-									filter = p[1]
+						if strings.HasPrefix(cmds[1:][i], "--") {
+							switch cmds[1:][i][2:] {
+							case "delete":
+								del = true
+							case "check":
+								check = true
+							case "no-check", "nocheck":
+								check = false
+							}
+						} else {
+							p := strings.Split(cmds[1:][i], "/")
+							m, err := _find(p[0])
+							if err == nil {
+								for i, _ := range m {
+									var filter string
+									if len(p) == 1 {
+										filter = `.*`
+									} else {
+										filter = p[1]
+									}
+									pay[m[i].Id] = &struct {
+										t *api.Task
+										s string
+									}{m[i], filter}
 								}
-								pay[m[i].Id] = &struct {
-									t *api.Task
-									s string
-								}{m[i], filter}
 							}
 						}
 					}
 					for i, _ := range pay {
-						if err = download(pay[i].t, pay[i].s, true, true); err != nil {
+						if err = download(pay[i].t, pay[i].s, true, check); err != nil {
 							fmt.Println(err)
+						} else if del {
+							if err = pay[i].t.Remove(); err != nil {
+								fmt.Println(err)
+							}
 						}
 					}
 					err = nil

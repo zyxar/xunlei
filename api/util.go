@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bufio"
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
@@ -9,8 +10,12 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"os"
 	"regexp"
+	"strings"
 	"time"
+
+	"github.com/zyxar/ed2k"
 )
 
 func readBody(resp *http.Response) ([]byte, error) {
@@ -165,4 +170,24 @@ func extractTasks(ts []*Task) (urls []string, ids []string) {
 		urls = append(urls, ts[i].URL)
 	}
 	return
+}
+
+func getEd2kHash(filename string) (string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	rd := bufio.NewReader(f)
+	eh := ed2k.New()
+	_, err = rd.WriteTo(eh)
+	return fmt.Sprintf("%x", eh.Sum(nil)), err
+}
+
+func getEd2kHashFromURL(uri string) string {
+	h := strings.Split(uri, "|")
+	if len(h) > 4 {
+		return strings.ToLower(h[4])
+	}
+	return ""
 }

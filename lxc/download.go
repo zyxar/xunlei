@@ -40,13 +40,15 @@ func download(t *api.Task, filter string, echo, verify bool) error {
 			}
 		}
 	} else {
-		if len(t.LixianURL) > 0 {
-			log.Println("Downloading", t.TaskName, "...")
-			return dl(t.LixianURL, t.TaskName, echo)
+		if len(t.LixianURL) == 0 {
+			return errors.New("Target file not ready for downloading.")
 		}
-		return errors.New("Target file not ready for downloading.")
+		log.Println("Downloading", t.TaskName, "...")
+		if err := dl(t.LixianURL, t.TaskName, echo); err != nil {
+			return err
+		}
 	}
-	if verify && !t.Verify() {
+	if verify && !t.Verify(t.TaskName) {
 		return errors.New("Verification failed.")
 	}
 	return nil
