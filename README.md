@@ -24,35 +24,29 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 
 支持命令列表：
 
-- Utility Level:
-
-    - `cls`, `clear`:       **✓**
-    - `quit`, `exit`:       **✓**
-    - `version`:            **✓**
-
-- Service Level:
-
-    - `ls`:                 **✓**
-    - `ld`:                 **✓**
-    - `le`:                 **✓**
-    - `lc`:                 **✓**
-    - `ll`:                 **✓**
-    - `add`:                **✓**
-    - `rm`, `delete`:       **✓**
-    - `purge`:              **✓**
-    - `readd`:              **✓**
-    - `dispatch`, `find`:   **✓**
-    - `update`:             **✓**
-
-- Task Level:
-
-    - `info`:               **✓**
-    - `dl`, `download`:
-    - `pause`:              **✓**
-    - `resume`:             **✓**
-    - `rename`, `mv`:       **✓**
-    - `delay`:              **✓**
-    - `link`:               **✓**
+| Cmds              | Level   | Status|
+| ----------------- |:-------:|:-----:|
+| `cls`, `clear`    | Utility | **✓** |
+| `quit`, `exit`    | Utility | **✓** |
+| `version`         | Utility | **✓** |
+| `ls`              | Service | **✓** |
+| `ld`              | Service | **✓** |
+| `le`              | Service | **✓** |
+| `lc`              | Service | **✓** |
+| `ll`              | Service | **✓** |
+| `add`             | Service | **✓** |
+| `rm`, `delete`    | Service | **✓** |
+| `purge`           | Service | **✓** |
+| `readd`           | Service | **✓** |
+| `find`            | Service | **✓** |
+| `update`          | Service | **✓** |
+| `info`            | Task    | **✓** |
+| `dl`, `download`  | Task    |       |
+| `pause`           | Task    | **✓** |
+| `resume`          | Task    | **✓** |
+| `rename`, `mv`    | Task    | **✓** |
+| `delay`           | Task    | **✓** |
+| `link`            | Task    | **✓** |
 
 支持以 `aria2c` 爲下載工具，或者自行定製
 
