@@ -18,7 +18,7 @@ var cookie_file string
 var conf struct {
 	Id        string `json:"account"`
 	Pass      string `json:"password"`
-	checkHash bool   `json:"check_hash"`
+	CheckHash bool   `json:"check_hash"`
 }
 
 var printVer bool
@@ -32,7 +32,7 @@ func initConf() {
 	mkConfigDir()
 	conf_file = filepath.Join(home, "config.json")
 	cookie_file = filepath.Join(home, "cookie.json")
-	conf.checkHash = true
+	conf.CheckHash = true
 }
 
 func mkConfigDir() (err error) {

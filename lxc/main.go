@@ -182,7 +182,7 @@ func main() {
 						s string
 					})
 					del := false
-					check := conf.checkHash
+					check := conf.CheckHash
 					for i, _ := range cmds[1:] {
 						if strings.HasPrefix(cmds[1:][i], "--") {
 							switch cmds[1:][i][2:] {
@@ -222,6 +222,22 @@ func main() {
 						}
 					}
 					err = nil
+				}
+			case "dt":
+				if len(cmds) > 1 {
+					var ts map[string]*api.Task
+					if ts, err = find(cmds[1:]); err == nil { // TODO: improve find query
+						for i, _ := range ts {
+							if ts[i].IsBt() {
+								if err = api.GetTorrentFileByHash(ts[i].Cid, ts[i].TaskName+".torrent"); err != nil {
+									fmt.Println(err)
+								}
+							}
+						}
+						err = nil
+					}
+				} else {
+					err = insufficientArgErr
 				}
 			case "add":
 				if len(cmds) < 2 {
