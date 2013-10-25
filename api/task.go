@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/url"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -265,30 +263,22 @@ func (this _bt_list) String() string {
 func (this Task) Verify(path string) bool {
 	if this.IsBt() {
 		fmt.Println("Verifying [BT]", path)
-		tmp_torrent, err := ioutil.TempFile("", "xltorrent")
-		if err != nil {
-			fmt.Println(err)
-			return false
-		}
-		defer os.Remove(tmp_torrent.Name())
 		if b, err := GetTorrentByHash(this.Cid); err != nil {
 			fmt.Println(err)
 			return false
-		} else if err = ioutil.WriteFile(tmp_torrent.Name(), b, 0644); err != nil {
-			fmt.Println(err)
-			return false
-		}
-		if m, err := taipei.GetMetaInfo(tmp_torrent.Name()); err != nil {
-			fmt.Println(err)
-			return false
 		} else {
-			taipei.SetEcho(true)
-			g, err := taipei.VerifyContent(m, path)
-			taipei.SetEcho(false)
-			if err != nil {
+			if m, err := taipei.DecodeMetaInfo(b); err != nil {
 				fmt.Println(err)
+				return false
+			} else {
+				taipei.SetEcho(true)
+				g, err := taipei.VerifyContent(m, path)
+				taipei.SetEcho(false)
+				if err != nil {
+					fmt.Println(err)
+				}
+				return g
 			}
-			return g
 		}
 	} else if strings.HasPrefix(this.URL, "ed2k://") {
 		fmt.Println("Verifying [ED2K]", path)
