@@ -13,7 +13,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/matzoe/xunlei/api"
+	. "github.com/matzoe/xunlei/api"
 	"github.com/zyxar/taipei"
 )
 
@@ -22,17 +22,17 @@ type Term interface {
 	Restore()
 }
 
-func _find(req string) (map[string]*api.Task, error) {
-	if t, ok := api.M.Tasks[req]; ok {
-		return map[string]*api.Task{req: t}, nil
+func _find(req string) (map[string]*Task, error) {
+	if t, ok := M.Tasks[req]; ok {
+		return map[string]*Task{req: t}, nil
 	}
 	if ok, _ := regexp.MatchString(`(.+=.+)+`, req); ok {
-		return api.FindTasks(req)
+		return FindTasks(req)
 	}
-	return api.FindTasks("name=" + req)
+	return FindTasks("name=" + req)
 }
 
-func find(req []string) (map[string]*api.Task, error) {
+func find(req []string) (map[string]*Task, error) {
 	if len(req) == 0 {
 		return nil, errors.New("Empty find query.")
 	} else if len(req) == 1 {
@@ -74,17 +74,17 @@ func main() {
 		printVersion()
 		return
 	}
-	if err := api.ResumeSession(cookie_file); err != nil {
+	if err := ResumeSession(cookie_file); err != nil {
 		log.Println(err)
-		if err = api.Login(conf.Id, conf.Pass); err != nil {
+		if err = Login(conf.Id, conf.Pass); err != nil {
 			log.Println(err)
 			os.Exit(1)
 		}
-		if err = api.SaveSession(cookie_file); err != nil {
+		if err = SaveSession(cookie_file); err != nil {
 			log.Println(err)
 		}
 	}
-	api.GetGdriveId()
+	GetGdriveId()
 
 	term := newTerm()
 	defer term.Restore()
@@ -109,7 +109,7 @@ func main() {
 			case "cls", "clear":
 				clearscr()
 			case "ls":
-				ts, err := api.GetTasks()
+				ts, err := GetTasks()
 				if err == nil {
 					k := 0
 					for i, _ := range ts {
@@ -118,7 +118,7 @@ func main() {
 					}
 				}
 			case "ld":
-				ts, err := api.GetDeletedTasks()
+				ts, err := GetDeletedTasks()
 				if err == nil {
 					k := 0
 					for i, _ := range ts {
@@ -127,7 +127,7 @@ func main() {
 					}
 				}
 			case "le":
-				ts, err := api.GetExpiredTasks()
+				ts, err := GetExpiredTasks()
 				if err == nil {
 					k := 0
 					for i, _ := range ts {
@@ -136,7 +136,7 @@ func main() {
 					}
 				}
 			case "lc":
-				ts, err := api.GetCompletedTasks()
+				ts, err := GetCompletedTasks()
 				if err == nil {
 					k := 0
 					for i, _ := range ts {
@@ -145,7 +145,7 @@ func main() {
 					}
 				}
 			case "ll":
-				ts, err := api.GetTasks()
+				ts, err := GetTasks()
 				if err == nil {
 					k := 0
 					for i, _ := range ts {
@@ -157,7 +157,7 @@ func main() {
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
-					var ts map[string]*api.Task
+					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						j := 0
 						for i, _ := range ts {
@@ -179,7 +179,7 @@ func main() {
 					err = insufficientArgErr
 				} else {
 					pay := make(map[string]*struct {
-						t *api.Task
+						t *Task
 						s string
 					})
 					del := false
@@ -206,7 +206,7 @@ func main() {
 										filter = p[1]
 									}
 									pay[m[i].Id] = &struct {
-										t *api.Task
+										t *Task
 										s string
 									}{m[i], filter}
 								}
@@ -226,11 +226,11 @@ func main() {
 				}
 			case "dt":
 				if len(cmds) > 1 {
-					var ts map[string]*api.Task
+					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil { // TODO: improve find query
 						for i, _ := range ts {
 							if ts[i].IsBt() {
-								if err = api.GetTorrentFileByHash(ts[i].Cid, ts[i].TaskName+".torrent"); err != nil {
+								if err = GetTorrentFileByHash(ts[i].Cid, ts[i].TaskName+".torrent"); err != nil {
 									fmt.Println(err)
 								}
 							}
@@ -242,11 +242,11 @@ func main() {
 				}
 			case "ti":
 				if len(cmds) > 1 {
-					var ts map[string]*api.Task
+					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil { // TODO: improve find query
 						for i, _ := range ts {
 							if ts[i].IsBt() {
-								if b, err := api.GetTorrentByHash(ts[i].Cid); err != nil {
+								if b, err := GetTorrentByHash(ts[i].Cid); err != nil {
 									fmt.Println(err)
 								} else {
 									if m, err := taipei.DecodeMetaInfo(b); err != nil {
@@ -269,7 +269,7 @@ func main() {
 				} else {
 					req := cmds[1:]
 					for j, _ := range req {
-						if err = api.AddTask(req[j]); err != nil {
+						if err = AddTask(req[j]); err != nil {
 							fmt.Println(err)
 						}
 					}
@@ -279,7 +279,7 @@ func main() {
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
-					var ts map[string]*api.Task
+					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i, _ := range ts {
 							if err = ts[i].Remove(); err != nil {
@@ -293,7 +293,7 @@ func main() {
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
-					var ts map[string]*api.Task
+					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i, _ := range ts {
 							if err = ts[i].Purge(); err != nil {
@@ -306,16 +306,16 @@ func main() {
 			case "readd":
 				// re-add tasks from deleted or expired
 				if len(cmds) > 1 {
-					var ts map[string]*api.Task
+					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
-						api.ReAddTasks(ts)
+						ReAddTasks(ts)
 					}
 				} else {
 					err = insufficientArgErr
 				}
 			case "pause":
 				if len(cmds) > 1 {
-					var ts map[string]*api.Task
+					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i, _ := range ts {
 							if err = ts[i].Pause(); err != nil {
@@ -329,7 +329,7 @@ func main() {
 				}
 			case "resume":
 				if len(cmds) > 1 {
-					var ts map[string]*api.Task
+					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i, _ := range ts {
 							if err = ts[i].Resume(); err != nil {
@@ -344,7 +344,7 @@ func main() {
 			case "rename", "mv":
 				if len(cmds) == 3 {
 					// must be task id here
-					if t, ok := api.M.Tasks[cmds[1]]; ok {
+					if t, ok := M.Tasks[cmds[1]]; ok {
 						t.Rename(cmds[2])
 					} else {
 						err = noTasksMatchesErr
@@ -356,7 +356,7 @@ func main() {
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
-					var ts map[string]*api.Task
+					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i, _ := range ts {
 							if err = ts[i].Delay(); err != nil {
@@ -368,7 +368,7 @@ func main() {
 				}
 			case "link":
 				if len(cmds) == 2 {
-					var ts map[string]*api.Task
+					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						k := 0
 						for i, _ := range ts {
@@ -391,7 +391,7 @@ func main() {
 				}
 			case "find":
 				if len(cmds) == 2 {
-					var ts map[string]*api.Task
+					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						k := 0
 						for i, _ := range ts {
@@ -405,7 +405,7 @@ func main() {
 			case "version":
 				printVersion()
 			case "update":
-				err = api.ProcessTask(func(t *api.Task) {
+				err = ProcessTask(func(t *Task) {
 					log.Printf("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
 				})
 			case "quit", "exit":

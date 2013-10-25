@@ -6,20 +6,20 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/matzoe/xunlei/api"
-	"github.com/matzoe/xunlei/fetch"
+	. "github.com/matzoe/xunlei/api"
+	. "github.com/matzoe/xunlei/fetch"
 )
 
-var worker fetch.Fetcher = fetch.DefaultFetcher
+var worker Fetcher = DefaultFetcher
 
 func dl(uri, filename string, echo bool) error { //TODO: check file existence
-	if len(api.M.Gid) == 0 {
+	if len(M.Gid) == 0 {
 		return errors.New("gdriveid missing.")
 	}
-	return worker.Fetch(uri, api.M.Gid, filename, echo)
+	return worker.Fetch(uri, M.Gid, filename, echo)
 }
 
-func download(t *api.Task, filter string, echo, verify bool) error {
+func download(t *Task, filter string, echo, verify bool) error {
 	if t.IsBt() {
 		m, err := t.FillBtList()
 		if err != nil {

@@ -3,9 +3,10 @@
 package main
 
 import (
-	"code.google.com/p/go.crypto/ssh/terminal"
 	"os"
 	"path"
+
+	"code.google.com/p/go.crypto/ssh/terminal"
 )
 
 func initHome() {
