@@ -45,6 +45,7 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 | `info`            | Task    | **✓** |
 | `dl`, `download`  | Task    | **✓** |
 | `dt`              | Task    | **✓** |
+| `ti`              | Task    | **✓** |
 | `pause`           | Task    | **✓** |
 | `resume`          | Task    | **✓** |
 | `rename`, `mv`    | Task    | **✓** |

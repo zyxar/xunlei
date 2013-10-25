@@ -14,6 +14,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/matzoe/xunlei/api"
+	"github.com/zyxar/taipei"
 )
 
 type Term interface {
@@ -231,6 +232,29 @@ func main() {
 							if ts[i].IsBt() {
 								if err = api.GetTorrentFileByHash(ts[i].Cid, ts[i].TaskName+".torrent"); err != nil {
 									fmt.Println(err)
+								}
+							}
+						}
+						err = nil
+					}
+				} else {
+					err = insufficientArgErr
+				}
+			case "ti":
+				if len(cmds) > 1 {
+					var ts map[string]*api.Task
+					if ts, err = find(cmds[1:]); err == nil { // TODO: improve find query
+						for i, _ := range ts {
+							if ts[i].IsBt() {
+								if b, err := api.GetTorrentByHash(ts[i].Cid); err != nil {
+									fmt.Println(err)
+								} else {
+									if m, err := taipei.DecodeMetaInfo(b); err != nil {
+										fmt.Println(err)
+									} else {
+										taipei.Iconv(m)
+										fmt.Println(m)
+									}
 								}
 							}
 						}

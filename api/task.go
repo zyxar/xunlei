@@ -271,6 +271,7 @@ func (this Task) Verify(path string) bool {
 				fmt.Println(err)
 				return false
 			} else {
+				taipei.Iconv(m)
 				taipei.SetEcho(true)
 				g, err := taipei.VerifyContent(m, path)
 				taipei.SetEcho(false)
