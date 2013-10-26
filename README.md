@@ -31,6 +31,9 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 | `version`         | Utility | **✓** |
 | `help`            | Utility |       |
 | `?*`              | Utility |       |
+| `relogin`         | Service | **✓** |
+| `ison`            | Service | **✓** |
+| `ls`              | Service | **✓** |
 | `ls`              | Service | **✓** |
 | `ld`              | Service | **✓** |
 | `le`              | Service | **✓** |

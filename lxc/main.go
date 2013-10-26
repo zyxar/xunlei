@@ -106,6 +106,14 @@ func main() {
 				continue
 			}
 			switch cmds[0] {
+			case "ison":
+				log.Println(IsOn())
+			case "relogin":
+				if !IsOn() {
+					err = Login(conf.Id, conf.Pass)
+				} else {
+					fmt.Println("Already log on.")
+				}
 			case "cls", "clear":
 				clearscr()
 			case "ls":
