@@ -591,32 +591,33 @@ func addMagnetTask(link string, oid ...string) error {
 		}
 		return invalidResponseErr
 	}
-	task := evalParse(s[1])
-	v := url.Values{}
-	v.Add("uid", M.Uid)
-	v.Add("btname", task.Name)
-	v.Add("cid", task.InfoId)
-	v.Add("tsize", task.Size)
-	findex := strings.Join(task.Index, "_")
-	size := strings.Join(task.Sizes, "_")
-	v.Add("findex", findex)
-	v.Add("size", size)
-	if len(oid) > 0 {
-		v.Add("from", "history")
-		v.Add("o_taskid", oid[0])
-		v.Add("o_page", "history")
+	if task := evalParse(s[1]); task != nil {
+		v := url.Values{}
+		v.Add("uid", M.Uid)
+		v.Add("btname", task.Name)
+		v.Add("cid", task.InfoId)
+		v.Add("tsize", task.Size)
+		findex := strings.Join(task.Index, "_")
+		size := strings.Join(task.Sizes, "_")
+		v.Add("findex", findex)
+		v.Add("size", size)
+		if len(oid) > 0 {
+			v.Add("from", "history")
+			v.Add("o_taskid", oid[0])
+			v.Add("o_page", "history")
+		} else {
+			v.Add("from", "task")
+		}
+		dest := fmt.Sprintf(BTTASKCOMMIT_URL, current_timestamp())
+		r, err = post(dest, v.Encode())
+		exp = regexp.MustCompile(`jsonp.*\(\{"id":"(\d+)","avail_space":"\d+".*\}\)`)
+		s = exp.FindSubmatch(r)
+		if s == nil {
+			return invalidResponseErr
+		}
 	} else {
-		v.Add("from", "task")
-	}
-	dest := fmt.Sprintf(BTTASKCOMMIT_URL, current_timestamp())
-	r, err = post(dest, v.Encode())
-	exp = regexp.MustCompile(`jsonp.*\(\{"id":"(\d+)","avail_space":"\d+".*\}\)`)
-	s = exp.FindSubmatch(r)
-	if s == nil {
 		return invalidResponseErr
 	}
-	// tasklist_nofresh(4, 1)
-	// FillBtList(string(s[1]))
 	return nil
 }
 
