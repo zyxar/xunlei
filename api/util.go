@@ -7,6 +7,7 @@ import (
 	"compress/gzip"
 	"crypto/md5"
 	"fmt"
+	"html"
 	"io"
 	"math/rand"
 	"net/http"
@@ -190,4 +191,19 @@ func getEd2kHashFromURL(uri string) string {
 		return strings.ToLower(h[4])
 	}
 	return ""
+}
+
+func unescape_name(s string) (string, int) {
+	v := html.UnescapeString(s)
+	return v, len(v)
+}
+
+func unescapeName(s string) string {
+	ll := len(s)
+	l := 0
+	for ll != l {
+		ll = len(s)
+		s, l = unescape_name(s)
+	}
+	return s
 }

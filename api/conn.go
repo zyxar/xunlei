@@ -188,6 +188,7 @@ func GetTasks() ([]*Task, error) {
 	}
 	ts := make([]*Task, 0, len(resp.Info.Tasks))
 	for i, _ := range resp.Info.Tasks {
+		resp.Info.Tasks[i].TaskName = unescapeName(resp.Info.Tasks[i].TaskName)
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
 	M.invalidateGroup(_FLAG_normal)
@@ -207,6 +208,7 @@ func GetCompletedTasks() ([]*Task, error) {
 	}
 	ts := make([]*Task, 0, len(resp.Info.Tasks))
 	for i, _ := range resp.Info.Tasks {
+		resp.Info.Tasks[i].TaskName = unescapeName(resp.Info.Tasks[i].TaskName)
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
 	M.pushTasks(ts)
@@ -225,6 +227,7 @@ func GetIncompletedTasks() ([]*Task, error) {
 	}
 	ts := make([]*Task, 0, len(resp.Info.Tasks))
 	for i, _ := range resp.Info.Tasks {
+		resp.Info.Tasks[i].TaskName = unescapeName(resp.Info.Tasks[i].TaskName)
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
 	M.pushTasks(ts)
@@ -359,7 +362,7 @@ func parseHistory(in []byte, ty string) ([]*Task, bool) {
 	ret := make([]*Task, len(s))
 	for i, _ := range s {
 		b, _ := strconv.Atoi(string(s[i][7]))
-		ret[i] = &Task{Id: string(s[i][1]), DownloadStatus: string(s[i][2]), Cid: string(s[i][4]), URL: string(s[i][5]), TaskName: string(s[i][6]), TaskType: byte(b), Flag: ty}
+		ret[i] = &Task{Id: string(s[i][1]), DownloadStatus: string(s[i][2]), Cid: string(s[i][4]), URL: string(s[i][5]), TaskName: unescapeName(string(s[i][6])), TaskType: byte(b), Flag: ty}
 	}
 	exp = regexp.MustCompile(`<li class="next"><a href="([^"]+)">[^<>]*</a></li>`)
 	return ret, exp.FindSubmatch(in) != nil
@@ -451,6 +454,7 @@ func FillBtList(taskid, infohash string) (*_bt_list, error) {
 	exp = regexp.MustCompile(`\\`)
 	for i, _ := range bt_list.Record {
 		bt_list.Record[i].FileName = exp.ReplaceAllLiteralString(bt_list.Record[i].FileName, `/`)
+		bt_list.Record[i].FileName = unescapeName(bt_list.Record[i].FileName)
 	}
 	return &bt_list, nil
 }
