@@ -698,8 +698,6 @@ func addTorrentTask(filename string) (err error) {
 }
 
 func ProcessTaskDaemon(ch chan byte, callback func(*Task)) {
-	var j time.Duration = 20
-
 	if len(M.Tasks) == 0 {
 		GetIncompletedTasks()
 	}
@@ -712,13 +710,12 @@ func ProcessTaskDaemon(ch chan byte, callback func(*Task)) {
 				if err != nil {
 					log.Println("error in ProcessTask():", err)
 				}
-			case <-time.After(j * time.Second):
+			case <-time.After(60 * time.Second):
 				err := process_task(M.Tasks, callback)
 				if err != nil {
 					log.Println("error in ProcessTask():", err)
-					j = 10
-				} else {
-					j = 20
+					time.Sleep(5 * time.Second)
+					ch <- 1
 				}
 			}
 		}

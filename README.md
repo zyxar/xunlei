@@ -27,6 +27,8 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 | Cmds              | Level   | Status|
 | ----------------- |:-------:|:-----:|
 | `cls`, `clear`    | Utility | **✓** |
+| `saveconf`        | Utility |       |
+| `loadconf`        | Utility |       |
 | `quit`, `exit`    | Utility | **✓** |
 | `version`         | Utility | **✓** |
 | `help`            | Utility |       |
@@ -43,6 +45,7 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 | `rm`, `delete`    | Service | **✓** |
 | `purge`           | Service | **✓** |
 | `readd`           | Service | **✓** |
+| `readdexp`        | Service |       |
 | `find`            | Service | **✓** |
 | `update`          | Service | **✓** |
 | `info`            | Task    | **✓** |
@@ -53,6 +56,8 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 | `resume`          | Task    | **✓** |
 | `rename`, `mv`    | Task    | **✓** |
 | `delay`           | Task    | **✓** |
+| `submit`          | Task    |       |
+| `play`            | Task    |       |
 | `link`            | Task    | **✓** |
 
 支持以 `aria2c` 爲下載工具，或者自行定製
