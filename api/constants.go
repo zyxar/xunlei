@@ -38,9 +38,9 @@ const (
 
 const (
 	DOMAIN_LIXIAN       = "http://dynamic.cloud.vip.xunlei.com/"
-	TASK_BASE           = DOMAIN_LIXIAN + "user_task?userid=%s" //G_USERID
+	TASK_BASE           = DOMAIN_LIXIAN + "user_task?userid=%s"
 	TASK_HOME           = DOMAIN_LIXIAN + "user_task?userid=%s&st=4"
-	TASK_PAGE           = DOMAIN_LIXIAN + "user_task?userid=%s&st=%s&p=%s" //"G_USERID,G_STATUS,G_PAGENUM
+	TASK_PAGE           = DOMAIN_LIXIAN + "user_task?userid=%s&st=%s&p=%s"
 	HISTORY_HOME        = DOMAIN_LIXIAN + "user_history?userid=%s"
 	EXPIRE_HOME         = DOMAIN_LIXIAN + "user_history?type=1&userid=%s"
 	HISTORY_PAGE        = DOMAIN_LIXIAN + "user_history?userid=%s&p=%d"
@@ -67,4 +67,7 @@ const (
 	TASKPROCESS_URL     = INTERFACE_URL + "/task_process?callback=jsonp%d&t=%d"
 	TASKDELETE_URL      = INTERFACE_URL + "/task_delete?callback=jsonp%d&type=%d&noCacheIE=%d"
 	SHOWTASK_UNFRESH    = INTERFACE_URL + "/showtask_unfresh?type_id=%d&page=%d&tasknum=%s&p=%d&interfrom=task"
+	// GETPLAYURL_URL      = INTERFACE_URL + "/get_play_url?callback=jsonp%d&t=%d"
+	DOMAIN_IVOD         = "http://i.vod.xunlei.com"
+	REQGETMETHODVOD_URL = DOMAIN_IVOD + "/req_get_method_vod?"
 )

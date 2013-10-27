@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -250,6 +251,51 @@ func (this *Task) Resume() error {
 
 func (this *Task) Delay() error {
 	return DelayTask(this.Id)
+}
+
+func (this Task) GetVodURL() (lurl, hurl string, err error) {
+	sid := getCookie("http://xunlei.com", "sessionid")
+	v := url.Values{}
+	v.Add("url", this.URL)
+	v.Add("video_name", this.TaskName)
+	v.Add("platform", "0")
+	v.Add("userid", M.Uid)
+	v.Add("vip", "1")
+	v.Add("sessionid", sid)
+	v.Add("gcid", this.GCid)
+	v.Add("cid", this.Cid)
+	v.Add("filesize", this.YsFileSize)
+	v.Add("cache", strconv.Itoa(current_timestamp()))
+	v.Add("from", "lxweb")
+	v.Add("jsonp", "XL_CLOUD_FX_INSTANCEqueryBack")
+	uri := REQGETMETHODVOD_URL + v.Encode()
+	r, err := get(uri)
+	if err != nil {
+		return
+	}
+	exp := regexp.MustCompile(`XL_CLOUD_FX_INSTANCEqueryBack\((.*)\)`)
+	var res struct {
+		Resp vod_resp `json:"resp"`
+	}
+	s := exp.FindSubmatch(r)
+	if s == nil {
+		err = invalidResponseErr
+		return
+	}
+	json.Unmarshal(s[1], &res)
+	fmt.Printf("%+v\n", res.Resp)
+	if res.Resp.Status == 0 { // TODO: also check `TransWait`
+		for i, _ := range res.Resp.VodList {
+			if res.Resp.VodList[i].Spec == 225536 {
+				lurl = res.Resp.VodList[i].URL
+			} else if res.Resp.VodList[i].Spec == 282880 {
+				hurl = res.Resp.VodList[i].URL
+			}
+		}
+	} else {
+		err = errors.New(res.Resp.ErrMsg)
+	}
+	return
 }
 
 func (this _bt_list) String() string {

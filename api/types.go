@@ -196,3 +196,29 @@ type _ptask_resp struct {
 		WaitNum string `json:"waiting_num"`
 	} `json:"Task"`
 }
+
+type vod_resp struct {
+	Status    byte   `json:"status"`
+	UrlHash   string `json:"url_hash"`
+	TransWait int    `json:"tans_wait"`
+	Uid       string `json:"userid"`
+	Ret       byte   `json:"ret"`
+	SrcInfo   struct {
+		Name string `json:"file_name"`
+		Cid  string `json:"cid"`
+		Size string `json:"file_size"`
+		GCid string `json:"gcid"`
+	} `json:"src_info"`
+	Duration  int64 `json:"duration"`
+	VodPermit struct {
+		Msg string `json:"msg"`
+		Ret byte   `json:"ret"`
+	} `json:"vod_permit"`
+	ErrMsg  string `json:"error_msg"`
+	VodList []struct {
+		URLs   []string `json:"vod_urls"`
+		Spec   int      `json:"spec_id"`
+		URL    string   `json:"vod_url"`
+		HasSub byte     `json:"has_subtitle"`
+	} `json:"vodinfo_list"`
+}

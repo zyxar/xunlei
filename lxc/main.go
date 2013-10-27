@@ -118,6 +118,12 @@ func main() {
 				} else {
 					fmt.Println("Already log on.")
 				}
+			case "saveconf":
+				{
+				}
+			case "loadconf":
+				{
+				}
 			case "cls", "clear":
 				clearscr()
 			case "ls":
@@ -325,6 +331,10 @@ func main() {
 				} else {
 					err = insufficientArgErr
 				}
+			// case "readdexp":
+			// 	{
+			// 		ReAddAllExpiredTasks()
+			// 	}
 			case "pause":
 				if len(cmds) > 1 {
 					var ts map[string]*Task
@@ -402,7 +412,7 @@ func main() {
 					err = insufficientArgErr
 				}
 			case "find":
-				if len(cmds) == 2 {
+				if len(cmds) > 1 {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						k := 0
@@ -414,13 +424,21 @@ func main() {
 				} else {
 					err = insufficientArgErr
 				}
-			case "play":
-				if len(cmds) == 2 {
+			case "st":
+				{
+				}
+			case "rpc":
+				{
+				}
+			case "play", "vod":
+				if len(cmds) > 1 {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i, _ := range ts {
-							b := ts[i].GetPlayURL()
-							fmt.Printf("%s\n", b)
+							low, high, err := ts[i].GetVodURL()
+							if err == nil {
+								fmt.Printf("%s\n%s\n", low, high)
+							}
 						}
 					}
 				} else {

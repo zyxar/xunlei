@@ -45,7 +45,6 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 | `rm`, `delete`    | Service | **✓** |
 | `purge`           | Service | **✓** |
 | `readd`           | Service | **✓** |
-| `readdexp`        | Service |       |
 | `find`            | Service | **✓** |
 | `update`          | Service | **✓** |
 | `info`            | Task    | **✓** |
