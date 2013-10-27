@@ -110,7 +110,11 @@ func main() {
 				log.Println(IsOn())
 			case "relogin":
 				if !IsOn() {
-					err = Login(conf.Id, conf.Pass)
+					if err = Login(conf.Id, conf.Pass); err != nil {
+						log.Println(err)
+					} else if err = SaveSession(cookie_file); err != nil {
+						log.Println(err)
+					}
 				} else {
 					fmt.Println("Already log on.")
 				}
@@ -405,6 +409,18 @@ func main() {
 						for i, _ := range ts {
 							fmt.Printf("#%d %v\n", k, ts[i].Coloring())
 							k++
+						}
+					}
+				} else {
+					err = insufficientArgErr
+				}
+			case "play":
+				if len(cmds) == 2 {
+					var ts map[string]*Task
+					if ts, err = find(cmds[1:]); err == nil {
+						for i, _ := range ts {
+							b := ts[i].GetPlayURL()
+							fmt.Printf("%s\n", b)
 						}
 					}
 				} else {
