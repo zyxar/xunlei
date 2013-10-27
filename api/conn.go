@@ -817,7 +817,7 @@ func PauseTasks(ids []string) error {
 	return nil
 }
 
-func ReAddAllExpiredTasks() error {
+func DelayAllTasks() error {
 	r, err := get(DELAYONCE_URL)
 	if err != nil {
 		return err

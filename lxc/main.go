@@ -331,10 +331,10 @@ func main() {
 				} else {
 					err = insufficientArgErr
 				}
-			// case "readdexp":
-			// 	{
-			// 		ReAddAllExpiredTasks()
-			// 	}
+			case "delayall":
+				{
+					DelayAllTasks()
+				}
 			case "pause":
 				if len(cmds) > 1 {
 					var ts map[string]*Task
@@ -389,7 +389,7 @@ func main() {
 					}
 				}
 			case "link":
-				if len(cmds) == 2 {
+				if len(cmds) > 1 {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						k := 0

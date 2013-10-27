@@ -108,9 +108,9 @@ func PauseTasksAsync(ids []string, callback func(error)) {
 	}()
 }
 
-func ReAddAllExpiredTasksAsync(callback func(error)) {
+func DelayAllTasksAsync(callback func(error)) {
 	go func() {
-		err := ReAddAllExpiredTasks()
+		err := DelayAllTasks()
 		if callback != nil {
 			callback(err)
 		}
