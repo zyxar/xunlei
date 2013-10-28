@@ -36,7 +36,7 @@ var register = map[string]interface{}{
 	"PauseTasks":           api.PauseTasks,
 	"ProcessTask":          api.ProcessTask,
 	"PurgeTask":            api.PurgeTask,
-	"ReAddAllExpiredTasks": api.ReAddAllExpiredTasks,
+	"DelayAllTasks":        api.DelayAllTasks,
 	"RenameTask":           api.RenameTask,
 	"ResumeTasks":          api.ResumeTasks,
 }
