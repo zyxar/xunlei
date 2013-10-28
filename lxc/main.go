@@ -2,11 +2,9 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -64,8 +62,6 @@ func fixedLengthName(name string, size int) string {
 
 func main() {
 	initConf()
-	f, _ := ioutil.ReadFile(conf_file)
-	json.Unmarshal(f, &conf)
 	flag.StringVar(&conf.Id, "login", conf.Id, "login account")
 	flag.StringVar(&conf.Pass, "pass", conf.Pass, "password/passhash")
 	flag.BoolVar(&printVer, "version", false, "print version")
@@ -120,9 +116,16 @@ func main() {
 				}
 			case "saveconf":
 				{
+					b, err := conf.save(conf_file)
+					if err == nil {
+						fmt.Printf("%s\n", b)
+					}
 				}
 			case "loadconf":
 				{
+					if _, err = conf.load(conf_file); err == nil {
+						fmt.Printf("%+v\n", conf)
+					}
 				}
 			case "cls", "clear":
 				clearscr()

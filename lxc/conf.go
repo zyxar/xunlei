@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -15,10 +17,30 @@ var home string
 var conf_file string
 var cookie_file string
 
-var conf struct {
+type config struct {
 	Id        string `json:"account"`
 	Pass      string `json:"password"`
 	CheckHash bool   `json:"check_hash"`
+}
+
+var conf config
+
+func (id *config) save(cf string) (b []byte, err error) {
+	b, err = json.Marshal(id)
+	if err != nil {
+		return
+	}
+	err = ioutil.WriteFile(cf, b, 0644)
+	return
+}
+
+func (id *config) load(cf string) (b []byte, err error) {
+	b, err = ioutil.ReadFile(cf)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(b, id)
+	return
 }
 
 var printVer bool
@@ -33,6 +55,7 @@ func initConf() {
 	conf_file = filepath.Join(home, "config.json")
 	cookie_file = filepath.Join(home, "cookie.json")
 	conf.CheckHash = true
+	conf.load(conf_file)
 }
 
 func mkConfigDir() (err error) {
