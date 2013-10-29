@@ -65,6 +65,7 @@ func main() {
 	flag.StringVar(&conf.Id, "login", conf.Id, "login account")
 	flag.StringVar(&conf.Pass, "pass", conf.Pass, "password/passhash")
 	flag.BoolVar(&printVer, "version", false, "print version")
+	flag.BoolVar(&daemon, "d", false, "run as daemon/server")
 	flag.Parse()
 	if printVer {
 		printVersion()
@@ -81,7 +82,10 @@ func main() {
 		}
 	}
 	GetGdriveId()
-
+	if daemon {
+		daemonLoop()
+		return
+	}
 	term := newTerm()
 	defer term.Restore()
 	{

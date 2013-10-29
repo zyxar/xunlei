@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/matzoe/xunlei/api"
+	. "github.com/matzoe/xunlei/api"
 )
 
 func TestCall(t *testing.T) {
@@ -12,7 +12,7 @@ func TestCall(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if v, ok := r[0].Interface().([]*api.Task); ok {
+	if v, ok := r[0].Interface().([]*Task); ok {
 		fmt.Println(len(v), "task(s).")
 	}
 }

@@ -16,6 +16,7 @@ const (
 var home string
 var conf_file string
 var cookie_file string
+var daemon bool
 
 type config struct {
 	Id        string `json:"account"`
