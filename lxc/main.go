@@ -410,6 +410,8 @@ func main() {
 									for j, _ := range m.Record {
 										fmt.Printf("  #%d %s\n", m.Record[j].Id, m.Record[j].DownURL)
 									}
+								} else {
+									fmt.Println(err)
 								}
 							}
 							k++
