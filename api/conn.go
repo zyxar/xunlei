@@ -70,6 +70,7 @@ retry:
 		return nil, err
 	}
 	defer resp.Body.Close()
+	log.Println(resp.Status)
 	return readBody(resp)
 }
 
@@ -93,6 +94,7 @@ retry:
 		return nil, err
 	}
 	defer resp.Body.Close()
+	log.Println(resp.Status)
 	return readBody(resp)
 }
 
@@ -310,6 +312,7 @@ retry:
 		return nil, err
 	}
 	defer resp.Body.Close()
+	log.Println(resp.Status)
 	return readBody(resp)
 }
 
@@ -368,6 +371,7 @@ retry:
 		return nil, err
 	}
 	defer resp.Body.Close()
+	log.Println(resp.Status)
 	return readBody(resp)
 }
 
@@ -490,6 +494,7 @@ retry:
 	if err != nil {
 		return nil, err
 	}
+	log.Println(resp.Status)
 	r, err := readBody(resp)
 	resp.Body.Close()
 	if err != nil {
@@ -715,8 +720,9 @@ retry:
 	if err != nil {
 		return
 	}
-	defer resp.Body.Close()
+	log.Println(resp.Status)
 	r, err := readBody(resp)
+	resp.Body.Close()
 	exp := regexp.MustCompile(`<script>document\.domain="xunlei\.com";var btResult =(\{.+\});var btRtcode = 0</script>`)
 	s := exp.FindSubmatch(r)
 	if s != nil {
