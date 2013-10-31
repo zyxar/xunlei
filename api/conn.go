@@ -418,8 +418,44 @@ func redownload(tasks []*Task) error {
 	return nil
 }
 
-func FillBtList(taskid, infohash string) (*_bt_list, error) {
-	uri := fmt.Sprintf(FILLBTLIST_URL, taskid, infohash, M.Uid, "task", current_timestamp())
+func FillBtList(taskid, infohash string) (*bt_list, error) {
+	var pgsize = _bt_page_size
+retry:
+	m, err := fillBtList(taskid, infohash, 1, pgsize)
+	if err != nil {
+		if pgsize == _bt_page_size {
+			pgsize = "100"
+			goto retry
+		}
+		return nil, err
+	}
+	var list = bt_list{}
+	list.BtNum = m.BtNum
+	list.Id = m.Id
+	list.InfoId = m.InfoId
+	if len(m.Record) > 0 {
+		list.Record = append(list.Record, m.Record...)
+	}
+	total, _ := strconv.Atoi(list.BtNum)
+	size, _ := strconv.Atoi(pgsize)
+	pageNum := total/size + 1
+	next := 2
+	for next <= pageNum {
+		m, err = fillBtList(taskid, infohash, next, pgsize)
+		if err == nil {
+			if len(m.Record) > 0 {
+				list.Record = append(list.Record, m.Record...)
+			}
+			next++
+		} else {
+			log.Println("err in fillBtList()")
+		}
+	}
+	return &list, nil
+}
+
+func fillBtList(taskid, infohash string, page int, pgsize string) (*_bt_list, error) {
+	uri := fmt.Sprintf(FILLBTLIST_URL, taskid, infohash, page, M.Uid, "task", current_timestamp())
 	log.Println("==>", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -427,7 +463,7 @@ func FillBtList(taskid, infohash string) (*_bt_list, error) {
 	}
 	req.Header.Add("User-Agent", user_agent)
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
-	req.AddCookie(&http.Cookie{Name: "pagenum", Value: _bt_page_size})
+	req.AddCookie(&http.Cookie{Name: "pagenum", Value: pgsize})
 	defaultConn.Lock()
 	resp, err := defaultConn.Do(req)
 	defaultConn.Unlock()

@@ -63,7 +63,7 @@ func DelayTaskAsync(id string, callback func(error)) {
 	}()
 }
 
-func FillBtListAsync(taskid, infohash string, callback func(*_bt_list, error)) {
+func FillBtListAsync(taskid, infohash string, callback func(*bt_list, error)) {
 	go func() {
 		l, err := FillBtList(taskid, infohash)
 		if callback != nil {

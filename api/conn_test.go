@@ -127,24 +127,24 @@ func TestGetDeletedTasks(t *testing.T) {
 	}
 }
 
-func TestAddTask(t *testing.T) {
-	err := AddTask("26B092652A3D8263BABDE5D32BEB0F01F6D208F7")
-	if err != nil && err != btTaskAlreadyErr {
-		t.Error(err)
-	}
-}
+// func TestAddTask(t *testing.T) {
+// 	err := AddTask("26B092652A3D8263BABDE5D32BEB0F01F6D208F7")
+// 	if err != nil && err != btTaskAlreadyErr {
+// 		t.Error(err)
+// 	}
+// }
 
-func TestTorrent(t *testing.T) {
-	err := GetTorrentFileByHash("26B092652A3D8263BABDE5D32BEB0F01F6D208F7", "test.torrent")
-	if err != nil {
-		t.Error(err)
-	}
-	err = addTorrentTask("test.torrent")
-	if err != nil && err != btTaskAlreadyErr {
-		t.Error(err)
-	}
-	os.Remove("test.torrent")
-}
+// func TestTorrent(t *testing.T) {
+// 	err := GetTorrentFileByHash("26B092652A3D8263BABDE5D32BEB0F01F6D208F7", "test.torrent")
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	err = addTorrentTask("test.torrent")
+// 	if err != nil && err != btTaskAlreadyErr {
+// 		t.Error(err)
+// 	}
+// 	os.Remove("test.torrent")
+// }
 
 func TestFillBtListAsync(t *testing.T) {
 	for i, _ := range M.Tasks {

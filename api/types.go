@@ -104,6 +104,13 @@ type _userinfo struct {
 	Percent        string `json:"percent"`
 }
 
+type bt_list struct {
+	Id     string       `json:"Tid"`
+	InfoId string       `json:"Infoid"`
+	BtNum  string       `json:"btnum"`
+	Record []_bt_record `json:"Record"`
+}
+
 type _bt_list struct {
 	Id       string       `json:"Tid"`
 	InfoId   string       `json:"Infoid"`

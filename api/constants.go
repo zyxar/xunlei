@@ -54,7 +54,7 @@ const (
 	REDOWNLOAD_URL      = INTERFACE_URL + "/redownload?callback=jsonp%d"
 	SHOWCLASS_URL       = INTERFACE_URL + "/show_class?callback=jsonp%d&type_id=%d"
 	MENUGET_URL         = INTERFACE_URL + "/menu_get"
-	FILLBTLIST_URL      = INTERFACE_URL + "/fill_bt_list?callback=fill_bt_list&tid=%s&infoid=%s&g_net=1&p=1&uid=%s&interfrom=%s&noCacheIE=%d"
+	FILLBTLIST_URL      = INTERFACE_URL + "/fill_bt_list?callback=fill_bt_list&tid=%s&infoid=%s&g_net=1&p=%d&uid=%s&interfrom=%s&noCacheIE=%d"
 	TASKCHECK_URL       = INTERFACE_URL + "/task_check?callback=queryCid&url=%s&interfrom=%s&random=%s&tcache=%d"
 	TASKCOMMIT_URL      = INTERFACE_URL + "/task_commit?"
 	BATCHTASKCHECK_URL  = INTERFACE_URL + "/batch_task_check"

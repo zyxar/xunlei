@@ -408,7 +408,7 @@ func main() {
 								if err == nil {
 									fmt.Printf("#%d %s:\n", k, ts[i].Id)
 									for j, _ := range m.Record {
-										fmt.Printf("  #%d %s\n", m.Record[j].Id, m.Record[j].DownURL)
+										fmt.Printf("  #%d %s\n", j, m.Record[j].DownURL)
 									}
 								} else {
 									fmt.Println(err)
