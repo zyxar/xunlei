@@ -12,7 +12,7 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 
 - api:  **✏**
 - lxc:  **✏**
-- lxd:  **✍**
+- <del>lxd:  **✍**</del> *replaced by `lxc -d`*
 
 ## xunlei/api
 
@@ -64,7 +64,7 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 ![](http://farm4.staticflickr.com/3697/10421561225_aa3ea3f4e5_c.jpg)
 ![](http://farm6.staticflickr.com/5530/10461504605_8dc2b2737b_c.jpg)
 
-## xunlei/lxd
+## xunlei/`lxc -d`
 
 後臺工具
 
