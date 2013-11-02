@@ -371,10 +371,10 @@ func main() {
 					err = insufficientArgErr
 				}
 			case "rename", "mv":
-				if len(cmds) == 3 {
+				if len(cmds) > 2 {
 					// must be task id here
 					if t, ok := M.Tasks[cmds[1]]; ok {
-						t.Rename(cmds[2])
+						t.Rename(strings.Join(cmds[2:], " "))
 					} else {
 						err = noTasksMatchesErr
 					}
