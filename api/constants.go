@@ -68,6 +68,10 @@ const (
 	TASKDELETE_URL      = INTERFACE_URL + "/task_delete?callback=jsonp%d&type=%d&noCacheIE=%d"
 	SHOWTASK_UNFRESH    = INTERFACE_URL + "/showtask_unfresh?type_id=%d&page=%d&tasknum=%s&p=%d&interfrom=task"
 	// GETPLAYURL_URL      = INTERFACE_URL + "/get_play_url?callback=jsonp%d&t=%d"
-	DOMAIN_IVOD         = "http://i.vod.xunlei.com"
-	REQGETMETHODVOD_URL = DOMAIN_IVOD + "/req_get_method_vod?"
+	VOD_BASE            = "http://i.vod.xunlei.com"
+	REQGETMETHODVOD_URL = VOD_BASE + "/req_get_method_vod?"
+	HISTORY_PLAY_URL    = VOD_BASE + "/req_history_play_list/req_num/%d/req_offset/%d?type=%s&order=%s&t=%d"
+	SUBBT_URL           = VOD_BASE + "/req_subBT/info_hash/%s/req_num/%d/req_offset/%d"
+	PROGRESS_URL        = VOD_BASE + "/req_progress_query?&t=%d"
+	LXTASK_LIST_URL     = VOD_BASE + "/req_lxtask_list"
 )

@@ -439,7 +439,7 @@ func main() {
 			case "rpc":
 				{
 				}
-			case "play", "vod":
+			case "play":
 				if len(cmds) > 1 {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
@@ -452,6 +452,15 @@ func main() {
 					}
 				} else {
 					err = insufficientArgErr
+				}
+			case "vod":
+				list, err := GetLxtaskList()
+				if err == nil {
+					for _, t := range list {
+						fmt.Printf("%s\n", t)
+					}
+				} else {
+					fmt.Println(err)
 				}
 			case "version":
 				printVersion()

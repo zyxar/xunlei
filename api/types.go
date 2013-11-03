@@ -204,6 +204,110 @@ type _ptask_resp struct {
 	} `json:"Task"`
 }
 
+type hist_resp struct {
+	List []struct {
+		GCid     string `json:"gcid"`
+		UrlHash  string `json:"url_hash"`
+		Cid      string `json:"cid"`
+		URL      string `json:"url"`
+		Name     string `json:"file_name"`
+		Type     byte   `json:"tasktype"`
+		Src      string `json:"src_url"`
+		Size     int64  `json:"file_size"`
+		Duration int    `json:"duration"`
+		Played   string `json:"playtime"`
+		Created  string `json:"createtime"`
+	} `json:"history_play_list"`
+	MaxNum int    `json:"max_num"`
+	Uid    string `json:"userid"`
+	Ret    byte   `json:"ret"`
+	Start  string `json:"start_t"`
+	End    string `json:"end_t"`
+	Num    int    `json:"record_num"`
+	Type   string `json:"type"`
+}
+
+type subbt_resp struct {
+	Uid  string `json:"userid"`
+	Ret  byte   `json:"ret"`
+	List []struct {
+		GCid     string `json:"gcid"`
+		UrlHash  string `json:"url_hash"`
+		Name     string `json:"name"`
+		Index    int    `json:"index"`
+		Cid      string `json:"cid"`
+		Size     int64  `json:"file_size"`
+		Duration int64  `json:"duration"`
+	} `json:"subfile_list"`
+	UrlHash  string `json:"main_task_url_hash"`
+	InfoHash string `json:"info_hash"`
+	Num      int    `json:"record_num"`
+}
+
+type progress_resp struct {
+	List []struct {
+		Progress string `json:"progress"`
+		UrlHash  string `json:"url_hash"`
+	} `json:"progress_info_list"`
+	Uid string `json:"userid"`
+	Ret byte   `json:"ret"`
+}
+
+type VodLXTask struct {
+	Vod       int    `json:"vod"`
+	GCid      string `json:"gcid"`
+	Status    int    `json:"download_status"`
+	SecDown   int    `json:"sec_down"`
+	FinishNum int    `json:"finish_num"`
+	TotalNum  int    `json:"total_num"`
+	Cid       string `json:"cid"`
+	URL       string `json:"url"`
+	FileType  int    `json:"filetype"`
+	ResType   int    `json:"restype"`
+	Flag      int    `json:"flag"`
+	Size      int64  `json:"filesize"`
+	Id        string `json:"taskid"`
+	Progress  int    `json:"progress"`
+	Name      string `json:"taskname"`
+	LixianURL string `json:"lixian_url"`
+	LeftTime  int    `json:"left_live_time"`
+}
+
+type lxtask_resp struct {
+	List []VodLXTask `json:"tasklist"`
+	Ret  string      `json:"ret"`
+	User struct {
+		From      int    `json:"from"`
+		Name      string `json:"name"`
+		IP        string `json:"ip"`
+		NewNO     string `json:"newno"`
+		Uid       string `json:"userid"`
+		VIP       string `json:"vip"`
+		Type      string `json:"user_type"`
+		Sid       string `json:"sessionid"`
+		AvalSpace string `json:"available_space"`
+		MaxStore  string `json:"max_store"`
+	} `json:"user_info"`
+	Count    string `json:"task_total_cnt"`
+	ErrMsg   string `json:"error_msg"`
+	CountAll string `json:"task_total_cnt_all"`
+}
+
+type mb_resp struct {
+	//url: http://i.vod.xunlei.com/miaobo/
+	// infohash/507625D95D7695F9A1F91EC41A633D250419DF26?jsonp=jsonp1383446499423&t=0.7223064277786762
+	InfoHash string `json:"infohash"`
+	Result   byte   `json:"result"`
+	Index    int    `json:"idx"`
+}
+
+type VodInfo struct {
+	URLs   []string `json:"vod_urls"`
+	Spec   int      `json:"spec_id"`
+	URL    string   `json:"vod_url"`
+	HasSub byte     `json:"has_subtitle"`
+}
+
 type vod_resp struct {
 	Status    byte   `json:"status"`
 	UrlHash   string `json:"url_hash"`
@@ -221,11 +325,6 @@ type vod_resp struct {
 		Msg string `json:"msg"`
 		Ret byte   `json:"ret"`
 	} `json:"vod_permit"`
-	ErrMsg  string `json:"error_msg"`
-	VodList []struct {
-		URLs   []string `json:"vod_urls"`
-		Spec   int      `json:"spec_id"`
-		URL    string   `json:"vod_url"`
-		HasSub byte     `json:"has_subtitle"`
-	} `json:"vodinfo_list"`
+	ErrMsg  string    `json:"error_msg"`
+	VodList []VodInfo `json:"vodinfo_list"`
 }

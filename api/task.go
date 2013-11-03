@@ -348,3 +348,7 @@ func (this Task) Verify(path string) bool {
 	}
 	return true
 }
+
+func (this VodLXTask) String() string {
+	return fmt.Sprintf("%s %s [%d] %dMB %d%% %dDays", this.Id, this.Name, this.Status, this.Size/1024/1204, this.Progress/100, this.LeftTime/3600/24)
+}
