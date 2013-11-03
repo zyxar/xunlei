@@ -278,7 +278,27 @@ func tasklist_nofresh(tid, page int) ([]byte, error) {
 		tid = 4
 	}
 	uri := fmt.Sprintf(SHOWTASK_UNFRESH, tid, page, _page_size, page)
-	r, err := get(uri)
+	log.Println("==>", uri)
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("User-Agent", user_agent)
+	req.Header.Add("Accept-Encoding", "gzip, deflate")
+	req.AddCookie(&http.Cookie{Name: "pagenum", Value: _page_size})
+retry:
+	defaultConn.Lock()
+	resp, err := defaultConn.Do(req)
+	defaultConn.Unlock()
+	if err == io.EOF {
+		goto retry
+	}
+	if err != nil {
+		return nil, err
+	}
+	log.Println(resp.Status)
+	r, err := readBody(resp)
+	resp.Body.Close()
 	if err != nil {
 		return nil, err
 	}
