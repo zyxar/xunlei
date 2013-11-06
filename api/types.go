@@ -204,27 +204,29 @@ type _ptask_resp struct {
 	} `json:"Task"`
 }
 
+type VodHistTask struct {
+	GCid     string `json:"gcid"`
+	UrlHash  string `json:"url_hash"`
+	Cid      string `json:"cid"`
+	URL      string `json:"url"`
+	Name     string `json:"file_name"`
+	Type     byte   `json:"tasktype"`
+	Src      string `json:"src_url"`
+	Size     int64  `json:"file_size"`
+	Duration int    `json:"duration"`
+	Played   string `json:"playtime"`
+	Created  string `json:"createtime"`
+}
+
 type hist_resp struct {
-	List []struct {
-		GCid     string `json:"gcid"`
-		UrlHash  string `json:"url_hash"`
-		Cid      string `json:"cid"`
-		URL      string `json:"url"`
-		Name     string `json:"file_name"`
-		Type     byte   `json:"tasktype"`
-		Src      string `json:"src_url"`
-		Size     int64  `json:"file_size"`
-		Duration int    `json:"duration"`
-		Played   string `json:"playtime"`
-		Created  string `json:"createtime"`
-	} `json:"history_play_list"`
-	MaxNum int    `json:"max_num"`
-	Uid    string `json:"userid"`
-	Ret    byte   `json:"ret"`
-	Start  string `json:"start_t"`
-	End    string `json:"end_t"`
-	Num    int    `json:"record_num"`
-	Type   string `json:"type"`
+	List   []VodHistTask `json:"history_play_list"`
+	MaxNum int           `json:"max_num"`
+	Uid    string        `json:"userid"`
+	Ret    byte          `json:"ret"`
+	Start  string        `json:"start_t"`
+	End    string        `json:"end_t"`
+	Num    int           `json:"record_num"`
+	Type   string        `json:"type"`
 }
 
 type subbt_resp struct {

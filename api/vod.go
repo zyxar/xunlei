@@ -4,11 +4,20 @@ package api
 
 import (
 	"encoding/json"
-	// "fmt"
+	"fmt"
 )
 
-func GetHistoryPlayList(num int) *hist_resp {
-	return nil
+func GetHistoryPlayList() ([]VodHistTask, error) {
+	uri := fmt.Sprintf(HISTORY_PLAY_URL, 30, 0, "all", "create", current_timestamp()) //TODO: eliminate hard-code
+	b, err := get(uri)
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data hist_resp `json:"resp"`
+	}
+	err = json.Unmarshal(b, &resp)
+	return resp.Data.List, nil
 }
 
 func SubmitBt(infohash string, num int) *subbt_resp {

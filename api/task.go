@@ -350,5 +350,11 @@ func (this Task) Verify(path string) bool {
 }
 
 func (this VodLXTask) String() string {
-	return fmt.Sprintf("%s %s [%d] %dMB %d%% %dDays", this.Id, this.Name, this.Status, this.Size/1024/1204, this.Progress/100, this.LeftTime/3600/24)
+	name, _ := url.QueryUnescape(this.Name)
+	return fmt.Sprintf("%s %s [%d] %dMB %d%% %dDays", this.Id, name, this.Status, this.Size/1024/1204, this.Progress/100, this.LeftTime/3600/24)
+}
+
+func (this VodHistTask) String() string {
+	name, _ := url.QueryUnescape(this.Name)
+	return fmt.Sprintf("%s %dMB %d", name, this.Size/1024/1204, this.Duration)
 }

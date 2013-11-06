@@ -454,13 +454,23 @@ func main() {
 					err = insufficientArgErr
 				}
 			case "vod":
-				list, err := GetLxtaskList()
-				if err == nil {
-					for _, t := range list {
-						fmt.Printf("%s\n", t)
+				if len(cmds) > 1 {
+					var list interface{}
+					for i, _ := range cmds[1:] {
+						switch cmds[1:][i] {
+						case "hist":
+							list, err = GetHistoryPlayList()
+						case "lx":
+							list, err = GetLxtaskList()
+						default:
+							err = errors.New("Unkown vod command.")
+						}
+						if err == nil {
+							fmt.Println(list)
+						}
 					}
 				} else {
-					fmt.Println(err)
+					err = insufficientArgErr
 				}
 			case "version":
 				printVersion()
