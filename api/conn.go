@@ -71,6 +71,9 @@ retry:
 	}
 	defer resp.Body.Close()
 	log.Println(resp.Status)
+	if resp.StatusCode/100 > 3 {
+		return nil, errors.New(resp.Status)
+	}
 	return readBody(resp)
 }
 
@@ -95,6 +98,9 @@ retry:
 	}
 	defer resp.Body.Close()
 	log.Println(resp.Status)
+	if resp.StatusCode/100 > 3 {
+		return nil, errors.New(resp.Status)
+	}
 	return readBody(resp)
 }
 
@@ -164,7 +170,10 @@ func IsOn() bool {
 	if len(uid) == 0 {
 		return false
 	}
-	r, _ := get(fmt.Sprintf("%suser_task?userid=%s&st=0", DOMAIN_LIXIAN, uid))
+	r, err := get(fmt.Sprintf(TASK_HOME, uid))
+	if err != nil {
+		return false
+	}
 	if ok, _ := regexp.Match(`top.location='http://cloud.vip.xunlei.com/task.html\?error=`, r); ok {
 		// log.Println("previous login timeout")
 		return false
