@@ -165,6 +165,40 @@ func ResumeSession(cookieFile string) (err error) {
 	return
 }
 
+func verifyLogin() bool {
+	r, err := get(VERIFY_LOGIN_URL)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	exp := regexp.MustCompile(`.*\((\{.*\})\)`)
+	s := exp.FindSubmatch(r)
+	if s == nil {
+		log.Printf("Response: %s\n", r)
+		return false
+	}
+	var resp login_resp
+	json.Unmarshal(s[1], &resp)
+	if resp.Result == 0 {
+		log.Printf("Response: %s\n", s[1])
+		return false
+	}
+	fmt.Printf(`
+-------------+-------------
+  user id    |  %s
+  user name  |  %s
+  user newno |  %s
+  user type  |  %s
+  nickname   |  %s
+  user nick	 |  %s
+  vip state	 |  %s
+-------------+-------------
+`, resp.Data.UserId, resp.Data.UserName,
+		resp.Data.UserNewno, resp.Data.UserType,
+		resp.Data.Nickname, resp.Data.UserNick, resp.Data.VipState)
+	return true
+}
+
 func IsOn() bool {
 	uid := getCookie("http://xunlei.com", "userid")
 	if len(uid) == 0 {
