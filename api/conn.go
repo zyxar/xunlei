@@ -175,7 +175,6 @@ func IsOn() bool {
 		return false
 	}
 	if ok, _ := regexp.Match(`top.location='http://cloud.vip.xunlei.com/task.html\?error=`, r); ok {
-		// log.Println("previous login timeout")
 		return false
 	}
 	if len(M.Uid) == 0 {

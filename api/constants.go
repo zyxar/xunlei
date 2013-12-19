@@ -48,6 +48,7 @@ const (
 	APPLY_PAGE          = DOMAIN_LIXIAN + "user_apply?userid=%s&p=%s"
 	LOGIN_URL           = DOMAIN_LIXIAN + "login"
 	INTERFACE_URL       = DOMAIN_LIXIAN + "interface"
+	VERIFY_LOGIN_URL    = INTERFACE_URL + "/verify_login"
 	TASKDELAY_URL       = INTERFACE_URL + "/task_delay?taskids=%s&interfrom=%s&noCacheIE=%d"
 	GETTORRENT_URL      = INTERFACE_URL + "/get_torrent?userid=%s&infoid=%s"
 	TASKPAUSE_URL       = INTERFACE_URL + "/task_pause?tid=%s&uid=%s&noCacheIE=%d"

@@ -1,5 +1,18 @@
 package api
 
+type login_resp struct {
+	Result int `json:"result"`
+	Data   struct {
+		UserId    string `json:"userid"`
+		UserName  string `json:"usrname"`
+		UserNewno string `json:"usernewno"`
+		UserType  string `json:"usrtype"`
+		Nickname  string `json:"nickname"`
+		UserNick  string `json:"usernick"`
+		VipState  string `json:"vipstate"`
+	} `json:"data"`
+}
+
 type _task_resp struct {
 	Rtcode    int         `json:"rtcode"`
 	Info      _info       `json:"info"`
