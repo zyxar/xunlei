@@ -120,6 +120,7 @@ func main() {
 				}
 			case "saveconf":
 				{
+					conf.Pass = EncryptPass(conf.Pass)
 					b, err := conf.save(conf_file)
 					if err == nil {
 						fmt.Printf("%s\n", b)
