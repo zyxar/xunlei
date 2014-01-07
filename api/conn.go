@@ -646,6 +646,8 @@ func addSimpleTask(uri string, oid ...string) error {
 	} else {
 		from = "task"
 	}
+	exp := regexp.MustCompile(`%2C|,`)
+	uri = exp.ReplaceAllLiteralString(uri, `.`)
 	dest := fmt.Sprintf(TASKCHECK_URL, url.QueryEscape(uri), from, current_random(), current_timestamp())
 	r, err := get(dest)
 	if err == nil {
