@@ -118,7 +118,7 @@ func getTaskPre(resp []byte) (*_task_pre, error) {
 }
 
 func evalParse(queryUrl []byte) *_bt_qtask {
-	exp := regexp.MustCompile(`'([0-9A-Za-z]{40,40})','(\d+)','(.*)','(\d)',new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),'([\d\.]+)','(\d)'`)
+	exp := regexp.MustCompile(`'([0-9A-Za-z]{40,40})','(\d*)','(.*)','(\d)',new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),'([\d\.]+)','(\d)'`)
 	s := exp.FindSubmatch(queryUrl)
 	if s == nil {
 		return nil
