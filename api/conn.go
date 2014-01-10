@@ -789,7 +789,7 @@ retry:
 	log.Println(resp.Status)
 	r, err := readBody(resp)
 	resp.Body.Close()
-	exp := regexp.MustCompile(`<script>document\.domain="xunlei\.com";var btResult =(\{.+\});var btRtcode = 0</script>`)
+	exp := regexp.MustCompile(`<script>document\.domain="xunlei\.com";var btResult =(\{.+\});(var btRtcode = 0)*</script>`)
 	s := exp.FindSubmatch(r)
 	if s != nil {
 		var result _btup_result
@@ -813,6 +813,7 @@ retry:
 		exp = regexp.MustCompile(`jsonp.*\(\{"id":"(\d+)","avail_space":"\d+".*\}\)`)
 		s = exp.FindSubmatch(r)
 		if s == nil {
+			fmt.Printf("%s\n", r)
 			return invalidResponseErr
 		}
 		// tasklist_nofresh(4, 1)
