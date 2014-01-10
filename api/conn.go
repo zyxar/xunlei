@@ -595,6 +595,8 @@ func AddTask(req string) error {
 	} else if ok, _ := regexp.MatchString(`^[a-zA-Z0-9]{40,40}$`, req); ok {
 		ttype = _TASK_TYPE_BT
 		req = "bt://" + req
+	} else if hasScheme, _ := regexp.Match(`://`, []byte(req)); !hasScheme {
+		ttype = _TASK_TYPE_BT
 	}
 	switch ttype {
 	case _TASK_TYPE, _TASK_TYPE_ED2K:
