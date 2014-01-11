@@ -142,6 +142,8 @@ func main() {
 						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
 						k++
 					}
+				} else {
+					fmt.Println(err)
 				}
 			case "ld":
 				ts, err := GetDeletedTasks()
@@ -151,6 +153,8 @@ func main() {
 						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
 						k++
 					}
+				} else {
+					fmt.Println(err)
 				}
 			case "le":
 				ts, err := GetExpiredTasks()
@@ -160,6 +164,8 @@ func main() {
 						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
 						k++
 					}
+				} else {
+					fmt.Println(err)
 				}
 			case "lc":
 				ts, err := GetCompletedTasks()
@@ -169,6 +175,8 @@ func main() {
 						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
 						k++
 					}
+				} else {
+					fmt.Println(err)
 				}
 			case "ll":
 				ts, err := GetTasks()
@@ -178,6 +186,8 @@ func main() {
 						fmt.Printf("#%d %v\n", k, ts[i].Repr())
 						k++
 					}
+				} else {
+					fmt.Println(err)
 				}
 			case "info":
 				if len(cmds) < 2 {

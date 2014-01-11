@@ -14,18 +14,18 @@ type login_resp struct {
 }
 
 type _task_resp struct {
-	Rtcode    int         `json:"rtcode"`
-	Info      _info       `json:"info"`
-	GlobalNew interface{} `json:"global_new"`
-	UserInfo  _userinfo   `json:"userinfo"`
-	Time      float64     `json:"time"`
+	Rtcode   int       `json:"rtcode"`
+	Info     _info     `json:"info"`
+	UserInfo _userinfo `json:"userinfo"`
+	// GlobalNew interface{} `json:"global_new"`
+	// Time      interface{} `json:"time"` // v1: float64, v-current: string
 }
 
 type _info struct {
 	Tasks    []Task `json:"tasks"`
 	User     _user  `json:"user"`
-	ShowArc  int
-	TotalNum string
+	ShowArc  int    `json:"show_arc"`
+	TotalNum string `json:"total_num"`
 }
 
 type Task struct {
