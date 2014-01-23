@@ -173,7 +173,7 @@ func (this *Task) remove(flag byte) error {
 	} else if flag == 0 && del_type == _FLAG_deleted {
 		return errors.New("Task already deleted.")
 	}
-	ct := current_timestamp()
+	ct := currentTimestamp()
 	uri := fmt.Sprintf(TASKDELETE_URL, ct, del_type, ct)
 	data := url.Values{}
 	data.Add("taskids", this.Id+",")
@@ -201,7 +201,7 @@ func (this *Task) Rename(name string) error {
 
 func (this *Task) Pause() error {
 	tids := this.Id + ","
-	uri := fmt.Sprintf(TASKPAUSE_URL, tids, M.Uid, current_timestamp())
+	uri := fmt.Sprintf(TASKPAUSE_URL, tids, M.Uid, currentTimestamp())
 	r, err := get(uri)
 	if err != nil {
 		return err
@@ -240,7 +240,7 @@ func (this *Task) Resume() error {
 	form = append(form, v.Encode())
 	form = append(form, "type=1")
 	form = append(form, "interfrom=task")
-	uri := fmt.Sprintf(REDOWNLOAD_URL, current_timestamp())
+	uri := fmt.Sprintf(REDOWNLOAD_URL, currentTimestamp())
 	r, err := post(uri, strings.Join(form, "&"))
 	if err != nil {
 		return err
@@ -265,7 +265,7 @@ func (this Task) GetVodURL() (lurl, hurl string, err error) {
 	v.Add("gcid", this.GCid)
 	v.Add("cid", this.Cid)
 	v.Add("filesize", this.YsFileSize)
-	v.Add("cache", strconv.Itoa(current_timestamp()))
+	v.Add("cache", strconv.FormatInt(currentTimestamp(), 10))
 	v.Add("from", "lxweb")
 	v.Add("jsonp", "XL_CLOUD_FX_INSTANCEqueryBack")
 	uri := REQGETMETHODVOD_URL + v.Encode()

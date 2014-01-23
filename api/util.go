@@ -48,12 +48,12 @@ func readBody(resp *http.Response) ([]byte, error) {
 	return buffer.Bytes(), err
 }
 
-func current_timestamp() int {
-	return int(time.Now().UnixNano() / 1000000)
+func currentTimestamp() int64 {
+	return time.Now().UnixNano() / 1000000
 }
 
-func current_random() string {
-	return fmt.Sprintf("%d%v", current_timestamp(), rand.Float64()*1000000)
+func currentRandom() string {
+	return fmt.Sprintf("%d%v", currentTimestamp(), rand.Float64()*1000000)
 }
 
 func hashPass(pass, vcode string) string {

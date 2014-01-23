@@ -110,7 +110,7 @@ func Login(id, passhash string) (err error) {
 		err = invalidLoginErr
 		return
 	}
-	loginUrl := fmt.Sprintf("http://login.xunlei.com/check?u=%s&cachetime=%d", id, current_timestamp())
+	loginUrl := fmt.Sprintf("http://login.xunlei.com/check?u=%s&cachetime=%d", id, currentTimestamp())
 	u, _ := url.Parse("http://xunlei.com/")
 loop:
 	if _, err = get(loginUrl); err != nil {
@@ -142,7 +142,7 @@ loop:
 		return
 	}
 	var r []byte
-	if r, err = get(fmt.Sprintf("%slogin?cachetime=%d&from=0", DOMAIN_LIXIAN, current_timestamp())); err != nil || len(r) < 512 {
+	if r, err = get(fmt.Sprintf("%slogin?cachetime=%d&from=0", DOMAIN_LIXIAN, currentTimestamp())); err != nil || len(r) < 512 {
 		err = unexpectedErr
 	}
 	return
@@ -451,7 +451,7 @@ func parseHistory(in []byte, ty string) ([]*Task, bool) {
 }
 
 func DelayTask(taskid string) error {
-	uri := fmt.Sprintf(TASKDELAY_URL, taskid+"_1", "task", current_timestamp())
+	uri := fmt.Sprintf(TASKDELAY_URL, taskid+"_1", "task", currentTimestamp())
 	r, err := get(uri)
 	if err != nil {
 		return err
@@ -491,7 +491,7 @@ func redownload(tasks []*Task) error {
 	}
 	form = append(form, "type=1")
 	form = append(form, "interfrom=task")
-	uri := fmt.Sprintf(REDOWNLOAD_URL, current_timestamp())
+	uri := fmt.Sprintf(REDOWNLOAD_URL, currentTimestamp())
 	r, err := post(uri, strings.Join(form, "&"))
 	if err != nil {
 		return err
@@ -537,7 +537,7 @@ retry:
 }
 
 func fillBtList(taskid, infohash string, page int, pgsize string) (*_bt_list, error) {
-	uri := fmt.Sprintf(FILLBTLIST_URL, taskid, infohash, page, M.Uid, "task", current_timestamp())
+	uri := fmt.Sprintf(FILLBTLIST_URL, taskid, infohash, page, M.Uid, "task", currentTimestamp())
 	log.Println("==>", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -634,7 +634,7 @@ func AddBatchTasks(urls []string, oids ...string) error {
 		v.Add("batch_old_database", "0,")
 		v.Add("interfrom", "task")
 	}
-	tm := current_timestamp()
+	tm := currentTimestamp()
 	uri := fmt.Sprintf(BATCHTASKCOMMIT_URL, tm, tm)
 	r, err := post(uri, v.Encode())
 	fmt.Printf("%s\n", r)
@@ -650,7 +650,7 @@ func addSimpleTask(uri string, oid ...string) error {
 	}
 	exp := regexp.MustCompile(`%2C|,`)
 	uri = exp.ReplaceAllLiteralString(uri, `.`)
-	dest := fmt.Sprintf(TASKCHECK_URL, url.QueryEscape(uri), from, current_random(), current_timestamp())
+	dest := fmt.Sprintf(TASKCHECK_URL, url.QueryEscape(uri), from, currentRandom(), currentTimestamp())
 	r, err := get(dest)
 	if err == nil {
 		task_pre, err := getTaskPre(r)
@@ -705,7 +705,7 @@ func addBtTask(uri string) error {
 }
 
 func addMagnetTask(link string, oid ...string) error {
-	uri := fmt.Sprintf(URLQUERY_URL, url.QueryEscape(link), current_random())
+	uri := fmt.Sprintf(URLQUERY_URL, url.QueryEscape(link), currentRandom())
 	r, err := get(uri)
 	if err != nil {
 		return err
@@ -735,7 +735,7 @@ func addMagnetTask(link string, oid ...string) error {
 		} else {
 			v.Add("from", "task")
 		}
-		dest := fmt.Sprintf(BTTASKCOMMIT_URL, current_timestamp())
+		dest := fmt.Sprintf(BTTASKCOMMIT_URL, currentTimestamp())
 		r, err = post(dest, v.Encode())
 		exp = regexp.MustCompile(`jsonp.*\(\{"id":"(\d+)","avail_space":"\d+".*\}\)`)
 		s = exp.FindSubmatch(r)
@@ -764,7 +764,7 @@ func addTorrentTask(filename string) (err error) {
 		return
 	}
 	io.Copy(part, file)
-	writer.WriteField("random", current_random())
+	writer.WriteField("random", currentRandom())
 	writer.WriteField("interfrom", "task")
 
 	dest := TORRENTUPLOAD_URL
@@ -808,7 +808,7 @@ retry:
 		v.Add("findex", strings.Join(findex, "_"))
 		v.Add("size", strings.Join(size, "_"))
 		v.Add("from", "0")
-		dest = fmt.Sprintf(BTTASKCOMMIT_URL, current_timestamp())
+		dest = fmt.Sprintf(BTTASKCOMMIT_URL, currentTimestamp())
 		r, err = post(dest, v.Encode())
 		exp = regexp.MustCompile(`jsonp.*\(\{"id":"(\d+)","avail_space":"\d+".*\}\)`)
 		s = exp.FindSubmatch(r)
@@ -864,7 +864,7 @@ func process_task(tasks map[string]*Task, callback func(*Task)) error {
 	if l == 0 {
 		return errors.New("No tasks in progress.")
 	}
-	ct := current_timestamp()
+	ct := currentTimestamp()
 	uri := fmt.Sprintf(TASKPROCESS_URL, ct, ct)
 	v := url.Values{}
 	list := make([]string, 0, l)
@@ -939,7 +939,7 @@ func GetTorrentFileByHash(hash, file string) error {
 func PauseTasks(ids []string) error {
 	tids := strings.Join(ids, ",")
 	tids += ","
-	uri := fmt.Sprintf(TASKPAUSE_URL, tids, M.Uid, current_timestamp())
+	uri := fmt.Sprintf(TASKPAUSE_URL, tids, M.Uid, currentTimestamp())
 	r, err := get(uri)
 	if err != nil {
 		return err

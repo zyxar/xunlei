@@ -8,7 +8,7 @@ import (
 )
 
 func GetHistoryPlayList() ([]VodHistTask, error) {
-	uri := fmt.Sprintf(HISTORY_PLAY_URL, 30, 0, "all", "create", current_timestamp()) //TODO: eliminate hard-code
+	uri := fmt.Sprintf(HISTORY_PLAY_URL, 30, 0, "all", "create", currentTimestamp()) //TODO: eliminate hard-code
 	b, err := get(uri)
 	if err != nil {
 		return nil, err
@@ -39,11 +39,11 @@ func GetLxtaskList() ([]VodLXTask, error) {
 			Sid   string `json:"sessionid"`
 			From  int    `json:"from"`
 		} `json:"user_info"`
-		Offset int `json:"offset"`
-		Num    int `json:"req_num"`
-		Type   int `json:"req_type"`
-		Attr   int `json:"fileattribute"`
-		Time   int `json:"t"`
+		Offset int   `json:"offset"`
+		Num    int   `json:"req_num"`
+		Type   int   `json:"req_type"`
+		Attr   int   `json:"fileattribute"`
+		Time   int64 `json:"t"`
 	}
 	domain := "http://xunlei.com"
 	payload.UserInfo.Uid = getCookie(domain, "userid")
@@ -55,7 +55,7 @@ func GetLxtaskList() ([]VodLXTask, error) {
 	payload.Num = 30
 	payload.Type = 2
 	payload.Attr = 1
-	payload.Time = current_timestamp()
+	payload.Time = currentTimestamp()
 	b, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
