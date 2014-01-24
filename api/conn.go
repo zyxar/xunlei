@@ -658,12 +658,12 @@ func addSimpleTask(uri string, oid ...string) error {
 			return err
 		}
 		var t_type string
-		if strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "ftp://") || strings.HasPrefix(uri, "https://") {
-			t_type = strconv.Itoa(_TASK_TYPE)
-		} else if strings.HasPrefix(uri, "ed2k://") {
+		if strings.HasPrefix(uri, "ed2k://") {
 			t_type = strconv.Itoa(_TASK_TYPE_ED2K)
 		} else {
-			return errors.New("Invalid protocol scheme.")
+			t_type = strconv.Itoa(_TASK_TYPE)
+			// strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "ftp://") || strings.HasPrefix(uri, "https://")
+			// return errors.New("Invalid protocol scheme.")
 		}
 		v := url.Values{}
 		v.Add("callback", "ret_task")
