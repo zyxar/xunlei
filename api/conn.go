@@ -60,7 +60,7 @@ func init() {
 	timeoutErr = errors.New("Request time out.")
 }
 
-func connect(req *http.Request) (*http.Response, error) {
+func routine(req *http.Request) (*http.Response, error) {
 	timeout := false
 retry:
 	defaultConn.Lock()
@@ -73,7 +73,7 @@ retry:
 		timer.Stop()
 	}
 	defaultConn.Unlock()
-	if err == io.EOF {
+	if err == io.EOF && !timeout {
 		goto retry
 	}
 	if timeout {
@@ -90,7 +90,7 @@ func get(dest string) ([]byte, error) {
 	}
 	req.Header.Add("User-Agent", user_agent)
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
-	resp, err := connect(req)
+	resp, err := routine(req)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func post(dest string, data string) ([]byte, error) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("User-Agent", user_agent)
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
-	resp, err := connect(req)
+	resp, err := routine(req)
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +395,7 @@ func tasklist_nofresh(tid, page int) ([]byte, error) {
 	req.Header.Add("User-Agent", user_agent)
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
 	req.AddCookie(&http.Cookie{Name: "pagenum", Value: _page_size})
-	resp, err := connect(req)
+	resp, err := routine(req)
 	if err != nil {
 		return nil, err
 	}
@@ -424,7 +424,7 @@ func readExpired() ([]byte, error) {
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
 	req.AddCookie(&http.Cookie{Name: "lx_nf_all", Value: url.QueryEscape(_expired_ck)})
 	req.AddCookie(&http.Cookie{Name: "pagenum", Value: _page_size})
-	resp, err := connect(req)
+	resp, err := routine(req)
 	if err != nil {
 		return nil, err
 	}
@@ -477,7 +477,7 @@ func readHistory(page int) ([]byte, error) {
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
 	req.AddCookie(&http.Cookie{Name: "lx_nf_all", Value: url.QueryEscape(_deleted_ck)})
 	req.AddCookie(&http.Cookie{Name: "pagenum", Value: _page_size})
-	resp, err := connect(req)
+	resp, err := routine(req)
 	if err != nil {
 		return nil, err
 	}
@@ -595,7 +595,7 @@ func fillBtList(taskid, infohash string, page int, pgsize string) (*_bt_list, er
 	req.Header.Add("User-Agent", user_agent)
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
 	req.AddCookie(&http.Cookie{Name: "pagenum", Value: pgsize})
-	resp, err := connect(req)
+	resp, err := routine(req)
 	if err != nil {
 		return nil, err
 	}
@@ -819,7 +819,7 @@ func addTorrentTask(filename string) (err error) {
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Add("User-Agent", user_agent)
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
-	resp, err := connect(req)
+	resp, err := routine(req)
 	if err != nil {
 		return
 	}
