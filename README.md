@@ -74,10 +74,10 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 
 ## TODO
 
-- really daemonize `lxc(-d)`;
-- Node.js frontend/client;
-- start `aria2` standalone, and submit tasks to it via RPC;
-- VOD API and play demo;
+- [x] really daemonize `lxc(-d)`;
+- [ ] Node.js frontend/client;
+- [ ] start `aria2` standalone, and submit tasks to it via RPC;
+- [ ] VOD API and play demo;
 
 ## LICENSE
 

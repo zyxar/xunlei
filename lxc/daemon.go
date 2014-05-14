@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"os"
 	"reflect"
 
 	"github.com/hoisie/web"
@@ -75,11 +76,24 @@ func daemonLoop() {
 		if err != nil {
 			return err.Error()
 		}
-		r, err := json.Marshal(v)
+		r, err := json.MarshalIndent(v, "", "  ")
 		if err != nil {
 			return err.Error()
 		}
 		return string(r)
 	})
+	web.Get("/self", func(ctx *web.Context) string {
+		if M.Account == nil {
+			return "{}"
+		}
+		v, err := json.MarshalIndent(M.Account, "", " ")
+		if err != nil {
+			return err.Error()
+		}
+		return string(v)
+	})
+	os.Stdout.Close()
+	os.Stderr.Close()
+	os.Stdin.Close()
 	web.Run("127.0.0.1:8808")
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -65,12 +66,25 @@ func main() {
 	flag.StringVar(&conf.Id, "login", conf.Id, "login account")
 	flag.StringVar(&conf.Pass, "pass", conf.Pass, "password/passhash")
 	flag.BoolVar(&printVer, "version", false, "print version")
-	flag.BoolVar(&daemon, "d", false, "run as daemon/server")
+	flag.BoolVar(&isDaemon, "d", false, "run as daemon/server")
+	loop := flag.Bool("loop", false, "start daemon loop in background")
 	flag.Parse()
 	if printVer {
 		printVersion()
 		return
 	}
+
+	if isDaemon {
+		cmd := exec.Command(os.Args[0], "-loop")
+		err := cmd.Start()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		cmd.Process.Release()
+		// FIXME: find a proper way to detect daemon error and call cmd.Process.Kill().
+		return
+	}
+
 	if err := ResumeSession(cookie_file); err != nil {
 		log.Println(err)
 		if err = Login(conf.Id, conf.Pass); err != nil {
@@ -82,10 +96,12 @@ func main() {
 		}
 	}
 	GetGdriveId()
-	if daemon {
+
+	if *loop {
 		daemonLoop()
 		return
 	}
+
 	term := newTerm()
 	defer term.Restore()
 	{
