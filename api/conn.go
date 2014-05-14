@@ -37,7 +37,7 @@ var defaultConn struct {
 
 func init() {
 	jar, _ := cookiejar.New(nil)
-	defaultConn.Client = &http.Client{nil, nil, jar}
+	defaultConn.Client = &http.Client{Jar: jar}
 	defaultConn.Mutex = sync.Mutex{}
 
 	noSuchTaskErr = errors.New("No such TaskId in list.")
