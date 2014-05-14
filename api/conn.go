@@ -229,46 +229,82 @@ func getCookie(uri, name string) string {
 }
 
 func GetTasks() ([]*Task, error) {
-	b, err := tasklist_nofresh(_STATUS_mixed, 1)
+	accumulated := 0
+	page := 1
+	var ts []*Task
+round:
+	b, err := tasklist_nofresh(_STATUS_mixed, page)
 	if err != nil {
-		return nil, err
+		return ts, err
 	}
 	var resp _task_resp
 	err = json.Unmarshal(b, &resp)
 	if err != nil {
-		return nil, err
+		return ts, err
 	}
-	ts := make([]*Task, 0, len(resp.Info.Tasks))
+	total, _ := strconv.Atoi(resp.Info.User.TotalNum)
+	if ts == nil {
+		if total <= 0 {
+			ts = make([]*Task, 0, len(resp.Info.Tasks))
+		} else {
+			ts = make([]*Task, 0, total)
+		}
+	}
 	for i, _ := range resp.Info.Tasks {
 		resp.Info.Tasks[i].TaskName = unescapeName(resp.Info.Tasks[i].TaskName)
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
 	M.invalidateGroup(_FLAG_normal)
 	M.pushTasks(ts)
+	accumulated += len(ts)
+	if accumulated < total {
+		page++
+		goto round
+	}
 	return ts, err
 }
 
 func GetCompletedTasks() ([]*Task, error) {
-	b, err := tasklist_nofresh(_STATUS_completed, 1)
+	accumulated := 0
+	page := 1
+	var ts []*Task
+round:
+	b, err := tasklist_nofresh(_STATUS_completed, page)
 	if err != nil {
-		return nil, err
+		return ts, err
 	}
 	var resp _task_resp
 	err = json.Unmarshal(b, &resp)
 	if err != nil {
-		return nil, err
+		return ts, err
 	}
-	ts := make([]*Task, 0, len(resp.Info.Tasks))
+	total, _ := strconv.Atoi(resp.Info.User.TotalNum)
+	if ts == nil {
+		if total <= 0 {
+			ts = make([]*Task, 0, len(resp.Info.Tasks))
+		} else {
+			ts = make([]*Task, 0, total)
+		}
+	}
 	for i, _ := range resp.Info.Tasks {
 		resp.Info.Tasks[i].TaskName = unescapeName(resp.Info.Tasks[i].TaskName)
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
 	M.pushTasks(ts)
+	accumulated += len(ts)
+	if accumulated < total {
+		page++
+		goto round
+	}
 	return ts, err
 }
 
 func GetIncompletedTasks() ([]*Task, error) {
-	b, err := tasklist_nofresh(_STATUS_downloading, 1)
+	accumulated := 0
+	page := 1
+	var ts []*Task
+round:
+	b, err := tasklist_nofresh(_STATUS_downloading, page)
 	if err != nil {
 		return nil, err
 	}
@@ -277,12 +313,24 @@ func GetIncompletedTasks() ([]*Task, error) {
 	if err != nil {
 		return nil, err
 	}
-	ts := make([]*Task, 0, len(resp.Info.Tasks))
+	total, _ := strconv.Atoi(resp.Info.User.TotalNum)
+	if ts == nil {
+		if total <= 0 {
+			ts = make([]*Task, 0, len(resp.Info.Tasks))
+		} else {
+			ts = make([]*Task, 0, total)
+		}
+	}
 	for i, _ := range resp.Info.Tasks {
 		resp.Info.Tasks[i].TaskName = unescapeName(resp.Info.Tasks[i].TaskName)
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
 	M.pushTasks(ts)
+	accumulated += len(ts)
+	if accumulated < total {
+		page++
+		goto round
+	}
 	return ts, err
 }
 
