@@ -27,7 +27,7 @@ type config struct {
 var conf config
 
 func (id *config) save(cf string) (b []byte, err error) {
-	b, err = json.Marshal(id)
+	b, err = json.MarshalIndent(id, "", "  ")
 	if err != nil {
 		return
 	}

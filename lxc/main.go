@@ -134,6 +134,14 @@ func main() {
 						fmt.Printf("%+v\n", conf)
 					}
 				}
+			case "savesession":
+				{
+					if err := SaveSession(cookie_file); err != nil {
+						fmt.Println(err)
+					} else {
+						fmt.Println("[done]")
+					}
+				}
 			case "cls", "clear":
 				clearscr()
 			case "ls":

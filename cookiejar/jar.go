@@ -301,7 +301,7 @@ func (j *Jar) setCookies(u *url.URL, cookies []*http.Cookie, now time.Time) {
 }
 
 func (j *Jar) Save(path string) error {
-	r, err := json.Marshal(j.entries)
+	r, err := json.MarshalIndent(j.entries, "", "  ")
 	if err != nil {
 		return err
 	}
