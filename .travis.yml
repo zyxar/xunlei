@@ -1,7 +1,7 @@
 language: go
 go:
   - 1.1
-  - tip
+  - 1.2
 
 script: go build -v ./...
 # go test would always fail since lacking of account info.
