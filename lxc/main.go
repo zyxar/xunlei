@@ -108,6 +108,8 @@ func main() {
 			switch cmds[0] {
 			case "ison":
 				log.Println(IsOn())
+			case "me":
+				fmt.Printf("%#v\n", *M.Account)
 			case "relogin":
 				if !IsOn() {
 					if err = Login(conf.Id, conf.Pass); err != nil {
