@@ -4,7 +4,7 @@
 
 [![Build Status](https://travis-ci.org/matzoe/xunlei.png?branch=master)](https://travis-ci.org/matzoe/xunlei)
 
-原 repo 見[此](https://github.com/zyxar/xltask)
+rewritten based on [xltask](https://github.com/zyxar/xltask)
 
 Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunlei-lixian](https://github.com/iambus/xunlei-lixian)
 
@@ -41,6 +41,7 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 | `le`              | Service | **✓** |
 | `lc`              | Service | **✓** |
 | `ll`              | Service | **✓** |
+| `me`              | Service | **✓** |
 | `add`             | Service | **✓** |
 | `rm`, `delete`    | Service | **✓** |
 | `purge`           | Service | **✓** |
@@ -70,3 +71,14 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 
 - 接受 `RESTful` 調用
 - 接受 `JSON-RPC` 調用
+
+## TODO
+
+- really daemonize `lxc(-d)`;
+- Node.js frontend/client;
+- start `aria2` standalone, and submit tasks to it via RPC;
+- VOD API and play demo;
+
+## LICENSE
+
+MPL v2
