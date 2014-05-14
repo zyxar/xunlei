@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -30,16 +31,23 @@ var loginFailedErr error
 var ReuseSessionErr error
 var btTaskAlreadyErr error
 var taskNoRedownCapErr error
+var timeoutErr error
 var defaultConn struct {
 	*http.Client
 	sync.Mutex
+	timeout time.Duration
 }
 
 func init() {
 	jar, _ := cookiejar.New(nil)
-	defaultConn.Client = &http.Client{Jar: jar}
+	defaultConn.timeout = 3000 * time.Millisecond
+	defaultConn.Client = &http.Client{
+		Jar: jar,
+		Transport: &http.Transport{
+			Dial: (&net.Dialer{Timeout: defaultConn.timeout}).Dial,
+		},
+	}
 	defaultConn.Mutex = sync.Mutex{}
-
 	noSuchTaskErr = errors.New("No such TaskId in list.")
 	invalidResponseErr = errors.New("Invalid response.")
 	unexpectedErr = errors.New("Unexpected error.")
@@ -49,6 +57,29 @@ func init() {
 	ReuseSessionErr = errors.New("Previous session exipred.")
 	btTaskAlreadyErr = errors.New("Bt task already exists.")
 	taskNoRedownCapErr = errors.New("Task not capable for restart.")
+	timeoutErr = errors.New("Request time out.")
+}
+
+func connect(req *http.Request) (*http.Response, error) {
+	timeout := false
+retry:
+	defaultConn.Lock()
+	timer := time.AfterFunc(defaultConn.timeout, func() {
+		defaultConn.Client.Transport.(*http.Transport).CancelRequest(req)
+		timeout = true
+	})
+	resp, err := defaultConn.Do(req)
+	if timer != nil {
+		timer.Stop()
+	}
+	defaultConn.Unlock()
+	if err == io.EOF {
+		goto retry
+	}
+	if timeout {
+		err = timeoutErr
+	}
+	return resp, err
 }
 
 func get(dest string) ([]byte, error) {
@@ -59,13 +90,7 @@ func get(dest string) ([]byte, error) {
 	}
 	req.Header.Add("User-Agent", user_agent)
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
-retry:
-	defaultConn.Lock()
-	resp, err := defaultConn.Do(req)
-	defaultConn.Unlock()
-	if err == io.EOF {
-		goto retry
-	}
+	resp, err := connect(req)
 	if err != nil {
 		return nil, err
 	}
@@ -86,13 +111,7 @@ func post(dest string, data string) ([]byte, error) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("User-Agent", user_agent)
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
-retry:
-	defaultConn.Lock()
-	resp, err := defaultConn.Do(req)
-	defaultConn.Unlock()
-	if err == io.EOF {
-		goto retry
-	}
+	resp, err := connect(req)
 	if err != nil {
 		return nil, err
 	}
@@ -376,13 +395,7 @@ func tasklist_nofresh(tid, page int) ([]byte, error) {
 	req.Header.Add("User-Agent", user_agent)
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
 	req.AddCookie(&http.Cookie{Name: "pagenum", Value: _page_size})
-retry:
-	defaultConn.Lock()
-	resp, err := defaultConn.Do(req)
-	defaultConn.Unlock()
-	if err == io.EOF {
-		goto retry
-	}
+	resp, err := connect(req)
 	if err != nil {
 		return nil, err
 	}
@@ -411,13 +424,7 @@ func readExpired() ([]byte, error) {
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
 	req.AddCookie(&http.Cookie{Name: "lx_nf_all", Value: url.QueryEscape(_expired_ck)})
 	req.AddCookie(&http.Cookie{Name: "pagenum", Value: _page_size})
-retry:
-	defaultConn.Lock()
-	resp, err := defaultConn.Do(req)
-	defaultConn.Unlock()
-	if err == io.EOF {
-		goto retry
-	}
+	resp, err := connect(req)
 	if err != nil {
 		return nil, err
 	}
@@ -470,13 +477,7 @@ func readHistory(page int) ([]byte, error) {
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
 	req.AddCookie(&http.Cookie{Name: "lx_nf_all", Value: url.QueryEscape(_deleted_ck)})
 	req.AddCookie(&http.Cookie{Name: "pagenum", Value: _page_size})
-retry:
-	defaultConn.Lock()
-	resp, err := defaultConn.Do(req)
-	defaultConn.Unlock()
-	if err == io.EOF {
-		goto retry
-	}
+	resp, err := connect(req)
 	if err != nil {
 		return nil, err
 	}
@@ -594,13 +595,7 @@ func fillBtList(taskid, infohash string, page int, pgsize string) (*_bt_list, er
 	req.Header.Add("User-Agent", user_agent)
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
 	req.AddCookie(&http.Cookie{Name: "pagenum", Value: pgsize})
-retry:
-	defaultConn.Lock()
-	resp, err := defaultConn.Do(req)
-	defaultConn.Unlock()
-	if err == io.EOF {
-		goto retry
-	}
+	resp, err := connect(req)
 	if err != nil {
 		return nil, err
 	}
@@ -824,13 +819,7 @@ func addTorrentTask(filename string) (err error) {
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Add("User-Agent", user_agent)
 	req.Header.Add("Accept-Encoding", "gzip, deflate")
-retry:
-	defaultConn.Lock()
-	resp, err := defaultConn.Do(req)
-	defaultConn.Unlock()
-	if err == io.EOF {
-		goto retry
-	}
+	resp, err := connect(req)
 	if err != nil {
 		return
 	}
