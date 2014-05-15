@@ -375,6 +375,18 @@ func GetGdriveId() (gid string, err error) {
 	return
 }
 
+func JsonTaskList(category, page int) ([]byte, error) { // we do not parse content here
+	return tasklist_nofresh(category, page)
+}
+
+func JsonTaskListExpired() ([]byte, error) {
+	return nil, nil
+}
+
+func JsonTaskListDeleted() ([]byte, error) {
+	return nil, nil
+}
+
 func tasklist_nofresh(tid, page int) ([]byte, error) {
 	/*
 		tid:
@@ -584,6 +596,32 @@ retry:
 		}
 	}
 	return &list, nil
+}
+
+func JsonFillBtList(taskid, infohash string) ([]byte, error) {
+	var pgsize = _bt_page_size
+retry:
+	uri := fmt.Sprintf(FILLBTLIST_URL, taskid, infohash, 1, M.Uid, "task", currentTimestamp())
+	log.Println("==>", uri)
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("User-Agent", user_agent)
+	req.Header.Add("Accept-Encoding", "gzip, deflate")
+	req.AddCookie(&http.Cookie{Name: "pagenum", Value: pgsize})
+	resp, err := routine(req)
+	if err != nil {
+		return nil, err
+	}
+	log.Println(resp.Status)
+	defer resp.Body.Close()
+	r, err := readBody(resp)
+	if err == io.ErrUnexpectedEOF && pgsize == _bt_page_size {
+		pgsize = "100"
+		goto retry
+	}
+	return r, nil
 }
 
 func fillBtList(taskid, infohash string, page int, pgsize string) (*_bt_list, error) {

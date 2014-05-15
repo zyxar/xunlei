@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"reflect"
+	"strconv"
 
 	"github.com/hoisie/web"
 	. "github.com/matzoe/xunlei/api"
@@ -90,6 +91,30 @@ func daemonLoop() {
 			return err.Error()
 		}
 		return string(v)
+	})
+	web.Get("/tasklist/(.*)", func(ctx *web.Context, val string) string {
+		page, err := strconv.Atoi(val)
+		if err != nil {
+			return "{}"
+		}
+		b, err := JsonTaskList(4, page)
+		if err != nil {
+			return "{}"
+		}
+		return string(b)
+	})
+	web.Get("/task/(.*)", func(ctx *web.Context, val string) string {
+		if t, ok := M.Tasks[val]; ok {
+			if t.IsBt() {
+				m, err := JsonFillBtList(t.Id, t.Cid)
+				if err != nil {
+					return t.Repr()
+				}
+				return string(m)
+			}
+			return t.Repr()
+		}
+		return "TASK NOT FOUND!"
 	})
 	web.Run("127.0.0.1:8808")
 }
