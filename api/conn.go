@@ -44,7 +44,8 @@ func init() {
 	defaultConn.Client = &http.Client{
 		Jar: jar,
 		Transport: &http.Transport{
-			Dial: (&net.Dialer{Timeout: defaultConn.timeout}).Dial,
+			Dial:  (&net.Dialer{Timeout: defaultConn.timeout}).Dial,
+			Proxy: http.ProxyFromEnvironment,
 		},
 	}
 	defaultConn.Mutex = sync.Mutex{}
