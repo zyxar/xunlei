@@ -68,6 +68,7 @@ func main() {
 	flag.BoolVar(&printVer, "version", false, "print version")
 	flag.BoolVar(&isDaemon, "d", false, "run as daemon/server")
 	loop := flag.Bool("loop", false, "start daemon loop in background")
+	close_fds := flag.Bool("close-fds", false, "close stdout,stderr,stdin")
 	flag.Parse()
 	if printVer {
 		printVersion()
@@ -75,7 +76,7 @@ func main() {
 	}
 
 	if isDaemon {
-		cmd := exec.Command(os.Args[0], "-loop")
+		cmd := exec.Command(os.Args[0], "-loop", "-close-fds")
 		err := cmd.Start()
 		if err != nil {
 			log.Fatalln(err)
@@ -83,6 +84,12 @@ func main() {
 		cmd.Process.Release()
 		// FIXME: find a proper way to detect daemon error and call cmd.Process.Kill().
 		return
+	}
+
+	if *close_fds {
+		os.Stdout.Close()
+		os.Stderr.Close()
+		os.Stdin.Close()
 	}
 
 	if err := ResumeSession(cookie_file); err != nil {

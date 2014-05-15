@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"os"
 	"reflect"
 
 	"github.com/hoisie/web"
@@ -92,8 +91,5 @@ func daemonLoop() {
 		}
 		return string(v)
 	})
-	os.Stdout.Close()
-	os.Stderr.Close()
-	os.Stdin.Close()
 	web.Run("127.0.0.1:8808")
 }
