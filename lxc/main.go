@@ -74,6 +74,17 @@ func main() {
 		printVersion()
 		return
 	}
+	var login = func() error {
+		if err := ResumeSession(cookie_file); err != nil {
+			if err = Login(conf.Id, conf.Pass); err != nil {
+				return err
+			}
+			if err = SaveSession(cookie_file); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 
 	if isDaemon {
 		cmd := exec.Command(os.Args[0], "-loop", "-close-fds")
@@ -92,23 +103,21 @@ func main() {
 		os.Stdin.Close()
 	}
 
-	if err := ResumeSession(cookie_file); err != nil {
-		log.Println(err)
-		if err = Login(conf.Id, conf.Pass); err != nil {
-			log.Println(err)
-			os.Exit(1)
-		}
-		if err = SaveSession(cookie_file); err != nil {
-			log.Println(err)
-		}
-	}
-	GetGdriveId()
-
 	if *loop {
+		go func() {
+			if err := login(); err != nil {
+				os.Exit(1)
+			}
+			GetGdriveId()
+		}()
 		daemonLoop()
 		return
 	}
 
+	if err := login(); err != nil {
+		os.Exit(1)
+	}
+	GetGdriveId()
 	term := newTerm()
 	defer term.Restore()
 	{

@@ -75,7 +75,7 @@ func daemonLoop() {
 		if err != nil {
 			return err.Error()
 		}
-		r, err := json.MarshalIndent(v, "", "  ")
+		r, err := json.Marshal(v)
 		if err != nil {
 			return err.Error()
 		}
@@ -85,7 +85,7 @@ func daemonLoop() {
 		if M.Account == nil {
 			return "{}"
 		}
-		v, err := json.MarshalIndent(M.Account, "", " ")
+		v, err := json.Marshal(M.Account)
 		if err != nil {
 			return err.Error()
 		}
