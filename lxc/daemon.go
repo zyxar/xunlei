@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"net/http"
 	"reflect"
 	"strconv"
 
@@ -56,7 +57,10 @@ func daemonLoop() {
 	ProcessTaskDaemon(ch, func(t *Task) {
 		log.Printf("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
 	})
-	web.Get("/gettasks/(.*)", func(ctx *web.Context, val string) string {
+	go GetTasks()
+	web.Get("/gettasks/(.*)", func(ctx *web.Context, val string) {
+		flusher, _ := ctx.ResponseWriter.(http.Flusher)
+		flusher.Flush()
 		var v []*Task
 		var err error
 		switch val {
@@ -71,50 +75,72 @@ func daemonLoop() {
 		case "4":
 			v, err = GetExpiredTasks()
 		default:
-			return "Invalid Task Group"
+			ctx.NotFound("Invalid Task Group")
+			return
 		}
 		if err != nil {
-			return err.Error()
+			ctx.Abort(503, err.Error())
+			return
 		}
 		r, err := json.Marshal(v)
 		if err != nil {
-			return err.Error()
+			ctx.Abort(503, err.Error())
+			return
 		}
-		return string(r)
+		ctx.Write(r)
+		flusher.Flush()
 	})
-	web.Get("/self", func(ctx *web.Context) string {
+	web.Get("/self", func(ctx *web.Context) {
+		flusher, _ := ctx.ResponseWriter.(http.Flusher)
+		flusher.Flush()
 		if M.Account == nil {
-			return "{}"
+			ctx.NotFound("Account information not retrieved")
+			return
 		}
-		v, err := json.Marshal(M.Account)
+		r, err := json.Marshal(M.Account)
 		if err != nil {
-			return err.Error()
+			ctx.Abort(503, err.Error())
+			return
 		}
-		return string(v)
+		ctx.Write(r)
+		flusher.Flush()
 	})
-	web.Get("/tasklist/(.*)", func(ctx *web.Context, val string) string {
+	web.Get("/raw/tasklist/(.*)", func(ctx *web.Context, val string) {
+		flusher, _ := ctx.ResponseWriter.(http.Flusher)
+		flusher.Flush()
 		page, err := strconv.Atoi(val)
 		if err != nil {
-			return "{}"
+			ctx.Abort(503, "Invalid page number")
+			return
 		}
-		b, err := JsonTaskList(4, page)
+		b, err := RawTaskList(4, page)
 		if err != nil {
-			return "{}"
+			ctx.Abort(503, err.Error())
+			return
 		}
-		return string(b)
+		ctx.Write(b)
+		flusher.Flush()
 	})
-	web.Get("/task/(.*)", func(ctx *web.Context, val string) string {
+	web.Get("/raw/task/(.*)", func(ctx *web.Context, val string) {
+		flusher, _ := ctx.ResponseWriter.(http.Flusher)
+		flusher.Flush()
 		if t, ok := M.Tasks[val]; ok {
 			if t.IsBt() {
-				m, err := JsonFillBtList(t.Id, t.Cid)
+				m, err := RawFillBtList(t.Id, t.Cid, 1)
 				if err != nil {
-					return t.Repr()
+					ctx.Abort(503, err.Error())
+					flusher.Flush()
+					return
 				}
-				return string(m)
+				ctx.Write(m)
+				flusher.Flush()
+				return
 			}
-			return t.Repr()
+			ctx.WriteString(t.Repr())
+			flusher.Flush()
+			return
 		}
-		return "TASK NOT FOUND!"
+		ctx.NotFound("Task not found")
 	})
 	web.Run("127.0.0.1:8808")
 }

@@ -375,15 +375,17 @@ func GetGdriveId() (gid string, err error) {
 	return
 }
 
-func JsonTaskList(category, page int) ([]byte, error) { // we do not parse content here
+// bellow three funcs are for RESTful calling;
+// we do not parse content here.
+func RawTaskList(category, page int) ([]byte, error) {
 	return tasklist_nofresh(category, page)
 }
 
-func JsonTaskListExpired() ([]byte, error) {
+func RawTaskListExpired() ([]byte, error) {
 	return nil, nil
 }
 
-func JsonTaskListDeleted() ([]byte, error) {
+func RawTaskListDeleted() ([]byte, error) {
 	return nil, nil
 }
 
@@ -598,10 +600,10 @@ retry:
 	return &list, nil
 }
 
-func JsonFillBtList(taskid, infohash string) ([]byte, error) {
+func RawFillBtList(taskid, infohash string, page int) ([]byte, error) {
 	var pgsize = _bt_page_size
 retry:
-	uri := fmt.Sprintf(FILLBTLIST_URL, taskid, infohash, 1, M.Uid, "task", currentTimestamp())
+	uri := fmt.Sprintf(FILLBTLIST_URL, taskid, infohash, page, M.Uid, "task", currentTimestamp())
 	log.Println("==>", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
