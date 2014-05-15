@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"reflect"
 	"strconv"
 
@@ -58,6 +60,28 @@ func daemonLoop() {
 		log.Printf("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
 	})
 	go GetTasks()
+	web.Get("/", func(ctx *web.Context) {
+		ctx.Redirect(301, "/index.html")
+	})
+	web.Get("/index.html", func(ctx *web.Context) {
+		fd, err := os.Open("index.html")
+		if err != nil {
+			ctx.NotFound("index.html not found")
+			return
+		}
+		io.Copy(ctx, fd)
+		fd.Close()
+	})
+	web.Get("/script.js", func(ctx *web.Context) {
+		fd, err := os.Open("script.js")
+		if err != nil {
+			ctx.NotFound("script.js not found")
+			return
+		}
+		ctx.SetHeader("Content-Type", "application/javascript", true)
+		io.Copy(ctx, fd)
+		fd.Close()
+	})
 	web.Get("/gettasks/(.*)", func(ctx *web.Context, val string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		flusher.Flush()
@@ -87,6 +111,7 @@ func daemonLoop() {
 			ctx.Abort(503, err.Error())
 			return
 		}
+		ctx.SetHeader("Content-Type", "application/json", true)
 		ctx.Write(r)
 		flusher.Flush()
 	})
@@ -102,6 +127,7 @@ func daemonLoop() {
 			ctx.Abort(503, err.Error())
 			return
 		}
+		ctx.SetHeader("Content-Type", "application/json", true)
 		ctx.Write(r)
 		flusher.Flush()
 	})
@@ -118,6 +144,7 @@ func daemonLoop() {
 			ctx.Abort(503, err.Error())
 			return
 		}
+		ctx.SetHeader("Content-Type", "application/json", true)
 		ctx.Write(b)
 		flusher.Flush()
 	})
@@ -132,10 +159,12 @@ func daemonLoop() {
 					flusher.Flush()
 					return
 				}
+				ctx.SetHeader("Content-Type", "application/json", true)
 				ctx.Write(m)
 				flusher.Flush()
 				return
 			}
+			ctx.SetHeader("Content-Type", "text/plain", true)
 			ctx.WriteString(t.Repr())
 			flusher.Flush()
 			return
