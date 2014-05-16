@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
 	"log"
 	"net/http"
-	"os"
 	"reflect"
 	"strconv"
 
@@ -61,28 +59,7 @@ func daemonLoop() {
 		log.Printf("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
 	})
 	go GetTasks()
-	web.Get("/", func(ctx *web.Context) {
-		ctx.Redirect(301, "/index.html")
-	})
-	web.Get("/index.html", func(ctx *web.Context) {
-		fd, err := os.Open("index.html")
-		if err != nil {
-			ctx.NotFound("index.html not found")
-			return
-		}
-		io.Copy(ctx, fd)
-		fd.Close()
-	})
-	web.Get("/script.js", func(ctx *web.Context) {
-		fd, err := os.Open("script.js")
-		if err != nil {
-			ctx.NotFound("script.js not found")
-			return
-		}
-		ctx.SetHeader("Content-Type", "application/javascript", true)
-		io.Copy(ctx, fd)
-		fd.Close()
-	})
+
 	web.Get("/gettasks/(.*)", func(ctx *web.Context, val string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
