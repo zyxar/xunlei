@@ -69,8 +69,13 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 
 後臺工具
 
-- 接受 `RESTful` 調用
-- 接受 `JSON-RPC` 調用
+```bash
+lxc -d #start web server and daemonize
+lxc -loop #start web server
+```
+
+- [x] 接受 `RESTful` 調用
+- [ ] 接受 `JSON-RPC` 調用
 
 ## TODO
 
