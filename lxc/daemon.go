@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
@@ -84,7 +85,7 @@ func daemonLoop() {
 	})
 	web.Get("/gettasks/(.*)", func(ctx *web.Context, val string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
-		flusher.Flush()
+		defer flusher.Flush()
 		var v []*Task
 		var err error
 		switch val {
@@ -113,11 +114,10 @@ func daemonLoop() {
 		}
 		ctx.SetHeader("Content-Type", "application/json", true)
 		ctx.Write(r)
-		flusher.Flush()
 	})
 	web.Get("/self", func(ctx *web.Context) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
-		flusher.Flush()
+		defer flusher.Flush()
 		if M.Account == nil {
 			ctx.NotFound("Account information not retrieved")
 			return
@@ -129,11 +129,10 @@ func daemonLoop() {
 		}
 		ctx.SetHeader("Content-Type", "application/json", true)
 		ctx.Write(r)
-		flusher.Flush()
 	})
 	web.Get("/raw/tasklist/(.*)", func(ctx *web.Context, val string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
-		flusher.Flush()
+		defer flusher.Flush()
 		page, err := strconv.Atoi(val)
 		if err != nil {
 			ctx.Abort(503, "Invalid page number")
@@ -146,30 +145,21 @@ func daemonLoop() {
 		}
 		ctx.SetHeader("Content-Type", "application/json", true)
 		ctx.Write(b)
-		flusher.Flush()
 	})
-	web.Get("/raw/task/(.*)", func(ctx *web.Context, val string) {
+	web.Get("/raw/btlist/(.*)/(.*)", func(ctx *web.Context, taskId string, taskHash string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
-		flusher.Flush()
-		if t, ok := M.Tasks[val]; ok {
-			if t.IsBt() {
-				m, err := RawFillBtList(t.Id, t.Cid, 1)
-				if err != nil {
-					ctx.Abort(503, err.Error())
-					flusher.Flush()
-					return
-				}
-				ctx.SetHeader("Content-Type", "application/json", true)
-				ctx.Write(m)
-				flusher.Flush()
-				return
-			}
-			ctx.SetHeader("Content-Type", "text/plain", true)
-			ctx.WriteString(t.Repr())
-			flusher.Flush()
+		defer flusher.Flush()
+		m, err := RawFillBtList(taskId, taskHash, 1)
+		if err != nil {
+			ctx.Abort(503, err.Error())
 			return
 		}
-		ctx.NotFound("Task not found")
+		if bytes.HasPrefix(m, []byte("fill_bt_list")) {
+			ctx.SetHeader("Content-Type", "application/javascript", true)
+		} else {
+			ctx.SetHeader("Content-Type", "text/plain", true)
+		}
+		ctx.Write(m)
 	})
 	web.Run("127.0.0.1:8808")
 }
