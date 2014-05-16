@@ -36,6 +36,12 @@ var register = map[string]interface{}{
 	"ResumeTasks":          ResumeTasks,
 }
 
+type payload struct {
+	Signature string
+	Action    string
+	Data      interface{}
+}
+
 func Call(name string, params []string) (result []reflect.Value, err error) {
 	fn := reflect.ValueOf(register[name])
 	if len(params) != fn.Type().NumIn() {
@@ -60,22 +66,23 @@ func daemonLoop() {
 	})
 	go GetTasks()
 
-	// GET - ls, info, dl, dt, ti
-	web.Get("/gettasks/(.*)", func(ctx *web.Context, val string) {
+	// GET - ls, info
+	// ctx.SetHeader("Access-Control-Allow-Origin", "*", true)
+	web.Get("/tasks/([0-4]|l[cdeis])", func(ctx *web.Context, val string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
 		var v []*Task
 		var err error
 		switch val {
-		case "0":
+		case "0", "ls":
 			v, err = GetTasks()
-		case "1":
+		case "1", "li":
 			v, err = GetIncompletedTasks()
-		case "2":
+		case "2", "lc":
 			v, err = GetCompletedTasks()
-		case "3":
+		case "3", "ld":
 			v, err = GetDeletedTasks()
-		case "4":
+		case "4", "le":
 			v, err = GetExpiredTasks()
 		default:
 			ctx.NotFound("Invalid Task Group")
@@ -93,7 +100,7 @@ func daemonLoop() {
 		ctx.SetHeader("Content-Type", "application/json", true)
 		ctx.Write(r)
 	})
-	web.Get("/self", func(ctx *web.Context) {
+	web.Get("/session", func(ctx *web.Context) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
 		if M.Account == nil {
@@ -108,7 +115,7 @@ func daemonLoop() {
 		ctx.SetHeader("Content-Type", "application/json", true)
 		ctx.Write(r)
 	})
-	web.Get("/raw/tasklist/(.*)", func(ctx *web.Context, val string) {
+	web.Get("/tasks/raw/([0-9]+)", func(ctx *web.Context, val string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
 		page, err := strconv.Atoi(val)
@@ -124,7 +131,7 @@ func daemonLoop() {
 		ctx.SetHeader("Content-Type", "application/json", true)
 		ctx.Write(b)
 	})
-	web.Get("/raw/btlist/([0-9]+)/(.*)", func(ctx *web.Context, taskId string, taskHash string) {
+	web.Get("/task/bt/([0-9]+)/(.*)", func(ctx *web.Context, taskId string, taskHash string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
 		m, err := RawFillBtList(taskId, taskHash, 1)
@@ -139,10 +146,13 @@ func daemonLoop() {
 		}
 		ctx.Write(m)
 	})
-	// POST - add, readd, relogin, saveconf, loadconf, savesession
-	web.Post("/session/(.*)", func(ctx *web.Context, val string) {})
-	web.Post("/task/(.*)", func(ctx *web.Context, val string) {})
-	// PUT - delay(All), pause, resume, rename
+	// POST - relogin, saveconf, loadconf, savesession
+	web.Post("/session", func(ctx *web.Context) {})
+	// POST - add, readd
+	web.Post("/task", func(ctx *web.Context) {
+
+	})
+	// PUT - delay(All), pause, resume, rename, dl, dt, ti
 	web.Put("/task/(.*)", func(ctx *web.Context, val string) {})
 	// DELETE - rm, purge, GOODBYE
 	web.Delete("/task/(.*)", func(ctx *web.Context, val string) {})

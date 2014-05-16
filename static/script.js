@@ -3,7 +3,7 @@
 $(window).ready(function() {
   $.ajax({
     type: 'get',
-    url: 'http://localhost:8808/raw/tasklist/1',
+    url: 'http://localhost:8808/tasks/raw/1',
   }).done(function(resp){
     if (typeof resp === 'string') resp = JSON.parse(resp);
     var tasks = resp.info.tasks;
