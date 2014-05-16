@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
@@ -59,6 +61,10 @@ func Call(name string, params []string) (result []reflect.Value, err error) {
 func init() {
 }
 
+func verify(sig string) bool {
+	return true
+}
+
 func daemonLoop() {
 	ch := make(chan byte)
 	ProcessTaskDaemon(ch, func(t *Task) {
@@ -85,7 +91,7 @@ func daemonLoop() {
 		case "4", "le":
 			v, err = GetExpiredTasks()
 		default:
-			ctx.NotFound("Invalid Task Group")
+			ctx.NotFound("INVALID TASK GROUP")
 			return
 		}
 		if err != nil {
@@ -104,7 +110,7 @@ func daemonLoop() {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
 		if M.Account == nil {
-			ctx.NotFound("Account information not retrieved")
+			ctx.NotFound("ACCOUNT INFORMATION NOT RETRIEVED")
 			return
 		}
 		r, err := json.Marshal(M.Account)
@@ -120,7 +126,7 @@ func daemonLoop() {
 		defer flusher.Flush()
 		page, err := strconv.Atoi(val)
 		if err != nil {
-			ctx.Abort(503, "Invalid page number")
+			ctx.Abort(503, "INVALID PAGE NUMBER")
 			return
 		}
 		b, err := RawTaskList(4, page)
@@ -147,10 +153,102 @@ func daemonLoop() {
 		ctx.Write(m)
 	})
 	// POST - relogin, saveconf, loadconf, savesession
-	web.Post("/session", func(ctx *web.Context) {})
+	web.Post("/session", func(ctx *web.Context) {
+		flusher, _ := ctx.ResponseWriter.(http.Flusher)
+		defer flusher.Flush()
+		var v payload
+		if body, err := ioutil.ReadAll(ctx.Request.Body); err == nil {
+			defer ctx.Request.Body.Close()
+			if err := json.Unmarshal(body, &v); err != nil {
+				ctx.Abort(400, "INSUFFICIENT PAYLOAD")
+				return
+			}
+			if !verify(v.Signature) {
+				ctx.Abort(403, "INVALID SIGNATURE")
+				return
+			}
+			var err error
+			switch v.Action {
+			case "relogin":
+				if !IsOn() {
+					if err = Login(conf.Id, conf.Pass); err != nil {
+						ctx.Abort(400, err.Error())
+					} else if err = SaveSession(cookie_file); err != nil {
+						ctx.WriteString(err.Error())
+					} else {
+						ctx.WriteString("SESSION STATUS OK")
+					}
+				} else {
+					ctx.WriteString("SESSION STATUS OK")
+				}
+			case "saveconf", "save_conf":
+				conf.Pass = EncryptPass(conf.Pass)
+				if _, err := conf.save(conf_file); err != nil {
+					ctx.Abort(400, err.Error())
+					return
+				}
+				ctx.WriteString("CONFIGURATION SAVED")
+			case "loadconf", "load_conf":
+				if _, err = conf.load(conf_file); err != nil {
+					ctx.Abort(400, err.Error())
+					return
+				}
+				ctx.WriteString("CONFIGURATION RELOADED")
+			case "savesession", "save_session":
+				if err := SaveSession(cookie_file); err != nil {
+					ctx.Abort(400, err.Error())
+					return
+				}
+				ctx.WriteString("SESSION COOKIE SAVED")
+			default:
+				ctx.Abort(501, "NOT IMPLEMENTED")
+			}
+		} else {
+			ctx.Abort(400, err.Error())
+		}
+	})
 	// POST - add, readd
 	web.Post("/task", func(ctx *web.Context) {
-
+		flusher, _ := ctx.ResponseWriter.(http.Flusher)
+		defer flusher.Flush()
+		var v payload
+		if body, err := ioutil.ReadAll(ctx.Request.Body); err == nil {
+			defer ctx.Request.Body.Close()
+			if err := json.Unmarshal(body, &v); err != nil {
+				ctx.Abort(400, "INSUFFICIENT PAYLOAD")
+				return
+			}
+			if !verify(v.Signature) {
+				ctx.Abort(403, "INVALID SIGNATURE")
+				return
+			}
+			var err error
+			switch v.Action {
+			case "add":
+				switch url := v.Data.(type) {
+				case string:
+					err = AddTask(url)
+				case []string:
+					for i, _ := range url {
+						if err = AddTask(url[i]); err != nil {
+							break
+						}
+					}
+				default:
+					err = fmt.Errorf("INVALID PAYLOAD DATA")
+				}
+				if err != nil {
+					ctx.Abort(400, err.Error())
+					return
+				}
+			case "readd":
+				ctx.Abort(501, "NOT IMPLEMENTED")
+			default:
+				ctx.Abort(501, "NOT IMPLEMENTED")
+			}
+		} else {
+			ctx.Abort(400, err.Error())
+		}
 	})
 	// PUT - delay(All), pause, resume, rename, dl, dt, ti
 	web.Put("/task/(.*)", func(ctx *web.Context, val string) {})
