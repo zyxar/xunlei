@@ -382,11 +382,11 @@ func RawTaskList(category, page int) ([]byte, error) {
 }
 
 func RawTaskListExpired() ([]byte, error) {
-	return nil, nil
+	return readExpired()
 }
 
-func RawTaskListDeleted() ([]byte, error) {
-	return nil, nil
+func RawTaskListDeleted(page int) ([]byte, error) {
+	return readHistory(page)
 }
 
 func tasklist_nofresh(tid, page int) ([]byte, error) {

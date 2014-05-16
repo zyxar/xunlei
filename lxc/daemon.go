@@ -60,6 +60,7 @@ func daemonLoop() {
 	})
 	go GetTasks()
 
+	// GET - ls, info, dl, dt, ti
 	web.Get("/gettasks/(.*)", func(ctx *web.Context, val string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
@@ -138,5 +139,13 @@ func daemonLoop() {
 		}
 		ctx.Write(m)
 	})
+	// POST - add, readd, relogin, saveconf, loadconf, savesession
+	web.Post("/session/(.*)", func(ctx *web.Context, val string) {})
+	web.Post("/task/(.*)", func(ctx *web.Context, val string) {})
+	// PUT - delay(All), pause, resume, rename
+	web.Put("/task/(.*)", func(ctx *web.Context, val string) {})
+	// DELETE - rm, purge, GOODBYE
+	web.Delete("/task/(.*)", func(ctx *web.Context, val string) {})
+	web.Delete("/session/(.*)", func(ctx *web.Context, val string) {})
 	web.Run("127.0.0.1:8808")
 }
