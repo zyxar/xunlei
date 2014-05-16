@@ -123,7 +123,7 @@ func daemonLoop() {
 		ctx.SetHeader("Content-Type", "application/json", true)
 		ctx.Write(b)
 	})
-	web.Get("/raw/btlist/(.*)/(.*)", func(ctx *web.Context, taskId string, taskHash string) {
+	web.Get("/raw/btlist/([0-9]+)/(.*)", func(ctx *web.Context, taskId string, taskHash string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
 		m, err := RawFillBtList(taskId, taskHash, 1)
