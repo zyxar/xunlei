@@ -65,6 +65,27 @@ func verify(sig string) bool {
 	return true
 }
 
+func unpack(ctx *web.Context, action func(*payload)) {
+	flusher, _ := ctx.ResponseWriter.(http.Flusher)
+	defer flusher.Flush()
+	var v payload
+	if body, err := ioutil.ReadAll(ctx.Request.Body); err == nil {
+		defer ctx.Request.Body.Close()
+		if err := json.Unmarshal(body, &v); err != nil {
+			ctx.Abort(400, "INSUFFICIENT PAYLOAD")
+			return
+		}
+		if !verify(v.Signature) {
+			ctx.Abort(403, "INVALID SIGNATURE")
+			return
+		}
+		action(&v)
+		return
+	} else {
+		ctx.Abort(400, err.Error())
+	}
+}
+
 func daemonLoop() {
 	ch := make(chan byte)
 	ProcessTaskDaemon(ch, func(t *Task) {
@@ -74,7 +95,7 @@ func daemonLoop() {
 
 	// GET - ls, info
 	// ctx.SetHeader("Access-Control-Allow-Origin", "*", true)
-	web.Get("/tasks/([0-4]|l[cdeis])", func(ctx *web.Context, val string) {
+	web.Get("/task/([0-4]|l[cdeis])", func(ctx *web.Context, val string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
 		var v []*Task
@@ -121,7 +142,7 @@ func daemonLoop() {
 		ctx.SetHeader("Content-Type", "application/json", true)
 		ctx.Write(r)
 	})
-	web.Get("/tasks/raw/([0-9]+)", func(ctx *web.Context, val string) {
+	web.Get("/task/raw/([0-9]+)", func(ctx *web.Context, val string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
 		page, err := strconv.Atoi(val)
@@ -154,19 +175,7 @@ func daemonLoop() {
 	})
 	// POST - relogin, saveconf, loadconf, savesession
 	web.Post("/session", func(ctx *web.Context) {
-		flusher, _ := ctx.ResponseWriter.(http.Flusher)
-		defer flusher.Flush()
-		var v payload
-		if body, err := ioutil.ReadAll(ctx.Request.Body); err == nil {
-			defer ctx.Request.Body.Close()
-			if err := json.Unmarshal(body, &v); err != nil {
-				ctx.Abort(400, "INSUFFICIENT PAYLOAD")
-				return
-			}
-			if !verify(v.Signature) {
-				ctx.Abort(403, "INVALID SIGNATURE")
-				return
-			}
+		unpack(ctx, func(v *payload) {
 			var err error
 			switch v.Action {
 			case "relogin":
@@ -203,25 +212,11 @@ func daemonLoop() {
 			default:
 				ctx.Abort(501, "NOT IMPLEMENTED")
 			}
-		} else {
-			ctx.Abort(400, err.Error())
-		}
+		})
 	})
 	// POST - add, readd
 	web.Post("/task", func(ctx *web.Context) {
-		flusher, _ := ctx.ResponseWriter.(http.Flusher)
-		defer flusher.Flush()
-		var v payload
-		if body, err := ioutil.ReadAll(ctx.Request.Body); err == nil {
-			defer ctx.Request.Body.Close()
-			if err := json.Unmarshal(body, &v); err != nil {
-				ctx.Abort(400, "INSUFFICIENT PAYLOAD")
-				return
-			}
-			if !verify(v.Signature) {
-				ctx.Abort(403, "INVALID SIGNATURE")
-				return
-			}
+		unpack(ctx, func(v *payload) {
 			var err error
 			switch v.Action {
 			case "add":
@@ -246,12 +241,12 @@ func daemonLoop() {
 			default:
 				ctx.Abort(501, "NOT IMPLEMENTED")
 			}
-		} else {
-			ctx.Abort(400, err.Error())
-		}
+		})
 	})
 	// PUT - delay(All), pause, resume, rename, dl, dt, ti
-	web.Put("/task/(.*)", func(ctx *web.Context, val string) {})
+	web.Put("/task/(.*)", func(ctx *web.Context, val string) {
+
+	})
 	// DELETE - rm, purge, GOODBYE
 	web.Delete("/task/(.*)", func(ctx *web.Context, val string) {})
 	web.Delete("/session/(.*)", func(ctx *web.Context, val string) {})
