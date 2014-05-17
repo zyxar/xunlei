@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
+    <title>LXC - lixian cmd by matzoe</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>LXC - lixian cmd</h1>
+        <h2>迅雷離線 [forged in go]</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/matzoe/xunlei/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/matzoe/xunlei/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/matzoe/xunlei" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>
+<a name="%E8%BF%85%E9%9B%B7%E9%9B%A2%E7%B7%9A" class="anchor" href="#%E8%BF%85%E9%9B%B7%E9%9B%A2%E7%B7%9A"><span class="octicon octicon-link"></span></a>迅雷離線</h1>
+
+<p>迅雷離線API、命令行工具以及後臺工具</p>
+
+<p><a href="https://travis-ci.org/matzoe/xunlei"><img src="https://travis-ci.org/matzoe/xunlei.png?branch=master" alt="Build Status"></a></p>
+
+<p>rewritten based on <a href="https://github.com/zyxar/xltask">xltask</a></p>
+
+<p>Inspired by <a href="http://cloud.vip.xunlei.com/190/js/task.js?269">task.js</a>, and <a href="https://github.com/iambus/xunlei-lixian">xunlei-lixian</a></p>
+
+<h2>
+<a name="package-status" class="anchor" href="#package-status"><span class="octicon octicon-link"></span></a>Package Status</h2>
+
+<ul>
+<li>api:  <strong>✏</strong>
+</li>
+<li>lxc:  <strong>✏</strong>
+</li>
+<li>
+<code>lxc -d</code>:  <strong>✍</strong>
+</li>
+</ul><h2>
+<a name="xunleiapi" class="anchor" href="#xunleiapi"><span class="octicon octicon-link"></span></a>xunlei/api</h2>
+
+<p>見 <a href="https://godoc.org/github.com/matzoe/xunlei/api">API 文檔</a></p>
+
+<h2>
+<a name="xunleilxc--d" class="anchor" href="#xunleilxc--d"><span class="octicon octicon-link"></span></a>xunlei/<code>lxc -d</code>
+</h2>
+
+<p>後臺工具</p>
+
+<div class="highlight highlight-bash"><pre>lxc -d <span class="c">#start web server and daemonize</span>
+lxc -loop <span class="c">#start web server</span>
+</pre></div>
+
+<ul>
+<li>[x] 接受 <code>RESTful</code> 調用</li>
+<li>[ ] 接受 <code>JSON-RPC</code> 調用</li>
+</ul><h2>
+<a name="xunleistatic" class="anchor" href="#xunleistatic"><span class="octicon octicon-link"></span></a>xunlei/static</h2>
+
+<p>Simple web front end, build upon:</p>
+
+<ul>
+<li>jQuery</li>
+<li>Bootstrap</li>
+</ul><h2>
+<a name="xunleilxc" class="anchor" href="#xunleilxc"><span class="octicon octicon-link"></span></a>xunlei/lxc</h2>
+
+<p>命令行工具</p>
+
+<p>支持以 <code>aria2c</code> 爲下載工具，或者自行定製</p>
+
+<p><img src="http://farm4.staticflickr.com/3697/10421561225_aa3ea3f4e5_c.jpg" alt=""><img src="http://farm6.staticflickr.com/5530/10461504605_8dc2b2737b_c.jpg" alt=""></p>
+
+<h2>
+<a name="todo" class="anchor" href="#todo"><span class="octicon octicon-link"></span></a>TODO</h2>
+
+<ul>
+<li>[x] really daemonize <code>lxc(-d)</code>;</li>
+<li>[ ] Node.js frontend/client;</li>
+<li>[ ] start <code>aria2</code> standalone, and submit tasks to it via RPC;</li>
+<li>[ ] VOD API and play demo;</li>
+</ul><h2>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>LICENSE</h2>
+
+<p>MPL v2</p>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
