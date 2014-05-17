@@ -8,8 +8,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"reflect"
 	"strconv"
+	"time"
 
 	"github.com/hoisie/web"
 	. "github.com/matzoe/xunlei/api"
@@ -44,6 +46,26 @@ type payload struct {
 	Data      interface{}
 }
 
+type response struct {
+	Error   bool   `json:"error"`
+	Message string `json:"message"`
+}
+
+func (r *response) json() []byte {
+	if b, err := json.MarshalIndent(r, "", "  "); err == nil {
+		return b
+	}
+	return nil
+}
+
+func makeResponse(e bool, msg string) []byte {
+	return (&response{e, msg}).json()
+}
+
+func errorMsg(msg string) []byte {
+	return makeResponse(true, msg)
+}
+
 func Call(name string, params []string) (result []reflect.Value, err error) {
 	fn := reflect.ValueOf(register[name])
 	if len(params) != fn.Type().NumIn() {
@@ -72,17 +94,20 @@ func unpack(ctx *web.Context, action func(*payload)) {
 	if body, err := ioutil.ReadAll(ctx.Request.Body); err == nil {
 		defer ctx.Request.Body.Close()
 		if err := json.Unmarshal(body, &v); err != nil {
-			ctx.Abort(400, "INSUFFICIENT PAYLOAD")
+			ctx.WriteHeader(400)
+			ctx.Write(errorMsg("INSUFFICIENT PAYLOAD"))
 			return
 		}
 		if !verify(v.Signature) {
-			ctx.Abort(403, "INVALID SIGNATURE")
+			ctx.WriteHeader(403)
+			ctx.Write(errorMsg("INVALID SIGNATURE"))
 			return
 		}
 		action(&v)
 		return
 	} else {
-		ctx.Abort(400, err.Error())
+		ctx.WriteHeader(400)
+		ctx.Write(errorMsg(err.Error()))
 	}
 }
 
@@ -112,16 +137,19 @@ func daemonLoop() {
 		case "4", "le":
 			v, err = GetExpiredTasks()
 		default:
-			ctx.NotFound("INVALID TASK GROUP")
+			ctx.WriteHeader(404)
+			ctx.Write(errorMsg("INVALID TASK GROUP"))
 			return
 		}
 		if err != nil {
-			ctx.Abort(503, err.Error())
+			ctx.WriteHeader(503)
+			ctx.Write(errorMsg(err.Error()))
 			return
 		}
 		r, err := json.Marshal(v)
 		if err != nil {
-			ctx.Abort(503, err.Error())
+			ctx.WriteHeader(503)
+			ctx.Write(errorMsg(err.Error()))
 			return
 		}
 		ctx.SetHeader("Content-Type", "application/json", true)
@@ -131,12 +159,14 @@ func daemonLoop() {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
 		if M.Account == nil {
-			ctx.NotFound("ACCOUNT INFORMATION NOT RETRIEVED")
+			ctx.WriteHeader(404)
+			ctx.Write(errorMsg("ACCOUNT INFORMATION NOT RETRIEVED"))
 			return
 		}
 		r, err := json.Marshal(M.Account)
 		if err != nil {
-			ctx.Abort(503, err.Error())
+			ctx.WriteHeader(503)
+			ctx.Write(errorMsg(err.Error()))
 			return
 		}
 		ctx.SetHeader("Content-Type", "application/json", true)
@@ -147,12 +177,14 @@ func daemonLoop() {
 		defer flusher.Flush()
 		page, err := strconv.Atoi(val)
 		if err != nil {
-			ctx.Abort(503, "INVALID PAGE NUMBER")
+			ctx.WriteHeader(503)
+			ctx.Write(errorMsg("INVALID PAGE NUMBER"))
 			return
 		}
 		b, err := RawTaskList(4, page)
 		if err != nil {
-			ctx.Abort(503, err.Error())
+			ctx.WriteHeader(503)
+			ctx.Write(errorMsg(err.Error()))
 			return
 		}
 		ctx.SetHeader("Content-Type", "application/json", true)
@@ -163,7 +195,8 @@ func daemonLoop() {
 		defer flusher.Flush()
 		m, err := RawFillBtList(taskId, taskHash, 1)
 		if err != nil {
-			ctx.Abort(503, err.Error())
+			ctx.WriteHeader(503)
+			ctx.Write(errorMsg(err.Error()))
 			return
 		}
 		if bytes.HasPrefix(m, []byte("fill_bt_list")) {
@@ -181,36 +214,41 @@ func daemonLoop() {
 			case "relogin":
 				if !IsOn() {
 					if err = Login(conf.Id, conf.Pass); err != nil {
-						ctx.Abort(400, err.Error())
+						ctx.WriteHeader(400)
+						ctx.Write(errorMsg(err.Error()))
 					} else if err = SaveSession(cookie_file); err != nil {
-						ctx.WriteString(err.Error())
+						ctx.Write(errorMsg(err.Error()))
 					} else {
-						ctx.WriteString("SESSION STATUS OK")
+						ctx.Write(makeResponse(false, "SESSION STATUS OK"))
 					}
 				} else {
-					ctx.WriteString("SESSION STATUS OK")
+					ctx.Write(makeResponse(false, "SESSION STATUS OK"))
 				}
 			case "saveconf", "save_conf":
 				conf.Pass = EncryptPass(conf.Pass)
 				if _, err := conf.save(conf_file); err != nil {
-					ctx.Abort(400, err.Error())
+					ctx.WriteHeader(400)
+					ctx.Write(errorMsg(err.Error()))
 					return
 				}
-				ctx.WriteString("CONFIGURATION SAVED")
+				ctx.Write(makeResponse(false, "CONFIGURATION SAVED"))
 			case "loadconf", "load_conf":
 				if _, err = conf.load(conf_file); err != nil {
-					ctx.Abort(400, err.Error())
+					ctx.WriteHeader(400)
+					ctx.Write(errorMsg(err.Error()))
 					return
 				}
-				ctx.WriteString("CONFIGURATION RELOADED")
+				ctx.Write(makeResponse(false, "CONFIGURATION RELOADED"))
 			case "savesession", "save_session":
 				if err := SaveSession(cookie_file); err != nil {
-					ctx.Abort(400, err.Error())
+					ctx.WriteHeader(400)
+					ctx.Write(errorMsg(err.Error()))
 					return
 				}
-				ctx.WriteString("SESSION COOKIE SAVED")
+				ctx.Write(makeResponse(false, "SESSION COOKIE SAVED"))
 			default:
-				ctx.Abort(501, "NOT IMPLEMENTED")
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
 			}
 		})
 	})
@@ -233,22 +271,96 @@ func daemonLoop() {
 					err = fmt.Errorf("INVALID PAYLOAD DATA")
 				}
 				if err != nil {
-					ctx.Abort(400, err.Error())
+					ctx.WriteHeader(400)
+					ctx.Write(errorMsg(err.Error()))
 					return
 				}
+				ctx.Write(makeResponse(false, "OK"))
 			case "readd":
-				ctx.Abort(501, "NOT IMPLEMENTED")
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
 			default:
-				ctx.Abort(501, "NOT IMPLEMENTED")
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
 			}
 		})
 	})
 	// PUT - delay(All), pause, resume, rename, dl, dt, ti
-	web.Put("/task/(.*)", func(ctx *web.Context, val string) {
-
+	web.Put("/task", func(ctx *web.Context) {
+		unpack(ctx, func(v *payload) {
+			log.Printf("payload: %#v\n", v)
+			var err error
+			switch v.Action {
+			case "delayAll":
+				err = DelayAllTasks()
+			case "pause":
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
+			case "resume":
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
+			case "rename":
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
+			case "delay":
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
+			case "dl", "download":
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
+			case "dt", "download_torent":
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
+			case "ti", "torrent_info":
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
+			default:
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
+			}
+			if err != nil {
+				ctx.WriteHeader(400)
+				ctx.Write(errorMsg(err.Error()))
+				return
+			}
+		})
 	})
 	// DELETE - rm, purge, GOODBYE
-	web.Delete("/task/(.*)", func(ctx *web.Context, val string) {})
-	web.Delete("/session/(.*)", func(ctx *web.Context, val string) {})
+	web.Delete("/task", func(ctx *web.Context) {
+		unpack(ctx, func(v *payload) {
+			log.Printf("payload: %#v\n", v)
+			var err error
+			switch v.Action {
+			case "remove", "delete", "rm":
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
+			case "purge":
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
+			default:
+				ctx.WriteHeader(501)
+				ctx.Write(errorMsg("NOT IMPLEMENTED"))
+			}
+			if err != nil {
+				ctx.WriteHeader(400)
+				ctx.Write(errorMsg(err.Error()))
+				return
+			}
+		})
+	})
+	web.Delete("/session", func(ctx *web.Context) {
+		unpack(ctx, func(v *payload) {
+			log.Printf("payload: %#v\n", v)
+			if v.Action == "GOODBYE" {
+				ctx.Write(makeResponse(false, "GOODBYE!"))
+				time.AfterFunc(time.Second, func() {
+					os.Exit(0)
+				})
+				return
+			}
+			ctx.WriteHeader(405)
+			ctx.Write(errorMsg("ACTION NOT ALLOWED"))
+		})
+	})
 	web.Run("127.0.0.1:8808")
 }
