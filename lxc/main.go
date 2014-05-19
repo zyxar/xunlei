@@ -5,13 +5,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 	"unicode/utf8"
 
+	"github.com/golang/glog"
 	. "github.com/matzoe/xunlei/api"
 	"github.com/zyxar/taipei"
 )
@@ -90,7 +90,7 @@ func main() {
 		cmd := exec.Command(os.Args[0], "-loop", "-close-fds")
 		err := cmd.Start()
 		if err != nil {
-			log.Fatalln(err)
+			glog.Fatalln(err)
 		}
 		cmd.Process.Release()
 		// FIXME: find a proper way to detect daemon error and call cmd.Process.Kill().
@@ -139,15 +139,15 @@ func main() {
 			}
 			switch cmds[0] {
 			case "ison":
-				log.Println(IsOn())
+				glog.V(2).Infoln(IsOn())
 			case "me":
 				fmt.Printf("%#v\n", *M.Account)
 			case "relogin":
 				if !IsOn() {
 					if err = Login(conf.Id, conf.Pass); err != nil {
-						log.Println(err)
+						glog.V(2).Infoln(err)
 					} else if err = SaveSession(cookie_file); err != nil {
-						log.Println(err)
+						glog.V(2).Infoln(err)
 					}
 				} else {
 					fmt.Println("Already log on.")
@@ -529,7 +529,7 @@ func main() {
 				printVersion()
 			case "update":
 				err = ProcessTask(func(t *Task) {
-					log.Printf("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
+					glog.V(2).Infof("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
 				})
 			case "quit", "exit":
 				break LOOP

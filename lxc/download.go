@@ -2,10 +2,10 @@ package main
 
 import (
 	"errors"
-	"log"
 	"path/filepath"
 	"regexp"
 
+	"github.com/golang/glog"
 	. "github.com/matzoe/xunlei/api"
 	. "github.com/matzoe/xunlei/fetch"
 )
@@ -28,22 +28,22 @@ func download(t *Task, filter string, echo, verify bool) error {
 		for j, _ := range m.Record {
 			if m.Record[j].Status == "2" {
 				if ok, _ := regexp.MatchString(`(?i)`+filter, m.Record[j].FileName); ok {
-					log.Println("Downloading", m.Record[j].FileName, "...")
+					glog.V(2).Infoln("Downloading", m.Record[j].FileName, "...")
 					if err = dl(m.Record[j].DownURL, filepath.Join(t.TaskName, m.Record[j].FileName), echo); err != nil {
 						return err
 					}
 				} else {
-					log.Printf("Skip unselected task %s", m.Record[j].FileName)
+					glog.V(3).Infof("Skip unselected task %s", m.Record[j].FileName)
 				}
 			} else {
-				log.Printf("Skip incompleted task %s", m.Record[j].FileName)
+				glog.V(2).Infof("Skip incompleted task %s", m.Record[j].FileName)
 			}
 		}
 	} else {
 		if len(t.LixianURL) == 0 {
 			return errors.New("Target file not ready for downloading.")
 		}
-		log.Println("Downloading", t.TaskName, "...")
+		glog.V(2).Infoln("Downloading", t.TaskName, "...")
 		if err := dl(t.LixianURL, t.TaskName, echo); err != nil {
 			return err
 		}

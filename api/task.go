@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/golang/glog"
 	"github.com/zyxar/taipei"
 )
 
@@ -184,7 +184,7 @@ func (this *Task) remove(flag byte) error {
 		return err
 	}
 	if ok, _ := regexp.Match(`\{"result":1,"type":`, r); ok {
-		log.Printf("%s\n", r)
+		glog.V(2).Infof("%s\n", r)
 		if this.status() == _FLAG_deleted {
 			this.Flag = "2"
 		} else {
@@ -245,7 +245,7 @@ func (this *Task) Resume() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("%s\n", r)
+	glog.V(2).Infof("%s\n", r)
 	return nil
 }
 

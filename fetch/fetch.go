@@ -1,9 +1,10 @@
 package fetch
 
 import (
-	"log"
 	"os"
 	"os/exec"
+
+	"github.com/golang/glog"
 )
 
 type Fetcher interface {
@@ -45,7 +46,7 @@ func (w Wget) Fetch(uri, gdriveid, filename string, echo bool) error {
 	}
 	err := cmd.Start()
 	if err != nil {
-		log.Println(err)
+		glog.V(2).Infoln(err)
 	}
 	return cmd.Wait()
 }
@@ -64,7 +65,7 @@ func (c Curl) Fetch(uri, gdriveid, filename string, echo bool) error {
 	}
 	err := cmd.Start()
 	if err != nil {
-		log.Println(err)
+		glog.V(2).Infoln(err)
 	}
 	return cmd.Wait()
 }
@@ -83,7 +84,7 @@ func (a Aria2) Fetch(uri, gdriveid, filename string, echo bool) error {
 	}
 	err := cmd.Start()
 	if err != nil {
-		log.Println(err)
+		glog.V(2).Infoln(err)
 	}
 	return cmd.Wait()
 }
@@ -102,7 +103,7 @@ func (a Axel) Fetch(uri, gdriveid, filename string, echo bool) error {
 	}
 	err := cmd.Start()
 	if err != nil {
-		log.Println(err)
+		glog.V(2).Infoln(err)
 	}
 	return cmd.Wait()
 }

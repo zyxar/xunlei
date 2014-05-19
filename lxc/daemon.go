@@ -6,13 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"reflect"
 	"strconv"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/hoisie/web"
 	. "github.com/matzoe/xunlei/api"
 )
@@ -114,7 +114,7 @@ func unpack(ctx *web.Context, action func(*payload)) {
 func daemonLoop() {
 	ch := make(chan byte)
 	ProcessTaskDaemon(ch, func(t *Task) {
-		log.Printf("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
+		glog.V(2).Infof("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
 	})
 	go GetTasks()
 
@@ -288,7 +288,7 @@ func daemonLoop() {
 	// PUT - delay(All), pause, resume, rename, dl, dt, ti
 	web.Put("/task", func(ctx *web.Context) {
 		unpack(ctx, func(v *payload) {
-			log.Printf("payload: %#v\n", v)
+			glog.V(2).Infof("payload: %#v\n", v)
 			var err error
 			switch v.Action {
 			case "delayAll":
@@ -328,7 +328,7 @@ func daemonLoop() {
 	// DELETE - rm, purge, GOODBYE
 	web.Delete("/task", func(ctx *web.Context) {
 		unpack(ctx, func(v *payload) {
-			log.Printf("payload: %#v\n", v)
+			glog.V(2).Infof("payload: %#v\n", v)
 			var err error
 			switch v.Action {
 			case "remove", "delete", "rm":
@@ -350,7 +350,7 @@ func daemonLoop() {
 	})
 	web.Delete("/session", func(ctx *web.Context) {
 		unpack(ctx, func(v *payload) {
-			log.Printf("payload: %#v\n", v)
+			glog.V(2).Infof("payload: %#v\n", v)
 			if v.Action == "GOODBYE" {
 				ctx.Write(makeResponse(false, "GOODBYE!"))
 				time.AfterFunc(time.Second, func() {

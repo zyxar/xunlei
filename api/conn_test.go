@@ -2,8 +2,8 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"testing"
@@ -43,7 +43,7 @@ func TestTaskNoFresh(t *testing.T) {
 		for {
 			select {
 			case <-time.After(time.Second):
-				log.Println("tasks in cache:", len(M.Tasks))
+				fmt.Println("tasks in cache:", len(M.Tasks))
 			}
 		}
 	}()
@@ -52,7 +52,7 @@ func TestTaskNoFresh(t *testing.T) {
 func TestProcessTask(t *testing.T) {
 	ch := make(chan byte)
 	ProcessTaskDaemon(ch, func(t *Task) {
-		log.Printf("%s %sB/s %.2f%%\n", t.Id, t.Speed, t.Progress)
+		fmt.Printf("%s %sB/s %.2f%%\n", t.Id, t.Speed, t.Progress)
 	})
 	go func() {
 		for {
@@ -164,40 +164,40 @@ func TestFind(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	log.Println("----- group=completed -----")
+	fmt.Println("----- group=completed -----")
 	for i, _ := range m {
-		log.Printf("%v\n", m[i])
+		fmt.Printf("%v\n", m[i])
 	}
 	m, err = FindTasks("status=deleted")
 	if err != nil {
 		t.Error(err)
 	}
-	log.Println("----- status=deleted -----")
+	fmt.Println("----- status=deleted -----")
 	for i, _ := range m {
-		log.Printf("%v\n", m[i])
+		fmt.Printf("%v\n", m[i])
 	}
 	m, err = FindTasks("type=bt")
 	if err != nil {
 		t.Error(err)
 	}
-	log.Println("----- type=bt -----")
+	fmt.Println("----- type=bt -----")
 	for i, _ := range m {
-		log.Printf("%v\n", m[i])
+		fmt.Printf("%v\n", m[i])
 	}
 	m, err = FindTasks("name=monsters")
 	if err != nil {
 		t.Error(err)
 	}
-	log.Println("----- name=monsters -----")
+	fmt.Println("----- name=monsters -----")
 	for i, _ := range m {
-		log.Printf("%v\n", m[i])
+		fmt.Printf("%v\n", m[i])
 	}
 	m, err = FindTasks("name=monsters&group=completed&status=deleted&type=bt")
 	if err != nil {
 		t.Error(err)
 	}
-	log.Println("----- name=monsters&group=completed&status=deleted&type=bt -----")
+	fmt.Println("----- name=monsters&group=completed&status=deleted&type=bt -----")
 	for i, _ := range m {
-		log.Printf("%v\n", m[i])
+		fmt.Printf("%v\n", m[i])
 	}
 }
