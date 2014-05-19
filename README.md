@@ -10,13 +10,13 @@ Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunl
 
 ## Package Status
 
-- api:  **✏**
+- protocol:  **✏**
 - lxc:  **✏**
 - <del>lxd:  **✍**</del> *replaced by `lxc -d`*
 
-## xunlei/api
+## xunlei/protocol
 
-見 [API 文檔](https://godoc.org/github.com/matzoe/xunlei/api)
+見 [API 文檔](https://godoc.org/github.com/matzoe/xunlei/protocol)
 
 ## xunlei/`lxc -d`
 

@@ -14,7 +14,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/hoisie/web"
-	. "github.com/matzoe/xunlei/api"
+	. "github.com/matzoe/xunlei/protocol"
 )
 
 var register = map[string]interface{}{

@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/matzoe/argo/rpc"
-	. "github.com/matzoe/xunlei/api"
+	. "github.com/matzoe/xunlei/protocol"
 )
 
 var rpcc *rpc.Client

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/matzoe/xunlei/api"
+	. "github.com/matzoe/xunlei/protocol"
 )
 
 func TestAddUri(t *testing.T) {
