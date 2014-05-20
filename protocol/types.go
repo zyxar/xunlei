@@ -1,4 +1,4 @@
-package api
+package protocol
 
 type login_resp struct {
 	Result int `json:"result"`

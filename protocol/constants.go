@@ -1,4 +1,4 @@
-package api
+package protocol
 
 const (
 	user_agent    = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.13 (KHTML, like Gecko) Chrome/24.0.1290.1 Safari/537.13"

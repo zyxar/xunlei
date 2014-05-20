@@ -1,6 +1,6 @@
 // +build darwin freebsd netbsd openbsd linux
 
-package api
+package protocol
 
 const (
 	color_front_black   = "\x1b[30m"

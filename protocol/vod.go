@@ -1,6 +1,6 @@
 // http://vod.xunlei.com/js/list.js
 
-package api
+package protocol
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package api
+package protocol
 
 func GetTasksAsync(callback func([]*Task, error)) {
 	go func() {

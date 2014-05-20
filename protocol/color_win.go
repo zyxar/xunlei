@@ -1,6 +1,6 @@
 // +build windows
 
-package api
+package protocol
 
 const (
 	color_front_black   = ""
