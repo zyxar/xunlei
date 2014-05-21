@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os/exec"
@@ -40,6 +41,16 @@ func RPCAddTask(uri, filename string) (gid string, err error) {
 		return "", err
 	}
 	return rpcc.AddUri(uri, lxhead)
+}
+
+func RPCStatus() error {
+	if m, err := rpcc.GetGlobalStat(); err != nil {
+		return err
+	} else {
+		b, _ := json.MarshalIndent(m, "", "  ")
+		fmt.Printf("%s\n", b)
+	}
+	return nil
 }
 
 func launchAria2cDaemon() error {

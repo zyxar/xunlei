@@ -12,6 +12,8 @@ import (
 
 var worker Fetcher = DefaultFetcher
 
+type taskSink func(uri, filename string, echo bool) error
+
 func dl(uri, filename string, echo bool) error { //TODO: check file existence
 	if len(M.Gid) == 0 {
 		return errors.New("gdriveid missing.")
@@ -19,7 +21,7 @@ func dl(uri, filename string, echo bool) error { //TODO: check file existence
 	return worker.Fetch(uri, M.Gid, filename, echo)
 }
 
-func download(t *Task, filter string, echo, verify bool) error {
+func download(t *Task, filter string, echo, verify bool, sink taskSink) error {
 	if t.IsBt() {
 		m, err := t.FillBtList()
 		if err != nil {
@@ -29,7 +31,7 @@ func download(t *Task, filter string, echo, verify bool) error {
 			if m.Record[j].Status == "2" {
 				if ok, _ := regexp.MatchString(`(?i)`+filter, m.Record[j].FileName); ok {
 					glog.V(2).Infoln("Downloading", m.Record[j].FileName, "...")
-					if err = dl(m.Record[j].DownURL, filepath.Join(t.TaskName, m.Record[j].FileName), echo); err != nil {
+					if err = sink(m.Record[j].DownURL, filepath.Join(t.TaskName, m.Record[j].FileName), echo); err != nil {
 						return err
 					}
 				} else {
@@ -44,7 +46,7 @@ func download(t *Task, filter string, echo, verify bool) error {
 			return errors.New("Target file not ready for downloading.")
 		}
 		glog.V(2).Infoln("Downloading", t.TaskName, "...")
-		if err := dl(t.LixianURL, t.TaskName, echo); err != nil {
+		if err := sink(t.LixianURL, t.TaskName, echo); err != nil {
 			return err
 		}
 	}

@@ -254,6 +254,44 @@ func main() {
 				}
 			case "launch":
 				err = launchAria2cDaemon()
+			case "status":
+				err = RPCStatus()
+			case "submit":
+				if len(cmds) < 2 {
+					err = insufficientArgErr
+				} else {
+					pay := make(map[string]*struct {
+						t *Task
+						s string
+					})
+					for i, _ := range cmds[1:] {
+						p := strings.Split(cmds[1:][i], "/")
+						m, err := _find(p[0])
+						if err == nil {
+							for i, _ := range m {
+								var filter string
+								if len(p) == 1 {
+									filter = `.*`
+								} else {
+									filter = p[1]
+								}
+								pay[m[i].Id] = &struct {
+									t *Task
+									s string
+								}{m[i], filter}
+							}
+						}
+					}
+					for i, _ := range pay {
+						if err = download(pay[i].t, pay[i].s, false, false, func(uri, filename string, echo bool) error {
+							_, err := RPCAddTask(uri, filename)
+							return err
+						}); err != nil {
+							fmt.Println(err)
+						}
+					}
+					err = nil
+				}
 			case "dl", "download":
 				if len(cmds) < 2 {
 					err = insufficientArgErr
@@ -294,7 +332,7 @@ func main() {
 						}
 					}
 					for i, _ := range pay {
-						if err = download(pay[i].t, pay[i].s, true, check); err != nil {
+						if err = download(pay[i].t, pay[i].s, true, check, dl); err != nil {
 							fmt.Println(err)
 						} else if del {
 							if err = pay[i].t.Remove(); err != nil {
