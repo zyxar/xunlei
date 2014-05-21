@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"os/exec"
 
 	"github.com/matzoe/argo/rpc"
 	. "github.com/matzoe/xunlei/protocol"
@@ -38,4 +40,18 @@ func RPCAddTask(uri, filename string) (gid string, err error) {
 		return "", err
 	}
 	return rpcc.AddUri(uri, lxhead)
+}
+
+func launchAria2cDaemon() error {
+	if m, err := rpcc.GetVersion(); err == nil {
+		fmt.Printf("aria2c version: %v\nenabled features: %v\n", m["version"], m["enabledFeatures"])
+		return nil
+	}
+	cmd := exec.Command("aria2c", "--enable-rpc", "--rpc-listen-all")
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	cmd.Process.Release()
+	fmt.Println("Aria2c daemon launched.")
+	return nil
 }

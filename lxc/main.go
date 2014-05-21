@@ -252,6 +252,8 @@ func main() {
 						}
 					}
 				}
+			case "launch":
+				err = launchAria2cDaemon()
 			case "dl", "download":
 				if len(cmds) < 2 {
 					err = insufficientArgErr
