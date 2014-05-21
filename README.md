@@ -50,7 +50,7 @@ Simple web front end, build upon:
 
 - [x] really daemonize `lxc(-d)`;
 - [ ] Node.js frontend/client;
-- [ ] start `aria2` standalone, and submit tasks to it via RPC;
+- [x] start `aria2` standalone, and submit tasks to it via RPC;
 - [ ] VOD API and play demo;
 
 ## LICENSE
