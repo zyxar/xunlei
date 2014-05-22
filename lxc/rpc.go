@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os/exec"
 
 	"github.com/matzoe/argo/rpc"
@@ -43,26 +42,31 @@ func RPCAddTask(uri, filename string) (gid string, err error) {
 	return rpcc.AddUri(uri, lxhead)
 }
 
-func RPCStatus() error {
-	if m, err := rpcc.GetGlobalStat(); err != nil {
-		return err
-	} else {
-		b, _ := json.MarshalIndent(m, "", "  ")
-		fmt.Printf("%s\n", b)
+func RPCStatus() ([]byte, error) {
+	m, err := rpcc.GetGlobalStat()
+	if err != nil {
+		return nil, err
 	}
-	return nil
+	b, _ := json.MarshalIndent(m, "", "  ")
+	return b, nil
 }
 
-func launchAria2cDaemon() error {
+func RPCShutdown(force bool) (string, error) {
+	if !force {
+		return rpcc.Shutdown()
+	}
+	return rpcc.ForceShutdown()
+}
+
+func launchAria2cDaemon() ([]byte, error) {
 	if m, err := rpcc.GetVersion(); err == nil {
-		fmt.Printf("aria2c version: %v\nenabled features: %v\n", m["version"], m["enabledFeatures"])
-		return nil
+		b, _ := json.MarshalIndent(m, "", "  ")
+		return b, nil
 	}
 	cmd := exec.Command("aria2c", "--enable-rpc", "--rpc-listen-all")
 	if err := cmd.Start(); err != nil {
-		return err
+		return nil, err
 	}
 	cmd.Process.Release()
-	fmt.Println("Aria2c daemon launched.")
-	return nil
+	return []byte("Aria2c daemon launched"), nil
 }

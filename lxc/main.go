@@ -221,15 +221,14 @@ func main() {
 					fmt.Println(err)
 				}
 			case "ll":
-				ts, err := GetTasks()
+				var ts []*Task
+				ts, err = GetTasks()
 				if err == nil {
 					k := 0
 					for i, _ := range ts {
 						fmt.Printf("#%d %v\n", k, ts[i].Repr())
 						k++
 					}
-				} else {
-					fmt.Println(err)
 				}
 			case "info":
 				if len(cmds) < 2 {
@@ -253,9 +252,27 @@ func main() {
 					}
 				}
 			case "launch":
-				err = launchAria2cDaemon()
+				var b []byte
+				b, err = launchAria2cDaemon()
+				if err == nil {
+					fmt.Printf("%s\n", b)
+				}
 			case "status":
-				err = RPCStatus()
+				var b []byte
+				b, err = RPCStatus()
+				if err == nil {
+					fmt.Printf("%s\n", b)
+				}
+			case "kill":
+				var s string
+				force := false
+				if len(cmds) >= 2 && (cmds[1] == "-9" || cmds[1] == "-f") {
+					force = true
+				}
+				s, err = RPCShutdown(force)
+				if err == nil {
+					fmt.Println(s)
+				}
 			case "submit":
 				if len(cmds) < 2 {
 					err = insufficientArgErr
