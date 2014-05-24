@@ -273,7 +273,7 @@ func main() {
 				if err == nil {
 					fmt.Println(s)
 				}
-			case "submit":
+			case "submit", "sub":
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
@@ -308,6 +308,22 @@ func main() {
 						}
 					}
 					err = nil
+				}
+			case "verify":
+				if len(cmds) < 2 {
+					err = insufficientArgErr
+				} else {
+					var ts map[string]*Task
+					if ts, err = find(cmds[1:]); err == nil {
+						for i, _ := range ts {
+							if _, err = os.Stat(ts[i].TaskName); err != nil {
+								fmt.Println(err)
+								continue
+							}
+							fmt.Printf("Task verified? %v\n", ts[i].Verify(ts[i].TaskName))
+						}
+						err = nil
+					}
 				}
 			case "dl", "download":
 				if len(cmds) < 2 {
