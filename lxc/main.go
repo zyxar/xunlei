@@ -602,7 +602,7 @@ func main() {
 				printVersion()
 			case "update":
 				err = ProcessTask(func(t *Task) {
-					glog.V(2).Infof("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
+					fmt.Printf("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
 				})
 			case "quit", "exit":
 				break LOOP
