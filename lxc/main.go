@@ -557,6 +557,7 @@ func main() {
 						}
 					}
 				} else {
+					fmt.Println(`pattern == "name=abc&group=completed&status=normal&type=bt"`)
 					err = insufficientArgErr
 				}
 			case "st":
