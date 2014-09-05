@@ -27,11 +27,17 @@ func download(t *Task, filter string, echo, verify bool, sink taskSink) error {
 		if err != nil {
 			return err
 		}
+		var fullpath string
 		for j, _ := range m.Record {
 			if m.Record[j].Status == "2" {
 				if ok, _ := regexp.MatchString(`(?i)`+filter, m.Record[j].FileName); ok {
 					glog.V(2).Infoln("Downloading", m.Record[j].FileName, "...")
-					if err = sink(m.Record[j].DownURL, filepath.Join(t.TaskName, m.Record[j].FileName), echo); err != nil {
+					if len(m.Record) == 1 { // choose not to use torrent info, to reduce network transportation
+						fullpath = m.Record[j].FileName
+					} else {
+						fullpath = filepath.Join(t.TaskName, m.Record[j].FileName)
+					}
+					if err = sink(m.Record[j].DownURL, fullpath, echo); err != nil {
 						return err
 					}
 				} else {
