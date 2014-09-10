@@ -22,4 +22,3 @@ _testmain.go
 *.exe
 
 lxc/lxc
-lxd/lxd

@@ -274,13 +274,13 @@ round:
 		resp.Info.Tasks[i].TaskName = unescapeName(resp.Info.Tasks[i].TaskName)
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
-	M.invalidateGroup(_FLAG_normal)
-	M.pushTasks(ts)
 	accumulated += len(ts)
 	if accumulated < total {
 		page++
 		goto round
 	}
+	M.invalidateGroup(_FLAG_normal)
+	M.pushTasks(ts)
 	return ts, err
 }
 
@@ -310,12 +310,12 @@ round:
 		resp.Info.Tasks[i].TaskName = unescapeName(resp.Info.Tasks[i].TaskName)
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
-	M.pushTasks(ts)
 	accumulated += len(ts)
 	if accumulated < total {
 		page++
 		goto round
 	}
+	M.pushTasks(ts)
 	return ts, err
 }
 
@@ -345,12 +345,12 @@ round:
 		resp.Info.Tasks[i].TaskName = unescapeName(resp.Info.Tasks[i].TaskName)
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
-	M.pushTasks(ts)
 	accumulated += len(ts)
 	if accumulated < total {
 		page++
 		goto round
 	}
+	M.pushTasks(ts)
 	return ts, err
 }
 

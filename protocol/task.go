@@ -190,6 +190,7 @@ func (this *Task) remove(flag byte) error {
 		} else {
 			this.Flag = "1"
 		}
+		this.Progress = 0
 		return nil
 	}
 	return unexpectedErr

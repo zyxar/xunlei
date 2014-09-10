@@ -61,7 +61,7 @@ type Task struct {
 	// UsingResCount       string `json:"using_res_count"`
 	// VerifyFlag          string `json:"verify_flag"`
 	// VerifyTime          string `json:"verify_time"`
-	ProgressText string `json:"progress_text"`
+	// ProgressText 			 string `json:"progress_text"`
 	// ProgressImg         string `json:"progress_img"`
 	// ProgressClass       string `json:"progress_class"`
 	LeftTime string `json:"left_time"`

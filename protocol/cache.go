@@ -197,7 +197,7 @@ func (c *cache) invalidateGroup(flag byte) {
 	c.Unlock()
 }
 
-func (c *cache) invalidateAll() {
+func (c *cache) InvalidateAll() {
 	c.Lock()
 	c.Tasks = make(map[string]*Task)
 	c.Unlock()
