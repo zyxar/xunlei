@@ -187,7 +187,7 @@ func (c *cache) pushTasks(ts []*Task) {
 	c.Unlock()
 }
 
-func (c *cache) invalidateGroup(flag byte) {
+func (c *cache) InvalidateGroup(flag byte) {
 	c.Lock()
 	for i, _ := range c.Tasks {
 		if c.Tasks[i].status() == flag {

@@ -279,7 +279,7 @@ round:
 		page++
 		goto round
 	}
-	M.invalidateGroup(_FLAG_normal)
+	M.InvalidateGroup(_FLAG_normal)
 	M.pushTasks(ts)
 	return ts, err
 }
@@ -451,7 +451,7 @@ func readExpired() ([]byte, error) {
 func GetExpiredTasks() ([]*Task, error) {
 	r, err := readExpired()
 	ts, _ := parseHistory(r, "4")
-	M.invalidateGroup(_FLAG_expired)
+	M.InvalidateGroup(_FLAG_expired)
 	M.pushTasks(ts)
 	return ts, err
 }
@@ -469,8 +469,8 @@ func GetDeletedTasks() ([]*Task, error) {
 		ts, next = parseHistory(r, "1")
 		tss = append(tss, ts...)
 	}
-	M.invalidateGroup(_FLAG_deleted)
-	M.invalidateGroup(_FLAG_purged)
+	M.InvalidateGroup(_FLAG_deleted)
+	M.InvalidateGroup(_FLAG_purged)
 	M.pushTasks(tss)
 	return tss, err
 }

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -228,6 +229,42 @@ func main() {
 					for i, _ := range ts {
 						fmt.Printf("#%d %v\n", k, ts[i].Repr())
 						k++
+					}
+				}
+			case "head":
+				var ts []*Task
+				var num int = 10
+				if len(cmds) > 1 {
+					num, err = strconv.Atoi(cmds[1])
+					if err != nil {
+						num = 10
+					}
+				}
+				ts, err = GetTasks()
+				if err == nil {
+					k := 0
+					for i, _ := range ts[:num] {
+						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
+						k++
+					}
+				}
+			case "cache_clean", "cc":
+				if len(cmds) < 2 {
+					err = insufficientArgErr
+				} else {
+					switch cmds[1] {
+					case "normal":
+						M.InvalidateGroup(0)
+					case "deleted":
+						M.InvalidateGroup(1)
+					case "purged":
+						M.InvalidateGroup(2)
+					case "invalid":
+						M.InvalidateGroup(3)
+					case "expired":
+						M.InvalidateGroup(4)
+					case "all":
+						M.InvalidateAll()
 					}
 				}
 			case "info":
