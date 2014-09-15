@@ -241,6 +241,11 @@ func main() {
 					}
 				}
 				ts, err = GetTasks()
+				if len(ts) == 0 {
+					err = errors.New("Empty task list")
+				} else if len(ts) < num {
+					num = len(ts)
+				}
 				if err == nil {
 					k := 0
 					for i, _ := range ts[:num] {
