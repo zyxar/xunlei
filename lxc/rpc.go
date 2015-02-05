@@ -6,7 +6,7 @@ import (
 	"os/exec"
 
 	"github.com/matzoe/argo/rpc"
-	. "github.com/matzoe/xunlei/protocol"
+	. "github.com/zyxar/xunlei/protocol"
 )
 
 var rpcc *rpc.Client

@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"github.com/matzoe/xunlei/cookiejar"
+	"github.com/zyxar/xunlei/cookiejar"
 )
 
 var noSuchTaskErr error

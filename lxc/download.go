@@ -6,8 +6,8 @@ import (
 	"regexp"
 
 	"github.com/golang/glog"
-	. "github.com/matzoe/xunlei/fetch"
-	. "github.com/matzoe/xunlei/protocol"
+	. "github.com/zyxar/xunlei/fetch"
+	. "github.com/zyxar/xunlei/protocol"
 )
 
 var worker Fetcher = DefaultFetcher

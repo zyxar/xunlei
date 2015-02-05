@@ -13,8 +13,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/golang/glog"
-	. "github.com/matzoe/xunlei/protocol"
 	"github.com/zyxar/taipei"
+	. "github.com/zyxar/xunlei/protocol"
 )
 
 type Term interface {

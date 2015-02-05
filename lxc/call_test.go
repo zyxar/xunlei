@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/matzoe/xunlei/protocol"
+	. "github.com/zyxar/xunlei/protocol"
 )
 
 func init() {
