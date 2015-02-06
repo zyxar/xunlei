@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/conclave/web" // fork from github.com/hoisie/web
 	"github.com/golang/glog"
-	"github.com/hoisie/web"
 	. "github.com/zyxar/xunlei/protocol"
 )
 
