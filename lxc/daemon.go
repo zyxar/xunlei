@@ -216,7 +216,7 @@ func daemonLoop() {
 					if err = Login(conf.Id, conf.Pass); err != nil {
 						ctx.WriteHeader(400)
 						ctx.Write(errorMsg(err.Error()))
-					} else if err = SaveSession(cookie_file); err != nil {
+					} else if err = SaveSession(cookieFile); err != nil {
 						ctx.Write(errorMsg(err.Error()))
 					} else {
 						ctx.Write(makeResponse(false, "SESSION STATUS OK"))
@@ -226,21 +226,21 @@ func daemonLoop() {
 				}
 			case "saveconf", "save_conf":
 				conf.Pass = EncryptPass(conf.Pass)
-				if _, err := conf.save(conf_file); err != nil {
+				if _, err := conf.save(configFileName); err != nil {
 					ctx.WriteHeader(400)
 					ctx.Write(errorMsg(err.Error()))
 					return
 				}
 				ctx.Write(makeResponse(false, "CONFIGURATION SAVED"))
 			case "loadconf", "load_conf":
-				if _, err = conf.load(conf_file); err != nil {
+				if _, err = conf.load(configFileName); err != nil {
 					ctx.WriteHeader(400)
 					ctx.Write(errorMsg(err.Error()))
 					return
 				}
 				ctx.Write(makeResponse(false, "CONFIGURATION RELOADED"))
 			case "savesession", "save_session":
-				if err := SaveSession(cookie_file); err != nil {
+				if err := SaveSession(cookieFile); err != nil {
 					ctx.WriteHeader(400)
 					ctx.Write(errorMsg(err.Error()))
 					return

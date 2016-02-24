@@ -76,11 +76,11 @@ func main() {
 		return
 	}
 	var login = func() error {
-		if err := ResumeSession(cookie_file); err != nil {
+		if err := ResumeSession(cookieFile); err != nil {
 			if err = Login(conf.Id, conf.Pass); err != nil {
 				return err
 			}
-			if err = SaveSession(cookie_file); err != nil {
+			if err = SaveSession(cookieFile); err != nil {
 				return err
 			}
 		}
@@ -147,7 +147,7 @@ func main() {
 				if !IsOn() {
 					if err = Login(conf.Id, conf.Pass); err != nil {
 						glog.V(2).Infoln(err)
-					} else if err = SaveSession(cookie_file); err != nil {
+					} else if err = SaveSession(cookieFile); err != nil {
 						glog.V(2).Infoln(err)
 					}
 				} else {
@@ -156,20 +156,20 @@ func main() {
 			case "saveconf":
 				{
 					conf.Pass = EncryptPass(conf.Pass)
-					b, err := conf.save(conf_file)
+					b, err := conf.save(configFileName)
 					if err == nil {
 						fmt.Printf("%s\n", b)
 					}
 				}
 			case "loadconf":
 				{
-					if _, err = conf.load(conf_file); err == nil {
+					if _, err = conf.load(configFileName); err == nil {
 						fmt.Printf("%+v\n", conf)
 					}
 				}
 			case "savesession":
 				{
-					if err := SaveSession(cookie_file); err != nil {
+					if err := SaveSession(cookieFile); err != nil {
 						fmt.Println(err)
 					} else {
 						fmt.Println("[done]")

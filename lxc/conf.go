@@ -9,24 +9,23 @@ import (
 	"path/filepath"
 )
 
-const (
-	version = "master"
-)
-
-var home string
-var conf_file string
-var cookie_file string
-var isDaemon bool
-
-type config struct {
+type configure struct {
 	Id        string `json:"account"`
 	Pass      string `json:"password"`
 	CheckHash bool   `json:"check_hash"`
 }
 
-var conf config
+var (
+	version        string = "master"
+	home           string
+	configFileName string
+	cookieFile     string
+	isDaemon       bool
+	conf           configure
+	fromPath       string = "github.com/zyxar/xunlei/lxc"
+)
 
-func (id *config) save(cf string) (b []byte, err error) {
+func (id *configure) save(cf string) (b []byte, err error) {
 	b, err = json.MarshalIndent(id, "", "  ")
 	if err != nil {
 		return
@@ -35,7 +34,7 @@ func (id *config) save(cf string) (b []byte, err error) {
 	return
 }
 
-func (id *config) load(cf string) (b []byte, err error) {
+func (id *configure) load(cf string) (b []byte, err error) {
 	b, err = ioutil.ReadFile(cf)
 	if err != nil {
 		return
@@ -47,16 +46,16 @@ func (id *config) load(cf string) (b []byte, err error) {
 var printVer bool
 
 func printVersion() {
-	fmt.Println("lxc version:", version)
+	fmt.Printf("lxc version: %s [%s]\n", version, fromPath)
 }
 
 func initConf() {
 	initHome()
 	mkConfigDir()
-	conf_file = filepath.Join(home, "config.json")
-	cookie_file = filepath.Join(home, "cookie.json")
+	configFileName = filepath.Join(home, "config.json")
+	cookieFile = filepath.Join(home, "cookie.json")
 	conf.CheckHash = true
-	conf.load(conf_file)
+	conf.load(configFileName)
 }
 
 func mkConfigDir() (err error) {
