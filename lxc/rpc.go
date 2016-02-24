@@ -5,8 +5,8 @@ import (
 	"errors"
 	"os/exec"
 
-	"github.com/matzoe/argo/rpc"
-	. "github.com/zyxar/xunlei/protocol"
+	"github.com/zyxar/argo/rpc"
+	"github.com/zyxar/xunlei/protocol"
 )
 
 var rpcc *rpc.Client
@@ -35,7 +35,7 @@ func newOpt(gdriveid, filename string) (opt, error) {
 }
 
 func RPCAddTask(uri, filename string) (gid string, err error) {
-	lxhead, err := newOpt(M.Gid, filename)
+	lxhead, err := newOpt(protocol.M.Gid, filename)
 	if err != nil {
 		return "", err
 	}
