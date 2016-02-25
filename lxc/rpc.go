@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"os/exec"
+	"time"
 
 	"github.com/zyxar/argo/rpc"
 	"github.com/zyxar/xunlei/protocol"
 )
 
-var rpcc *rpc.Client
+var rpcc rpc.RPCProto
 
 func init() {
 	rpcc = rpc.New("http://localhost:6800/jsonrpc")
@@ -17,9 +18,7 @@ func init() {
 
 // {'header':['Cookie: XXXX']}
 // --file-allocation=none", "-x5", "-c", "--summary-interval=0", "--follow-torrent=false"
-type opt map[string]interface{}
-
-func newOpt(gdriveid, filename string) (opt, error) {
+func newOpt(gdriveid, filename string) (rpc.Option, error) {
 	if len(gdriveid) == 0 {
 		return nil, errors.New("Cannot retrieve gdriveid.")
 	}
@@ -58,15 +57,24 @@ func RPCShutdown(force bool) (string, error) {
 	return rpcc.ForceShutdown()
 }
 
-func launchAria2cDaemon() ([]byte, error) {
-	if m, err := rpcc.GetVersion(); err == nil {
-		b, _ := json.MarshalIndent(m, "", "  ")
-		return b, nil
+func rpcGetVersion() (b []byte, err error) {
+	m, err := rpcc.GetVersion()
+	if err == nil {
+		b, _ = json.MarshalIndent(m, "", "  ")
+	}
+	return
+}
+
+func launchAria2cDaemon() (b []byte, err error) {
+	if b, err = rpcGetVersion(); err == nil {
+		return
 	}
 	cmd := exec.Command("aria2c", "--enable-rpc", "--rpc-listen-all")
-	if err := cmd.Start(); err != nil {
-		return nil, err
+	if err = cmd.Start(); err != nil {
+		return
 	}
 	cmd.Process.Release()
-	return []byte("Aria2c daemon launched"), nil
+	time.Sleep(time.Second)
+	b, err = rpcGetVersion()
+	return
 }
