@@ -2,29 +2,30 @@
 
 迅雷離線API、命令行工具以及後臺工具
 
-[![Build Status](https://travis-ci.org/matzoe/xunlei.png?branch=master)](https://travis-ci.org/matzoe/xunlei)
+[![Build Status](https://travis-ci.org/zyxar/xunlei.png?branch=master)](https://travis-ci.org/zyxar/xunlei)
 
 rewritten based on [xltask](https://github.com/zyxar/xltask)
 
-Inspired by [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269), and [xunlei-lixian](https://github.com/iambus/xunlei-lixian)
+Inspired by
+- [task.js](http://cloud.vip.xunlei.com/190/js/task.js?269)
+- [xunlei-lixian](https://github.com/iambus/xunlei-lixian)
 
 ## Package Status
 
 - protocol:  **✏**
 - lxc:  **✏**
-- <del>lxd:  **✍**</del> *replaced by `lxc -d`*
 
 ## xunlei/protocol
 
-見 [API 文檔](https://godoc.org/github.com/matzoe/xunlei/protocol)
+[![GoDoc](https://godoc.org/github.com/zyxar/xunlei/protocol?status.svg)](https://godoc.org/github.com/zyxar/xunlei/protocol)
 
 ## xunlei/`lxc -d`
 
 後臺工具
 
 ```bash
-lxc -d #start web server and daemonize
-lxc -loop #start web server
+$ lxc -d #start web server and daemonize
+$ lxc -loop #start web server
 ```
 
 - [x] 接受 `RESTful` 調用
@@ -37,7 +38,7 @@ Simple web front end, build upon:
   - jQuery
   - Bootstrap
 
-## xunlei/lxc
+## xunlei/`lxc`
 
 命令行工具
 
