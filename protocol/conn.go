@@ -48,7 +48,6 @@ func init() {
 			Proxy: http.ProxyFromEnvironment,
 		},
 	}
-	defaultConn.Mutex = sync.Mutex{}
 	noSuchTaskErr = errors.New("No such TaskId in list.")
 	invalidResponseErr = errors.New("Invalid response.")
 	unexpectedErr = errors.New("Unexpected error.")
@@ -137,7 +136,7 @@ loop:
 		return
 	}
 	cks := defaultConn.Client.Jar.Cookies(u)
-	for i, _ := range cks {
+	for i := range cks {
 		if cks[i].Name == "check_result" {
 			if len(cks[i].Value) < 3 {
 				goto loop
@@ -240,7 +239,7 @@ func IsOn() bool {
 func getCookie(uri, name string) string {
 	u, _ := url.Parse(uri)
 	cks := defaultConn.Client.Jar.Cookies(u)
-	for i, _ := range cks {
+	for i := range cks {
 		if cks[i].Name == name {
 			return cks[i].Value
 		}
@@ -270,7 +269,7 @@ round:
 			ts = make([]*Task, 0, total)
 		}
 	}
-	for i, _ := range resp.Info.Tasks {
+	for i := range resp.Info.Tasks {
 		resp.Info.Tasks[i].TaskName = unescapeName(resp.Info.Tasks[i].TaskName)
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
@@ -306,7 +305,7 @@ round:
 			ts = make([]*Task, 0, total)
 		}
 	}
-	for i, _ := range resp.Info.Tasks {
+	for i := range resp.Info.Tasks {
 		resp.Info.Tasks[i].TaskName = unescapeName(resp.Info.Tasks[i].TaskName)
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
@@ -341,7 +340,7 @@ round:
 			ts = make([]*Task, 0, total)
 		}
 	}
-	for i, _ := range resp.Info.Tasks {
+	for i := range resp.Info.Tasks {
 		resp.Info.Tasks[i].TaskName = unescapeName(resp.Info.Tasks[i].TaskName)
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
@@ -506,7 +505,7 @@ func parseHistory(in []byte, ty string) ([]*Task, bool) {
 	exp := regexp.MustCompile(es)
 	s := exp.FindAllSubmatch(in, -1)
 	ret := make([]*Task, len(s))
-	for i, _ := range s {
+	for i := range s {
 		b, _ := strconv.Atoi(string(s[i][7]))
 		ret[i] = &Task{Id: string(s[i][1]), DownloadStatus: string(s[i][2]), Cid: string(s[i][4]), URL: string(s[i][5]), TaskName: unescapeName(string(s[i][6])), TaskType: byte(b), Flag: ty}
 	}
@@ -538,7 +537,7 @@ func DelayTask(taskid string) error {
 
 func redownload(tasks []*Task) error {
 	form := make([]string, 0, len(tasks)+2)
-	for i, _ := range tasks {
+	for i := range tasks {
 		if tasks[i].expired() || !tasks[i].failed() || !tasks[i].pending() {
 			continue
 		}
@@ -659,7 +658,7 @@ func fillBtList(taskid, infohash string, page int, pgsize string) (*_bt_list, er
 	var bt_list _bt_list
 	json.Unmarshal(s[1], &bt_list)
 	exp = regexp.MustCompile(`\\`)
-	for i, _ := range bt_list.Record {
+	for i := range bt_list.Record {
 		bt_list.Record[i].FileName = exp.ReplaceAllLiteralString(bt_list.Record[i].FileName, `/`)
 		bt_list.Record[i].FileName = unescapeName(bt_list.Record[i].FileName)
 	}
@@ -692,9 +691,8 @@ func AddTask(req string) error {
 	case _TASK_TYPE_INVALID:
 		fallthrough
 	default:
-		return unexpectedErr
 	}
-	panic(unexpectedErr.Error())
+	return unexpectedErr
 }
 
 func AddBatchTasks(urls []string, oids ...string) error {
@@ -948,7 +946,7 @@ func process_task(tasks map[string]*Task, callback func(*Task)) error {
 	list := make([]string, 0, l)
 	nm_list := make([]string, 0, l)
 	bt_list := make([]string, 0, l)
-	for i, _ := range tasks {
+	for i := range tasks {
 		if tasks[i].status() == _FLAG_normal && tasks[i].DownloadStatus == "1" {
 			list = append(list, tasks[i].Id)
 			if tasks[i].TaskType == 0 {
@@ -978,7 +976,7 @@ func process_task(tasks map[string]*Task, callback func(*Task)) error {
 	if err != nil {
 		return err
 	}
-	for i, _ := range res.List {
+	for i := range res.List {
 		task := tasks[res.List[i].Id]
 		task.update(&res.List[i])
 		if callback != nil {
@@ -1040,7 +1038,7 @@ func DelayAllTasks() error {
 func ReAddTasks(ts map[string]*Task) {
 	nbt := make([]*Task, 0, len(ts))
 	bt := make([]*Task, 0, len(ts))
-	for i, _ := range ts {
+	for i := range ts {
 		if ts[i].expired() || ts[i].deleted() {
 			if ts[i].IsBt() {
 				bt = append(bt, ts[i])
@@ -1059,7 +1057,7 @@ func ReAddTasks(ts map[string]*Task) {
 			glog.V(2).Infoln(err)
 		}
 	}
-	for i, _ := range bt {
+	for i := range bt {
 		if err := addMagnetTask(fmt.Sprintf(GETTORRENT_URL, M.Uid, bt[i].Cid), bt[i].Id); err != nil {
 			glog.V(2).Infoln(err)
 		}

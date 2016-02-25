@@ -28,7 +28,7 @@ func download(t *Task, filter string, echo, verify bool, sink taskSink) error {
 			return err
 		}
 		var fullpath string
-		for j, _ := range m.Record {
+		for j := range m.Record {
 			if m.Record[j].Status == "2" {
 				if ok, _ := regexp.MatchString(`(?i)`+filter, m.Record[j].FileName); ok {
 					glog.V(2).Infoln("Downloading", m.Record[j].FileName, "...")

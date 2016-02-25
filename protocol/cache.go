@@ -45,16 +45,16 @@ func FindTasks(pattern string) (map[string]*Task, error) {
 	tt := v["type"]
 	if len(tt) > 0 {
 		tr := make(map[string]*Task)
-		for k, _ := range tt {
+		for k := range tt {
 			switch tt[k] {
 			case "bt":
-				for i, _ := range ts {
+				for i := range ts {
 					if ts[i].IsBt() {
 						tr[i] = ts[i]
 					}
 				}
 			case "nbt":
-				for i, _ := range ts {
+				for i := range ts {
 					if !ts[i].IsBt() {
 						tr[i] = ts[i]
 					}
@@ -67,28 +67,28 @@ func FindTasks(pattern string) (map[string]*Task, error) {
 	}
 	if len(ss) > 0 {
 		tr := make(map[string]*Task)
-		for k, _ := range ss {
+		for k := range ss {
 			switch ss[k] {
 			case "normal":
-				for i, _ := range ts {
+				for i := range ts {
 					if ts[i].normal() {
 						tr[i] = ts[i]
 					}
 				}
 			case "expired":
-				for i, _ := range ts {
+				for i := range ts {
 					if ts[i].expired() {
 						tr[i] = ts[i]
 					}
 				}
 			case "deleted":
-				for i, _ := range ts {
+				for i := range ts {
 					if ts[i].deleted() {
 						tr[i] = ts[i]
 					}
 				}
 			case "purged": // for rescue
-				for i, _ := range ts {
+				for i := range ts {
 					if ts[i].purged() {
 						tr[i] = ts[i]
 					}
@@ -101,34 +101,34 @@ func FindTasks(pattern string) (map[string]*Task, error) {
 	}
 	if len(gg) > 0 {
 		tr := make(map[string]*Task)
-		for k, _ := range gg {
+		for k := range gg {
 			switch gg[k] {
 			case "waiting":
-				for i, _ := range ts {
+				for i := range ts {
 					if ts[i].waiting() {
 						tr[i] = ts[i]
 					}
 				}
 			case "downloading":
-				for i, _ := range ts {
+				for i := range ts {
 					if ts[i].downloading() {
 						tr[i] = ts[i]
 					}
 				}
 			case "completed":
-				for i, _ := range ts {
+				for i := range ts {
 					if ts[i].completed() {
 						tr[i] = ts[i]
 					}
 				}
 			case "failed":
-				for i, _ := range ts {
+				for i := range ts {
 					if ts[i].failed() {
 						tr[i] = ts[i]
 					}
 				}
 			case "pending":
-				for i, _ := range ts {
+				for i := range ts {
 					if ts[i].pending() {
 						tr[i] = ts[i]
 					}
@@ -145,7 +145,7 @@ func FindTasks(pattern string) (map[string]*Task, error) {
 			return nil, invalidQueryErr
 		}
 		tr := make(map[string]*Task)
-		for i, _ := range ts {
+		for i := range ts {
 			if exp.MatchString(ts[i].TaskName) {
 				tr[i] = ts[i]
 			}
@@ -157,7 +157,7 @@ func FindTasks(pattern string) (map[string]*Task, error) {
 
 func (c *cache) GetTasksByIds(ids []string) map[string]*Task {
 	ts := make(map[string]*Task)
-	for i, _ := range ids {
+	for i := range ids {
 		if _, ok := c.Tasks[ids[i]]; ok {
 			ts[ids[i]] = c.Tasks[ids[i]]
 		}
@@ -181,7 +181,7 @@ func (c *cache) pushTask(t *Task) {
 
 func (c *cache) pushTasks(ts []*Task) {
 	c.Lock()
-	for i, _ := range ts {
+	for i := range ts {
 		c.Tasks[ts[i].Id] = ts[i]
 	}
 	c.Unlock()
@@ -189,7 +189,7 @@ func (c *cache) pushTasks(ts []*Task) {
 
 func (c *cache) InvalidateGroup(flag byte) {
 	c.Lock()
-	for i, _ := range c.Tasks {
+	for i := range c.Tasks {
 		if c.Tasks[i].status() == flag {
 			delete(c.Tasks, i)
 		}
@@ -205,7 +205,7 @@ func (c *cache) InvalidateAll() {
 
 func (c *cache) replaceAll(ts []*Task) {
 	m := make(map[string]*Task)
-	for i, _ := range ts {
+	for i := range ts {
 		m[ts[i].Id] = ts[i]
 	}
 	c.Lock()

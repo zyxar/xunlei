@@ -181,7 +181,7 @@ func main() {
 				ts, err := GetTasks()
 				if err == nil {
 					k := 0
-					for i, _ := range ts {
+					for i := range ts {
 						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
 						k++
 					}
@@ -192,7 +192,7 @@ func main() {
 				ts, err := GetDeletedTasks()
 				if err == nil {
 					k := 0
-					for i, _ := range ts {
+					for i := range ts {
 						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
 						k++
 					}
@@ -203,7 +203,7 @@ func main() {
 				ts, err := GetExpiredTasks()
 				if err == nil {
 					k := 0
-					for i, _ := range ts {
+					for i := range ts {
 						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
 						k++
 					}
@@ -214,7 +214,7 @@ func main() {
 				ts, err := GetCompletedTasks()
 				if err == nil {
 					k := 0
-					for i, _ := range ts {
+					for i := range ts {
 						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
 						k++
 					}
@@ -226,7 +226,7 @@ func main() {
 				ts, err = GetTasks()
 				if err == nil {
 					k := 0
-					for i, _ := range ts {
+					for i := range ts {
 						fmt.Printf("#%d %v\n", k, ts[i].Repr())
 						k++
 					}
@@ -248,7 +248,7 @@ func main() {
 				}
 				if err == nil {
 					k := 0
-					for i, _ := range ts[:num] {
+					for i := range ts[:num] {
 						fmt.Printf("#%d %v\n", k, ts[i].Coloring())
 						k++
 					}
@@ -279,7 +279,7 @@ func main() {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						j := 0
-						for i, _ := range ts {
+						for i := range ts {
 							if ts[i].IsBt() {
 								m, err := ts[i].FillBtList()
 								fmt.Printf("#%d %v\n", j, ts[i].Repr())
@@ -323,11 +323,11 @@ func main() {
 						t *Task
 						s string
 					})
-					for i, _ := range cmds[1:] {
+					for i := range cmds[1:] {
 						p := strings.Split(cmds[1:][i], "/")
 						m, err := _find(p[0])
 						if err == nil {
-							for i, _ := range m {
+							for i := range m {
 								var filter string
 								if len(p) == 1 {
 									filter = `.*`
@@ -341,7 +341,7 @@ func main() {
 							}
 						}
 					}
-					for i, _ := range pay {
+					for i := range pay {
 						if err = download(pay[i].t, pay[i].s, false, false, func(uri, filename string, echo bool) error {
 							_, err := RPCAddTask(uri, filename)
 							return err
@@ -357,7 +357,7 @@ func main() {
 				} else {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
-						for i, _ := range ts {
+						for i := range ts {
 							if _, err = os.Stat(ts[i].TaskName); err != nil {
 								fmt.Println(err)
 								continue
@@ -377,7 +377,7 @@ func main() {
 					})
 					del := false
 					check := conf.CheckHash
-					for i, _ := range cmds[1:] {
+					for i := range cmds[1:] {
 						if strings.HasPrefix(cmds[1:][i], "--") {
 							switch cmds[1:][i][2:] {
 							case "delete":
@@ -391,7 +391,7 @@ func main() {
 							p := strings.Split(cmds[1:][i], "/")
 							m, err := _find(p[0])
 							if err == nil {
-								for i, _ := range m {
+								for i := range m {
 									var filter string
 									if len(p) == 1 {
 										filter = `.*`
@@ -406,7 +406,7 @@ func main() {
 							}
 						}
 					}
-					for i, _ := range pay {
+					for i := range pay {
 						if err = download(pay[i].t, pay[i].s, true, check, dl); err != nil {
 							fmt.Println(err)
 						} else if del {
@@ -421,7 +421,7 @@ func main() {
 				if len(cmds) > 1 {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil { // TODO: improve find query
-						for i, _ := range ts {
+						for i := range ts {
 							if ts[i].IsBt() {
 								if err = GetTorrentFileByHash(ts[i].Cid, ts[i].TaskName+".torrent"); err != nil {
 									fmt.Println(err)
@@ -437,7 +437,7 @@ func main() {
 				if len(cmds) > 1 {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil { // TODO: improve find query
-						for i, _ := range ts {
+						for i := range ts {
 							if ts[i].IsBt() {
 								if b, err := GetTorrentByHash(ts[i].Cid); err != nil {
 									fmt.Println(err)
@@ -461,7 +461,7 @@ func main() {
 					err = insufficientArgErr
 				} else {
 					req := cmds[1:]
-					for j, _ := range req {
+					for j := range req {
 						if err = AddTask(req[j]); err != nil {
 							fmt.Println(err)
 						}
@@ -474,7 +474,7 @@ func main() {
 				} else {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
-						for i, _ := range ts {
+						for i := range ts {
 							if err = ts[i].Remove(); err != nil {
 								fmt.Println(err)
 							}
@@ -488,7 +488,7 @@ func main() {
 				} else {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
-						for i, _ := range ts {
+						for i := range ts {
 							if err = ts[i].Purge(); err != nil {
 								fmt.Println(err)
 							}
@@ -514,7 +514,7 @@ func main() {
 				if len(cmds) > 1 {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
-						for i, _ := range ts {
+						for i := range ts {
 							if err = ts[i].Pause(); err != nil {
 								fmt.Println(err)
 							}
@@ -528,7 +528,7 @@ func main() {
 				if len(cmds) > 1 {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
-						for i, _ := range ts {
+						for i := range ts {
 							if err = ts[i].Resume(); err != nil {
 								fmt.Println(err)
 							}
@@ -555,7 +555,7 @@ func main() {
 				} else {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
-						for i, _ := range ts {
+						for i := range ts {
 							if err = ts[i].Delay(); err != nil {
 								fmt.Println(err)
 							}
@@ -568,14 +568,14 @@ func main() {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						k := 0
-						for i, _ := range ts {
+						for i := range ts {
 							if !ts[i].IsBt() {
 								fmt.Printf("#%d %s: %v\n", k, ts[i].Id, ts[i].LixianURL)
 							} else {
 								m, err := ts[i].FillBtList()
 								if err == nil {
 									fmt.Printf("#%d %s:\n", k, ts[i].Id)
-									for j, _ := range m.Record {
+									for j := range m.Record {
 										fmt.Printf("  #%d %s\n", j, m.Record[j].DownURL)
 									}
 								} else {
@@ -593,7 +593,7 @@ func main() {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
 						k := 0
-						for i, _ := range ts {
+						for i := range ts {
 							fmt.Printf("#%d %v\n", k, ts[i].Coloring())
 							k++
 						}
@@ -612,7 +612,7 @@ func main() {
 				if len(cmds) > 1 {
 					var ts map[string]*Task
 					if ts, err = find(cmds[1:]); err == nil {
-						for i, _ := range ts {
+						for i := range ts {
 							low, high, err := ts[i].GetVodURL()
 							if err == nil {
 								fmt.Printf("%s\n%s\n", low, high)
@@ -625,7 +625,7 @@ func main() {
 			case "vod":
 				if len(cmds) > 1 {
 					var list interface{}
-					for i, _ := range cmds[1:] {
+					for i := range cmds[1:] {
 						switch cmds[1:][i] {
 						case "hist":
 							list, err = GetHistoryPlayList()

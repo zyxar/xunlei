@@ -10,7 +10,7 @@ import (
 func TestAddUri(t *testing.T) {
 	ts, _ := _find("status=normal&group=completed&type=nbt")
 	var v *Task
-	for i, _ := range ts {
+	for i := range ts {
 		v = ts[i]
 		break
 	}

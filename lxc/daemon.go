@@ -262,7 +262,7 @@ func daemonLoop() {
 				case string:
 					err = AddTask(url)
 				case []string:
-					for i, _ := range url {
+					for i := range url {
 						if err = AddTask(url[i]); err != nil {
 							break
 						}

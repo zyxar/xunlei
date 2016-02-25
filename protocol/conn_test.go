@@ -147,7 +147,7 @@ func TestGetDeletedTasks(t *testing.T) {
 // }
 
 func TestFillBtListAsync(t *testing.T) {
-	for i, _ := range M.Tasks {
+	for i := range M.Tasks {
 		t := M.Tasks[i]
 		if t.status() == _FLAG_normal && t.IsBt() {
 			FillBtListAsync(t.Id, t.Cid, nil)
@@ -165,7 +165,7 @@ func TestFind(t *testing.T) {
 		t.Error(err)
 	}
 	fmt.Println("----- group=completed -----")
-	for i, _ := range m {
+	for i := range m {
 		fmt.Printf("%v\n", m[i])
 	}
 	m, err = FindTasks("status=deleted")
@@ -173,7 +173,7 @@ func TestFind(t *testing.T) {
 		t.Error(err)
 	}
 	fmt.Println("----- status=deleted -----")
-	for i, _ := range m {
+	for i := range m {
 		fmt.Printf("%v\n", m[i])
 	}
 	m, err = FindTasks("type=bt")
@@ -181,7 +181,7 @@ func TestFind(t *testing.T) {
 		t.Error(err)
 	}
 	fmt.Println("----- type=bt -----")
-	for i, _ := range m {
+	for i := range m {
 		fmt.Printf("%v\n", m[i])
 	}
 	m, err = FindTasks("name=monsters")
@@ -189,7 +189,7 @@ func TestFind(t *testing.T) {
 		t.Error(err)
 	}
 	fmt.Println("----- name=monsters -----")
-	for i, _ := range m {
+	for i := range m {
 		fmt.Printf("%v\n", m[i])
 	}
 	m, err = FindTasks("name=monsters&group=completed&status=deleted&type=bt")
@@ -197,7 +197,7 @@ func TestFind(t *testing.T) {
 		t.Error(err)
 	}
 	fmt.Println("----- name=monsters&group=completed&status=deleted&type=bt -----")
-	for i, _ := range m {
+	for i := range m {
 		fmt.Printf("%v\n", m[i])
 	}
 }

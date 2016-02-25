@@ -286,7 +286,7 @@ func (this Task) GetVodURL() (lurl, hurl string, err error) {
 	json.Unmarshal(s[1], &res)
 	fmt.Printf("%+v\n", res.Resp)
 	if res.Resp.Status == 0 { // TODO: also check `TransWait`
-		for i, _ := range res.Resp.VodList {
+		for i := range res.Resp.VodList {
 			if res.Resp.VodList[i].Spec == 225536 {
 				lurl = res.Resp.VodList[i].URL
 			} else if res.Resp.VodList[i].Spec == 282880 {
@@ -301,7 +301,7 @@ func (this Task) GetVodURL() (lurl, hurl string, err error) {
 
 func (this _bt_list) String() string {
 	r := fmt.Sprintf("%s %s %s/%d\n", this.Id, this.InfoId, this.BtNum, this.BtPerNum)
-	for i, _ := range this.Record {
+	for i := range this.Record {
 		r += fmt.Sprintf("#%d %s %s %s\n", this.Record[i].Id, this.Record[i].FileName, this.Record[i].SizeReadable, this.Record[i].Status)
 	}
 	return r
@@ -309,7 +309,7 @@ func (this _bt_list) String() string {
 
 func (this bt_list) String() string {
 	r := fmt.Sprintf("%s %s %s\n", this.Id, this.InfoId, this.BtNum)
-	for i, _ := range this.Record {
+	for i := range this.Record {
 		r += fmt.Sprintf("#%d %s %s %s\n", this.Record[i].Id, this.Record[i].FileName, this.Record[i].SizeReadable, this.Record[i].Status)
 	}
 	return r

@@ -16,13 +16,13 @@ type configure struct {
 }
 
 var (
-	version        string = "master"
 	home           string
 	configFileName string
 	cookieFile     string
 	isDaemon       bool
 	conf           configure
-	fromPath       string = "github.com/zyxar/xunlei/lxc"
+	version        = "master"
+	fromPath       = "github.com/zyxar/xunlei/lxc"
 )
 
 func (id *configure) save(cf string) (b []byte, err error) {
