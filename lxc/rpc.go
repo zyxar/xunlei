@@ -10,7 +10,7 @@ import (
 	"github.com/zyxar/xunlei/protocol"
 )
 
-var rpcc rpc.RPCProto
+var rpcc rpc.Protocol
 
 func init() {
 	rpcc = rpc.New("http://localhost:6800/jsonrpc")
@@ -38,7 +38,7 @@ func RPCAddTask(uri, filename string) (gid string, err error) {
 	if err != nil {
 		return "", err
 	}
-	return rpcc.AddUri(uri, lxhead)
+	return rpcc.AddURI(uri, lxhead)
 }
 
 func RPCStatus() ([]byte, error) {
