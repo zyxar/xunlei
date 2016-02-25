@@ -16,13 +16,17 @@ type configure struct {
 }
 
 var (
+	conf           configure
+	isDaemon       bool
 	home           string
 	configFileName string
 	cookieFile     string
-	isDaemon       bool
-	conf           configure
-	version        = "master"
-	fromPath       = "github.com/zyxar/xunlei/lxc"
+	hashes         string
+)
+
+const (
+	version    = "master"
+	binaryName = "github.com/zyxar/xunlei/lxc"
 )
 
 func (id *configure) save(cf string) (b []byte, err error) {
@@ -46,7 +50,18 @@ func (id *configure) load(cf string) (b []byte, err error) {
 var printVer bool
 
 func printVersion() {
-	fmt.Printf("lxc version: %s [%s]\n", version, fromPath)
+	if len(hashes) > 0 {
+		fmt.Printf("[%s]\nversions:\n", binaryName)
+		var deps map[string]string
+		if json.Unmarshal([]byte(hashes), &deps) == nil {
+			for k, v := range deps {
+				fmt.Printf("     %s:\r\t\t\t\t%s\n", k, v)
+			}
+		}
+		fmt.Println()
+	} else {
+		fmt.Printf("[%s] version: %s\n", binaryName, version)
+	}
 }
 
 func initConf() {
