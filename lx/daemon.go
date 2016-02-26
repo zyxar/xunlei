@@ -13,31 +13,30 @@ import (
 	"time"
 
 	"github.com/conclave/web" // fork from github.com/hoisie/web
-	"github.com/golang/glog"
-	. "github.com/zyxar/xunlei/protocol"
+	"github.com/zyxar/xunlei/protocol"
 )
 
 var register = map[string]interface{}{
-	"AddBatchTasks":        AddBatchTasks,
-	"AddTask":              AddTask,
-	"DelayTask":            DelayTask,
-	"DeleteTask":           DeleteTask,
-	"DeleteTasks":          DeleteTasks,
-	"FillBtList":           FillBtList,
-	"GetCompletedTasks":    GetCompletedTasks,
-	"GetDeletedTasks":      GetDeletedTasks,
-	"GetExpiredTasks":      GetExpiredTasks,
-	"GetGdriveId":          GetGdriveId,
-	"GetIncompletedTasks":  GetIncompletedTasks,
-	"GetTasks":             GetTasks,
-	"GetTorrentByHash":     GetTorrentByHash,
-	"GetTorrentFileByHash": GetTorrentFileByHash,
-	"PauseTasks":           PauseTasks,
-	"ProcessTask":          ProcessTask,
-	"PurgeTask":            PurgeTask,
-	"DelayAllTasks":        DelayAllTasks,
-	"RenameTask":           RenameTask,
-	"ResumeTasks":          ResumeTasks,
+	"AddBatchTasks":        protocol.AddBatchTasks,
+	"AddTask":              protocol.AddTask,
+	"DelayTask":            protocol.DelayTask,
+	"DeleteTask":           protocol.DeleteTask,
+	"DeleteTasks":          protocol.DeleteTasks,
+	"FillBtList":           protocol.FillBtList,
+	"GetCompletedTasks":    protocol.GetCompletedTasks,
+	"GetDeletedTasks":      protocol.GetDeletedTasks,
+	"GetExpiredTasks":      protocol.GetExpiredTasks,
+	"GetGdriveId":          protocol.GetGdriveId,
+	"GetIncompletedTasks":  protocol.GetIncompletedTasks,
+	"GetTasks":             protocol.GetTasks,
+	"GetTorrentByHash":     protocol.GetTorrentByHash,
+	"GetTorrentFileByHash": protocol.GetTorrentFileByHash,
+	"PauseTasks":           protocol.PauseTasks,
+	"ProcessTask":          protocol.ProcessTask,
+	"PurgeTask":            protocol.PurgeTask,
+	"DelayAllTasks":        protocol.DelayAllTasks,
+	"RenameTask":           protocol.RenameTask,
+	"ResumeTasks":          protocol.ResumeTasks,
 }
 
 type payload struct {
@@ -113,29 +112,28 @@ func unpack(ctx *web.Context, action func(*payload)) {
 
 func daemonLoop() {
 	ch := make(chan byte)
-	ProcessTaskDaemon(ch, func(t *Task) {
-		glog.V(2).Infof("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
+	protocol.ProcessTaskDaemon(ch, func(t *protocol.Task) {
 	})
-	go GetTasks()
+	go protocol.GetTasks()
 
 	// GET - ls, info
 	// ctx.SetHeader("Access-Control-Allow-Origin", "*", true)
 	web.Get("/task/([0-4]|l[cdeis])", func(ctx *web.Context, val string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
-		var v []*Task
+		var v []*protocol.Task
 		var err error
 		switch val {
 		case "0", "ls":
-			v, err = GetTasks()
+			v, err = protocol.GetTasks()
 		case "1", "li":
-			v, err = GetIncompletedTasks()
+			v, err = protocol.GetIncompletedTasks()
 		case "2", "lc":
-			v, err = GetCompletedTasks()
+			v, err = protocol.GetCompletedTasks()
 		case "3", "ld":
-			v, err = GetDeletedTasks()
+			v, err = protocol.GetDeletedTasks()
 		case "4", "le":
-			v, err = GetExpiredTasks()
+			v, err = protocol.GetExpiredTasks()
 		default:
 			ctx.WriteHeader(404)
 			ctx.Write(errorMsg("INVALID TASK GROUP"))
@@ -158,12 +156,12 @@ func daemonLoop() {
 	web.Get("/session", func(ctx *web.Context) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
-		if M.Account == nil {
+		if protocol.M.Account == nil {
 			ctx.WriteHeader(404)
 			ctx.Write(errorMsg("ACCOUNT INFORMATION NOT RETRIEVED"))
 			return
 		}
-		r, err := json.Marshal(M.Account)
+		r, err := json.Marshal(protocol.M.Account)
 		if err != nil {
 			ctx.WriteHeader(503)
 			ctx.Write(errorMsg(err.Error()))
@@ -181,7 +179,7 @@ func daemonLoop() {
 			ctx.Write(errorMsg("INVALID PAGE NUMBER"))
 			return
 		}
-		b, err := RawTaskList(4, page)
+		b, err := protocol.RawTaskList(4, page)
 		if err != nil {
 			ctx.WriteHeader(503)
 			ctx.Write(errorMsg(err.Error()))
@@ -193,7 +191,7 @@ func daemonLoop() {
 	web.Get("/task/bt/([0-9]+)/(.*)", func(ctx *web.Context, taskId string, taskHash string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
-		m, err := RawFillBtList(taskId, taskHash, 1)
+		m, err := protocol.RawFillBtList(taskId, taskHash, 1)
 		if err != nil {
 			ctx.WriteHeader(503)
 			ctx.Write(errorMsg(err.Error()))
@@ -212,11 +210,11 @@ func daemonLoop() {
 			var err error
 			switch v.Action {
 			case "relogin":
-				if !IsOn() {
-					if err = Login(conf.Id, conf.Pass); err != nil {
+				if !protocol.IsOn() {
+					if err = protocol.Login(conf.Id, conf.Pass); err != nil {
 						ctx.WriteHeader(400)
 						ctx.Write(errorMsg(err.Error()))
-					} else if err = SaveSession(cookieFile); err != nil {
+					} else if err = protocol.SaveSession(cookieFile); err != nil {
 						ctx.Write(errorMsg(err.Error()))
 					} else {
 						ctx.Write(makeResponse(false, "SESSION STATUS OK"))
@@ -225,7 +223,7 @@ func daemonLoop() {
 					ctx.Write(makeResponse(false, "SESSION STATUS OK"))
 				}
 			case "saveconf", "save_conf":
-				conf.Pass = EncryptPass(conf.Pass)
+				conf.Pass = protocol.EncryptPass(conf.Pass)
 				if _, err := conf.save(configFileName); err != nil {
 					ctx.WriteHeader(400)
 					ctx.Write(errorMsg(err.Error()))
@@ -240,7 +238,7 @@ func daemonLoop() {
 				}
 				ctx.Write(makeResponse(false, "CONFIGURATION RELOADED"))
 			case "savesession", "save_session":
-				if err := SaveSession(cookieFile); err != nil {
+				if err := protocol.SaveSession(cookieFile); err != nil {
 					ctx.WriteHeader(400)
 					ctx.Write(errorMsg(err.Error()))
 					return
@@ -260,10 +258,10 @@ func daemonLoop() {
 			case "add":
 				switch url := v.Data.(type) {
 				case string:
-					err = AddTask(url)
+					err = protocol.AddTask(url)
 				case []string:
 					for i := range url {
-						if err = AddTask(url[i]); err != nil {
+						if err = protocol.AddTask(url[i]); err != nil {
 							break
 						}
 					}
@@ -288,11 +286,10 @@ func daemonLoop() {
 	// PUT - delay(All), pause, resume, rename, dl, dt, ti
 	web.Put("/task", func(ctx *web.Context) {
 		unpack(ctx, func(v *payload) {
-			glog.V(2).Infof("payload: %#v\n", v)
 			var err error
 			switch v.Action {
 			case "delayAll":
-				err = DelayAllTasks()
+				err = protocol.DelayAllTasks()
 			case "pause":
 				ctx.WriteHeader(501)
 				ctx.Write(errorMsg("NOT IMPLEMENTED"))
@@ -328,7 +325,6 @@ func daemonLoop() {
 	// DELETE - rm, purge, GOODBYE
 	web.Delete("/task", func(ctx *web.Context) {
 		unpack(ctx, func(v *payload) {
-			glog.V(2).Infof("payload: %#v\n", v)
 			var err error
 			switch v.Action {
 			case "remove", "delete", "rm":
@@ -350,7 +346,6 @@ func daemonLoop() {
 	})
 	web.Delete("/session", func(ctx *web.Context) {
 		unpack(ctx, func(v *payload) {
-			glog.V(2).Infof("payload: %#v\n", v)
 			if v.Action == "GOODBYE" {
 				ctx.Write(makeResponse(false, "GOODBYE!"))
 				time.AfterFunc(time.Second, func() {

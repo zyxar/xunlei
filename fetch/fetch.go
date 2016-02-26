@@ -3,8 +3,6 @@ package fetch
 import (
 	"os"
 	"os/exec"
-
-	"github.com/golang/glog"
 )
 
 type Fetcher interface {
@@ -36,19 +34,22 @@ func init() {
 	}
 }
 
+func callCommand(cmd string, args []string, echo bool) error {
+	command := exec.Command(cmd, args...)
+	if echo {
+		command.Stdout = os.Stdout
+		command.Stderr = os.Stderr
+	}
+	if err := command.Start(); err != nil {
+		return err
+	}
+	return command.Wait()
+}
+
 func (w Wget) Fetch(uri, gdriveid, filename string, echo bool) error {
 	args := []string{"--header=Cookie: gdriveid=" + gdriveid, uri, "-O", filename}
 	args = append(args, w.options...)
-	cmd := exec.Command("wget", args...)
-	if echo {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-	err := cmd.Start()
-	if err != nil {
-		glog.V(2).Infoln(err)
-	}
-	return cmd.Wait()
+	return callCommand("wget", args, echo)
 }
 
 func (w *Wget) SetOptions(options ...string) {
@@ -58,16 +59,7 @@ func (w *Wget) SetOptions(options ...string) {
 func (c Curl) Fetch(uri, gdriveid, filename string, echo bool) error {
 	args := []string{"-L", uri, "--cookie", "gdriveid=" + gdriveid, "--output", filename}
 	args = append(args, c.options...)
-	cmd := exec.Command("curl", args...)
-	if echo {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-	err := cmd.Start()
-	if err != nil {
-		glog.V(2).Infoln(err)
-	}
-	return cmd.Wait()
+	return callCommand("curl", args, echo)
 }
 
 func (c *Curl) SetOptions(options ...string) {
@@ -77,16 +69,7 @@ func (c *Curl) SetOptions(options ...string) {
 func (a Aria2) Fetch(uri, gdriveid, filename string, echo bool) error {
 	args := []string{"--header=Cookie: gdriveid=" + gdriveid, uri, "--out", filename}
 	args = append(args, a.options...)
-	cmd := exec.Command("aria2c", args...)
-	if echo {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-	err := cmd.Start()
-	if err != nil {
-		glog.V(2).Infoln(err)
-	}
-	return cmd.Wait()
+	return callCommand("aria2c", args, echo)
 }
 
 func (a *Aria2) SetOptions(options ...string) {
@@ -96,16 +79,7 @@ func (a *Aria2) SetOptions(options ...string) {
 func (a Axel) Fetch(uri, gdriveid, filename string, echo bool) error {
 	args := []string{"--header=Cookie: gdriveid=" + gdriveid, uri, "--output", filename}
 	args = append(args, a.options...)
-	cmd := exec.Command("axel", args...)
-	if echo {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-	err := cmd.Start()
-	if err != nil {
-		glog.V(2).Infoln(err)
-	}
-	return cmd.Wait()
+	return callCommand("axel", args, echo)
 }
 
 func (a *Axel) SetOptions(options ...string) {

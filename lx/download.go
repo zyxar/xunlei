@@ -2,26 +2,26 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"regexp"
 
-	"github.com/golang/glog"
-	. "github.com/zyxar/xunlei/fetch"
-	. "github.com/zyxar/xunlei/protocol"
+	"github.com/zyxar/xunlei/fetch"
+	"github.com/zyxar/xunlei/protocol"
 )
 
-var worker Fetcher = DefaultFetcher
+var worker fetch.Fetcher = fetch.DefaultFetcher
 
 type taskSink func(uri, filename string, echo bool) error
 
 func dl(uri, filename string, echo bool) error { //TODO: check file existence
-	if len(M.Gid) == 0 {
+	if len(protocol.M.Gid) == 0 {
 		return errors.New("gdriveid missing.")
 	}
-	return worker.Fetch(uri, M.Gid, filename, echo)
+	return worker.Fetch(uri, protocol.M.Gid, filename, echo)
 }
 
-func download(t *Task, filter string, echo, verify bool, sink taskSink) error {
+func download(t *protocol.Task, filter string, echo, verify bool, sink taskSink) error {
 	if t.IsBt() {
 		m, err := t.FillBtList()
 		if err != nil {
@@ -31,7 +31,7 @@ func download(t *Task, filter string, echo, verify bool, sink taskSink) error {
 		for j := range m.Record {
 			if m.Record[j].Status == "2" {
 				if ok, _ := regexp.MatchString(`(?i)`+filter, m.Record[j].FileName); ok {
-					glog.V(2).Infoln("Downloading", m.Record[j].FileName, "...")
+					fmt.Println("Downloading", m.Record[j].FileName, "...")
 					if len(m.Record) == 1 { // choose not to use torrent info, to reduce network transportation
 						fullpath = m.Record[j].FileName
 					} else {
@@ -41,17 +41,17 @@ func download(t *Task, filter string, echo, verify bool, sink taskSink) error {
 						return err
 					}
 				} else {
-					glog.V(3).Infof("Skip unselected task %s", m.Record[j].FileName)
+					fmt.Printf("Skip unselected task %s\n", m.Record[j].FileName)
 				}
 			} else {
-				glog.V(2).Infof("Skip incompleted task %s", m.Record[j].FileName)
+				fmt.Printf("Skip incompleted task %s\n", m.Record[j].FileName)
 			}
 		}
 	} else {
 		if len(t.LixianURL) == 0 {
 			return errors.New("Target file not ready for downloading.")
 		}
-		glog.V(2).Infoln("Downloading", t.TaskName, "...")
+		fmt.Println("Downloading", t.TaskName, "...")
 		if err := sink(t.LixianURL, t.TaskName, echo); err != nil {
 			return err
 		}

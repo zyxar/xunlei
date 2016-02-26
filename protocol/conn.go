@@ -18,7 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/glog"
+	"github.com/apex/log"
+	"github.com/apex/log/handlers/text"
 	"github.com/zyxar/xunlei/cookiejar"
 )
 
@@ -58,6 +59,8 @@ func init() {
 	btTaskAlreadyErr = errors.New("Bt task already exists.")
 	taskNoRedownCapErr = errors.New("Task not capable for restart.")
 	timeoutErr = errors.New("Request time out.")
+	log.SetLevel(log.InfoLevel)
+	log.SetHandler(text.New(os.Stderr))
 }
 
 func routine(req *http.Request) (*http.Response, error) {
@@ -83,7 +86,7 @@ retry:
 }
 
 func get(dest string) ([]byte, error) {
-	glog.V(2).Infoln("==>", dest)
+	log.Debugf("==> %s", dest)
 	req, err := http.NewRequest("GET", dest, nil)
 	if err != nil {
 		return nil, err
@@ -95,7 +98,7 @@ func get(dest string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	glog.V(2).Infoln(resp.Status)
+	log.Info(resp.Status)
 	if resp.StatusCode/100 > 3 {
 		return nil, errors.New(resp.Status)
 	}
@@ -103,7 +106,7 @@ func get(dest string) ([]byte, error) {
 }
 
 func post(dest string, data string) ([]byte, error) {
-	glog.V(2).Infoln("==>", dest)
+	log.Debugf("==> %s", dest)
 	req, err := http.NewRequest("POST", dest, strings.NewReader(data))
 	if err != nil {
 		return nil, err
@@ -116,7 +119,7 @@ func post(dest string, data string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	glog.V(2).Infoln(resp.Status)
+	log.Info(resp.Status)
 	if resp.StatusCode/100 > 3 {
 		return nil, errors.New(resp.Status)
 	}
@@ -143,7 +146,7 @@ loop:
 			}
 			vcode = cks[i].Value[2:]
 			vcode = strings.ToUpper(vcode)
-			glog.V(2).Infoln("verify_code:", vcode)
+			log.Debugf("verify_code: %s", vcode)
 			break
 		}
 	}
@@ -155,7 +158,7 @@ loop:
 		return
 	}
 	M.Uid = getCookie("http://xunlei.com", "userid")
-	glog.V(2).Infof("uid: %s\n", M.Uid)
+	log.Infof("uid: %s\n", M.Uid)
 	if len(M.Uid) == 0 {
 		err = loginFailedErr
 		return
@@ -187,19 +190,19 @@ func ResumeSession(cookieFile string) (err error) {
 func verifyLogin() bool {
 	r, err := get(VERIFY_LOGIN_URL)
 	if err != nil {
-		glog.V(2).Infoln(err)
+		log.Error(err.Error())
 		return false
 	}
 	exp := regexp.MustCompile(`.*\((\{.*\})\)`)
 	s := exp.FindSubmatch(r)
 	if s == nil {
-		glog.V(2).Infof("Response: %s\n", r)
+		log.Debugf("Response: %s\n", r)
 		return false
 	}
 	var resp login_resp
 	json.Unmarshal(s[1], &resp)
 	if resp.Result == 0 {
-		glog.V(2).Infof("Response: %s\n", s[1])
+		log.Debugf("Response: %s\n", s[1])
 		return false
 	}
 	fmt.Printf(`
@@ -370,7 +373,7 @@ func GetGdriveId() (gid string, err error) {
 		M.AccountInfo = &resp.UserInfo
 	}
 	gid = M.Gid
-	glog.V(2).Infoln("gdriveid:", gid)
+	log.Debugf("gdriveid: %s", gid)
 	return
 }
 
@@ -401,7 +404,7 @@ func tasklist_nofresh(tid, page int) ([]byte, error) {
 		tid = 4
 	}
 	uri := fmt.Sprintf(SHOWTASK_UNFRESH, tid, page, _page_size, page)
-	glog.V(2).Infoln("==>", uri)
+	log.Infof("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
@@ -413,7 +416,7 @@ func tasklist_nofresh(tid, page int) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	glog.V(2).Infoln(resp.Status)
+	log.Info(resp.Status)
 	r, err := readBody(resp)
 	resp.Body.Close()
 	if err != nil {
@@ -429,7 +432,7 @@ func tasklist_nofresh(tid, page int) ([]byte, error) {
 
 func readExpired() ([]byte, error) {
 	uri := fmt.Sprintf(EXPIRE_HOME, M.Uid)
-	glog.V(2).Infoln("==>", uri)
+	log.Infof("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
@@ -443,7 +446,7 @@ func readExpired() ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	glog.V(2).Infoln(resp.Status)
+	log.Info(resp.Status)
 	return readBody(resp)
 }
 
@@ -482,7 +485,7 @@ func readHistory(page int) ([]byte, error) {
 		uri = fmt.Sprintf(HISTORY_HOME, M.Uid)
 	}
 
-	glog.V(2).Infoln("==>", uri)
+	log.Infof("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
@@ -496,7 +499,7 @@ func readHistory(page int) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	glog.V(2).Infoln(resp.Status)
+	log.Info(resp.Status)
 	return readBody(resp)
 }
 
@@ -531,7 +534,7 @@ func DelayTask(taskid string) error {
 		Result byte `json:"result"`
 	}
 	json.Unmarshal(s[1], &resp)
-	glog.V(2).Infof("%s: %s\n", taskid, resp.K.Llt)
+	log.Infof("%s: %s\n", taskid, resp.K.Llt)
 	return nil
 }
 
@@ -559,7 +562,7 @@ func redownload(tasks []*Task) error {
 	if err != nil {
 		return err
 	}
-	glog.V(2).Infof("%s\n", r)
+	log.Infof("%s\n", r)
 	return nil
 }
 
@@ -593,7 +596,7 @@ retry:
 			}
 			next++
 		} else {
-			glog.V(2).Infoln("err in fillBtList()")
+			log.Error("err in fillBtList()")
 		}
 	}
 	return &list, nil
@@ -603,7 +606,7 @@ func RawFillBtList(taskid, infohash string, page int) ([]byte, error) {
 	var pgsize = _bt_page_size
 retry:
 	uri := fmt.Sprintf(FILLBTLIST_URL, taskid, infohash, page, M.Uid, "task", currentTimestamp())
-	glog.V(2).Infoln("==>", uri)
+	log.Infof("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
@@ -615,7 +618,7 @@ retry:
 	if err != nil {
 		return nil, err
 	}
-	glog.V(2).Infoln(resp.Status)
+	log.Info(resp.Status)
 	defer resp.Body.Close()
 	r, err := readBody(resp)
 	if err == io.ErrUnexpectedEOF && pgsize == _bt_page_size {
@@ -627,7 +630,7 @@ retry:
 
 func fillBtList(taskid, infohash string, page int, pgsize string) (*_bt_list, error) {
 	uri := fmt.Sprintf(FILLBTLIST_URL, taskid, infohash, page, M.Uid, "task", currentTimestamp())
-	glog.V(2).Infoln("==>", uri)
+	log.Infof("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
@@ -639,7 +642,7 @@ func fillBtList(taskid, infohash string, page int, pgsize string) (*_bt_list, er
 	if err != nil {
 		return nil, err
 	}
-	glog.V(2).Infoln(resp.Status)
+	log.Info(resp.Status)
 	r, err := readBody(resp)
 	resp.Body.Close()
 	if err != nil {
@@ -850,7 +853,7 @@ func addTorrentTask(filename string) (err error) {
 	writer.WriteField("interfrom", "task")
 
 	dest := TORRENTUPLOAD_URL
-	glog.V(2).Infoln("==>", dest)
+	log.Infof("==> %s", dest)
 	req, err := http.NewRequest("POST", dest, bytes.NewReader(body.Bytes()))
 	if err != nil {
 		return
@@ -862,7 +865,7 @@ func addTorrentTask(filename string) (err error) {
 	if err != nil {
 		return
 	}
-	glog.V(2).Infoln(resp.Status)
+	log.Info(resp.Status)
 	r, err := readBody(resp)
 	resp.Body.Close()
 	exp := regexp.MustCompile(`<script>document\.domain="xunlei\.com";var btResult =(\{.+\});(var btRtcode = 0)*</script>`)
@@ -917,12 +920,12 @@ func ProcessTaskDaemon(ch chan byte, callback func(*Task)) {
 			case <-ch:
 				err := process_task(M.Tasks, callback)
 				if err != nil {
-					glog.V(2).Infoln("error in ProcessTask():", err)
+					log.Errorf("error in ProcessTask(): %v", err)
 				}
 			case <-time.After(60 * time.Second):
 				err := process_task(M.Tasks, callback)
 				if err != nil {
-					glog.V(2).Infoln("error in ProcessTask():", err)
+					log.Errorf("error in ProcessTask(): %v", err)
 					time.Sleep(5 * time.Second)
 					ch <- 1
 				}
@@ -995,7 +998,7 @@ func GetTorrentByHash(hash string) ([]byte, error) {
 	exp := regexp.MustCompile(`alert\('(.*)'\)`)
 	s := exp.FindSubmatch(r)
 	if s != nil {
-		glog.V(2).Infof("%s\n", s[1])
+		log.Infof("%s\n", s[1])
 		return nil, invalidResponseErr
 	}
 	return r, nil
@@ -1031,7 +1034,7 @@ func DelayAllTasks() error {
 	if err != nil {
 		return err
 	}
-	glog.V(2).Infof("%s\n", r)
+	log.Infof("%s\n", r)
 	return nil
 }
 
@@ -1049,17 +1052,17 @@ func ReAddTasks(ts map[string]*Task) {
 	}
 	if len(nbt) == 1 {
 		if err := nbt[0].Readd(); err != nil {
-			glog.V(2).Infoln(err)
+			log.Error(err.Error())
 		}
 	} else if len(nbt) > 1 {
 		urls, ids := extractTasks(nbt)
 		if err := AddBatchTasks(urls, ids...); err != nil {
-			glog.V(2).Infoln(err)
+			log.Error(err.Error())
 		}
 	}
 	for i := range bt {
 		if err := addMagnetTask(fmt.Sprintf(GETTORRENT_URL, M.Uid, bt[i].Cid), bt[i].Id); err != nil {
-			glog.V(2).Infoln(err)
+			log.Error(err.Error())
 		}
 	}
 }
@@ -1094,7 +1097,7 @@ func rename_task(taskid, newname string, tasktype byte) error {
 	if resp.Result != 0 {
 		return fmt.Errorf("error in rename task: %d", resp.Result)
 	}
-	glog.V(2).Infoln(resp.TaskId, "=>", resp.FileName)
+	log.Infof("%s => %s", resp.TaskId, resp.FileName)
 	return nil
 }
 

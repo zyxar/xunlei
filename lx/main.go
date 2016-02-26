@@ -12,7 +12,6 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/golang/glog"
 	"github.com/zyxar/taipei"
 	. "github.com/zyxar/xunlei/protocol"
 )
@@ -91,10 +90,9 @@ func main() {
 		cmd := exec.Command(os.Args[0], "-loop", "-close-fds")
 		err := cmd.Start()
 		if err != nil {
-			glog.Fatalln(err)
+			fmt.Println(err)
 		}
-		cmd.Process.Release()
-		// FIXME: find a proper way to detect daemon error and call cmd.Process.Kill().
+		cmd.Process.Release() // FIXME: find a proper way to detect daemon error and call cmd.Process.Kill().
 		return
 	}
 
@@ -140,15 +138,15 @@ func main() {
 			}
 			switch cmds[0] {
 			case "ison":
-				glog.V(2).Infoln(IsOn())
+				fmt.Println(IsOn())
 			case "me":
 				fmt.Printf("%#v\n", *M.Account)
 			case "relogin":
 				if !IsOn() {
 					if err = Login(conf.Id, conf.Pass); err != nil {
-						glog.V(2).Infoln(err)
+						fmt.Println(err)
 					} else if err = SaveSession(cookieFile); err != nil {
-						glog.V(2).Infoln(err)
+						fmt.Println(err)
 					}
 				} else {
 					fmt.Println("Already log on.")
