@@ -13,20 +13,20 @@ Inspired by
 
 ## Package Status
 
-- protocol:  **✏**
-- lxc:  **✏**
+- [x] protocol
+- [x] lx
 
 ## xunlei/protocol
 
 [![GoDoc](https://godoc.org/github.com/zyxar/xunlei/protocol?status.svg)](https://godoc.org/github.com/zyxar/xunlei/protocol)
 
-## xunlei/`lxc -d`
+## xunlei/`lx -d`
 
 後臺工具
 
 ```bash
-$ lxc -d #start web server and daemonize
-$ lxc -loop #start web server
+$ lx -d #start web server and daemonize
+$ lx -loop #start web server
 ```
 
 - [x] 接受 `RESTful` 調用
@@ -39,7 +39,7 @@ Simple web front end, build upon:
   - jQuery
   - Bootstrap
 
-## xunlei/`lxc`
+## xunlei/`lx`
 
 命令行工具
 
@@ -50,7 +50,7 @@ Simple web front end, build upon:
 
 ## TODO
 
-- [x] really daemonize `lxc(-d)`;
+- [x] really daemonize `lx(-d)`;
 - [x] start `aria2` standalone, and submit tasks to it via RPC;
 - [ ] Node.js frontend/client;
 - [ ] VOD API and play demo;

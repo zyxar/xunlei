@@ -9,7 +9,9 @@ else
   this_dir=$(dirname $(readlink -f $0))
 fi
 
-FILES=$(find ${this_dir}/.. -type f -name "*.go" | grep -v "_test.go")
+pushd ${this_dir} >/dev/null
+
+FILES=$(find .. -type f -name "*.go" | grep -v "_test.go")
 REPOS=$(
 for file in ${FILES}; do
   cat ${file} | grep "github.com" | cut -d ' ' -f 1
@@ -20,7 +22,7 @@ done | cut -d '/' -f 1,2,3 | cut -d '"' -f 2 | sort | uniq | grep '/'
 HASHES=\{$(
 for repo in ${REPOS}; do
   pushd ${GOPATH}/src/${repo} >/dev/null
-  echo \"${repo}\":\"$(git show -s --format=%H,%cI)\"
+  echo \"${repo}\":\"$(git show -s --format=%H,%cI | cut -d 'T' -f 1)\"
   popd >/dev/null
 done
 )\}
@@ -50,3 +52,5 @@ else
   echo
   echo -e "\x1b[32mPackage Done\x1b[0m."
 fi
+
+popd >/dev/null

@@ -26,7 +26,7 @@ var (
 
 const (
 	version    = "master"
-	binaryName = "github.com/zyxar/xunlei/lxc"
+	binaryName = "github.com/zyxar/xunlei/lx"
 )
 
 func (id *configure) save(cf string) (b []byte, err error) {
