@@ -255,7 +255,7 @@ func (this *Task) Delay() error {
 }
 
 func (this Task) GetVodURL() (lurl, hurl string, err error) {
-	sid := getCookie("http://xunlei.com", "sessionid")
+	sid := getCookie("sessionid")
 	v := url.Values{}
 	v.Add("url", this.URL)
 	v.Add("video_name", this.TaskName)

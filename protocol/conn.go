@@ -10,6 +10,7 @@ import (
 	"mime/multipart"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"os"
 	"regexp"
@@ -20,27 +21,36 @@ import (
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
-	"github.com/zyxar/xunlei/cookiejar"
 )
 
-var noSuchTaskErr error
-var invalidResponseErr error
-var unexpectedErr error
-var taskNotCompletedErr error
-var invalidLoginErr error
-var loginFailedErr error
-var ReuseSessionErr error
-var btTaskAlreadyErr error
-var taskNoRedownCapErr error
-var timeoutErr error
-var defaultConn struct {
-	*http.Client
-	sync.Mutex
-	timeout time.Duration
-}
+var (
+	noSuchTaskErr       = errors.New("No such TaskId in list")
+	invalidResponseErr  = errors.New("Invalid response")
+	unexpectedErr       = errors.New("Unexpected error")
+	taskNotCompletedErr = errors.New("Task not completed")
+	invalidLoginErr     = errors.New("Invalid login account")
+	loginFailedErr      = errors.New("Login failed")
+	ReuseSessionErr     = errors.New("Previous session exipred")
+	btTaskAlreadyErr    = errors.New("Bt task already exists")
+	taskNoRedownCapErr  = errors.New("Task not capable for restart")
+	timeoutErr          = errors.New("Request time out")
+	defaultConn         struct {
+		*http.Client
+		sync.Mutex
+		timeout time.Duration
+	}
+	urlXunleiCom                *url.URL
+	urlDynamicCloudVipXunleiCom *url.URL
+	// urlLoginXunleiCom           *url.URL
+	// urlVipXunleiCom             *url.URL
+)
 
 func init() {
 	jar, _ := cookiejar.New(nil)
+	urlXunleiCom, _ = url.Parse("http://xunlei.com")
+	urlDynamicCloudVipXunleiCom, _ = url.Parse("http://dynamic.cloud.vip.xunlei.com")
+	// urlLoginXunleiCom, _ = url.Parse("http://login.xunlei.com")
+	// urlVipXunleiCom, _ = url.Parse("http://vip.xunlei.com")
 	defaultConn.timeout = 3000 * time.Millisecond
 	defaultConn.Client = &http.Client{
 		Jar: jar,
@@ -49,18 +59,8 @@ func init() {
 			Proxy: http.ProxyFromEnvironment,
 		},
 	}
-	noSuchTaskErr = errors.New("No such TaskId in list.")
-	invalidResponseErr = errors.New("Invalid response.")
-	unexpectedErr = errors.New("Unexpected error.")
-	taskNotCompletedErr = errors.New("Task not completed.")
-	invalidLoginErr = errors.New("Invalid login account.")
-	loginFailedErr = errors.New("Login failed.")
-	ReuseSessionErr = errors.New("Previous session exipred.")
-	btTaskAlreadyErr = errors.New("Bt task already exists.")
-	taskNoRedownCapErr = errors.New("Task not capable for restart.")
-	timeoutErr = errors.New("Request time out.")
-	log.SetLevel(log.InfoLevel)
 	log.SetHandler(text.New(os.Stderr))
+	log.SetLevel(log.InfoLevel)
 }
 
 func routine(req *http.Request) (*http.Response, error) {
@@ -146,7 +146,7 @@ loop:
 			}
 			vcode = cks[i].Value[2:]
 			vcode = strings.ToUpper(vcode)
-			log.Debugf("verify_code: %s", vcode)
+			log.Infof("verify_code: %s", vcode)
 			break
 		}
 	}
@@ -157,7 +157,7 @@ loop:
 	if _, err = post("http://login.xunlei.com/sec2login/", v.Encode()); err != nil {
 		return
 	}
-	M.Uid = getCookie("http://xunlei.com", "userid")
+	M.Uid = getCookie("userid")
 	log.Infof("uid: %s\n", M.Uid)
 	if len(M.Uid) == 0 {
 		err = loginFailedErr
@@ -171,15 +171,33 @@ loop:
 }
 
 func SaveSession(cookieFile string) error {
-	return defaultConn.Client.Jar.(*cookiejar.Jar).Save(cookieFile)
+	session := [][]*http.Cookie{
+		defaultConn.Client.Jar.Cookies(urlXunleiCom),
+		defaultConn.Client.Jar.Cookies(urlDynamicCloudVipXunleiCom)}
+	r, err := json.MarshalIndent(session, "", "  ")
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(cookieFile, r, 0644)
 }
 
 func ResumeSession(cookieFile string) (err error) {
 	if cookieFile != "" {
-		if err = defaultConn.Client.Jar.(*cookiejar.Jar).Load(cookieFile); err != nil {
-			err = errors.New("Invalid cookie file.")
+		var data []byte
+		data, err = ioutil.ReadFile(cookieFile)
+		if err != nil {
 			return
 		}
+		var session [][]*http.Cookie
+		if err = json.Unmarshal(data, &session); err != nil {
+			return
+		}
+		if len(session) < 2 {
+			err = errors.New("invalid session")
+			return
+		}
+		defaultConn.Client.Jar.SetCookies(urlXunleiCom, session[0])
+		defaultConn.Client.Jar.SetCookies(urlDynamicCloudVipXunleiCom, session[1])
 	}
 	if !IsOn() {
 		err = ReuseSessionErr
@@ -222,7 +240,7 @@ func verifyLogin() bool {
 }
 
 func IsOn() bool {
-	uid := getCookie("http://xunlei.com", "userid")
+	uid := getCookie("userid")
 	if len(uid) == 0 {
 		return false
 	}
@@ -239,9 +257,8 @@ func IsOn() bool {
 	return true
 }
 
-func getCookie(uri, name string) string {
-	u, _ := url.Parse(uri)
-	cks := defaultConn.Client.Jar.Cookies(u)
+func getCookie(name string) string {
+	cks := defaultConn.Client.Jar.Cookies(urlXunleiCom)
 	for i := range cks {
 		if cks[i].Name == name {
 			return cks[i].Value
@@ -404,7 +421,7 @@ func tasklist_nofresh(tid, page int) ([]byte, error) {
 		tid = 4
 	}
 	uri := fmt.Sprintf(SHOWTASK_UNFRESH, tid, page, _page_size, page)
-	log.Infof("==> %s", uri)
+	log.Debugf("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
@@ -432,7 +449,7 @@ func tasklist_nofresh(tid, page int) ([]byte, error) {
 
 func readExpired() ([]byte, error) {
 	uri := fmt.Sprintf(EXPIRE_HOME, M.Uid)
-	log.Infof("==> %s", uri)
+	log.Debugf("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
@@ -485,7 +502,7 @@ func readHistory(page int) ([]byte, error) {
 		uri = fmt.Sprintf(HISTORY_HOME, M.Uid)
 	}
 
-	log.Infof("==> %s", uri)
+	log.Debugf("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
@@ -606,7 +623,7 @@ func RawFillBtList(taskid, infohash string, page int) ([]byte, error) {
 	var pgsize = _bt_page_size
 retry:
 	uri := fmt.Sprintf(FILLBTLIST_URL, taskid, infohash, page, M.Uid, "task", currentTimestamp())
-	log.Infof("==> %s", uri)
+	log.Debugf("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
@@ -630,7 +647,7 @@ retry:
 
 func fillBtList(taskid, infohash string, page int, pgsize string) (*_bt_list, error) {
 	uri := fmt.Sprintf(FILLBTLIST_URL, taskid, infohash, page, M.Uid, "task", currentTimestamp())
-	log.Infof("==> %s", uri)
+	log.Debugf("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
@@ -853,7 +870,7 @@ func addTorrentTask(filename string) (err error) {
 	writer.WriteField("interfrom", "task")
 
 	dest := TORRENTUPLOAD_URL
-	log.Infof("==> %s", dest)
+	log.Debugf("==> %s", dest)
 	req, err := http.NewRequest("POST", dest, bytes.NewReader(body.Bytes()))
 	if err != nil {
 		return

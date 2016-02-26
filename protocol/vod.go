@@ -45,12 +45,11 @@ func GetLxtaskList() ([]VodLXTask, error) {
 		Attr   int   `json:"fileattribute"`
 		Time   int64 `json:"t"`
 	}
-	domain := "http://xunlei.com"
-	payload.UserInfo.Uid = getCookie(domain, "userid")
-	payload.UserInfo.Name = getCookie(domain, "usrname")
-	payload.UserInfo.NewNo = getCookie(domain, "usernewno")
-	payload.UserInfo.VIP = getCookie(domain, "isvip")
-	payload.UserInfo.Sid = getCookie(domain, "sessionid")
+	payload.UserInfo.Uid = getCookie("userid")
+	payload.UserInfo.Name = getCookie("usrname")
+	payload.UserInfo.NewNo = getCookie("usernewno")
+	payload.UserInfo.VIP = getCookie("isvip")
+	payload.UserInfo.Sid = getCookie("sessionid")
 	payload.Offset = 0
 	payload.Num = 30
 	payload.Type = 2

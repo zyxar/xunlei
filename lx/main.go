@@ -12,6 +12,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/apex/log"
 	"github.com/zyxar/taipei"
 	. "github.com/zyxar/xunlei/protocol"
 )
@@ -69,13 +70,18 @@ func main() {
 	flag.BoolVar(&isDaemon, "d", false, "run as daemon/server")
 	loop := flag.Bool("loop", false, "start daemon loop in background")
 	close_fds := flag.Bool("close-fds", false, "close stdout,stderr,stdin")
+	debug := flag.Bool("debug", false, "set log level to debug")
 	flag.Parse()
 	if printVer {
 		printVersion()
 		return
 	}
+	if *debug {
+		log.SetLevel(log.DebugLevel)
+	}
 	var login = func() error {
 		if err := ResumeSession(cookieFile); err != nil {
+			log.Warn(err.Error())
 			if err = Login(conf.Id, conf.Pass); err != nil {
 				return err
 			}
