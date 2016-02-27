@@ -90,7 +90,9 @@ func unpack(ctx *web.Context, action func(*payload)) {
 	flusher, _ := ctx.ResponseWriter.(http.Flusher)
 	defer flusher.Flush()
 	var v payload
-	if body, err := ioutil.ReadAll(ctx.Request.Body); err == nil {
+	var err error
+	var body []byte
+	if body, err = ioutil.ReadAll(ctx.Request.Body); err == nil {
 		defer ctx.Request.Body.Close()
 		if err := json.Unmarshal(body, &v); err != nil {
 			ctx.WriteHeader(400)
@@ -104,10 +106,9 @@ func unpack(ctx *web.Context, action func(*payload)) {
 		}
 		action(&v)
 		return
-	} else {
-		ctx.WriteHeader(400)
-		ctx.Write(errorMsg(err.Error()))
 	}
+	ctx.WriteHeader(400)
+	ctx.Write(errorMsg(err.Error()))
 }
 
 func daemonLoop() {

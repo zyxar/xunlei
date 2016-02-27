@@ -33,7 +33,7 @@ func newOpt(gdriveid, filename string) (rpc.Option, error) {
 	return r, nil
 }
 
-func RPCAddTask(uri, filename string) (gid string, err error) {
+func rpcAddTask(uri, filename string) (gid string, err error) {
 	lxhead, err := newOpt(protocol.M.Gid, filename)
 	if err != nil {
 		return "", err
@@ -41,7 +41,7 @@ func RPCAddTask(uri, filename string) (gid string, err error) {
 	return rpcc.AddURI(uri, lxhead)
 }
 
-func RPCStatus() ([]byte, error) {
+func rpcStatus() ([]byte, error) {
 	m, err := rpcc.GetGlobalStat()
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func RPCStatus() ([]byte, error) {
 	return b, nil
 }
 
-func RPCShutdown(force bool) (string, error) {
+func rpcShutdown(force bool) (string, error) {
 	if !force {
 		return rpcc.Shutdown()
 	}

@@ -35,7 +35,7 @@ func TestConn(t *testing.T) {
 }
 
 func TestTaskNoFresh(t *testing.T) {
-	_, err := tasklist_nofresh(4, 1)
+	_, err := tasklistNofresh(4, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,7 +109,7 @@ func TestGetExpiredTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, v := range b {
-		if !v.completed() && v.status() != _FLAG_expired { // expired must be completed
+		if !v.completed() && v.status() != flagExpired { // expired must be completed
 			t.Error("Invalid download status")
 		}
 	}
@@ -121,7 +121,7 @@ func TestGetDeletedTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, v := range b {
-		if v.status() != _FLAG_deleted {
+		if v.status() != flagDeleted {
 			t.Error("Invalid status")
 		}
 	}
@@ -149,7 +149,7 @@ func TestGetDeletedTasks(t *testing.T) {
 func TestFillBtListAsync(t *testing.T) {
 	for i := range M.Tasks {
 		t := M.Tasks[i]
-		if t.status() == _FLAG_normal && t.IsBt() {
+		if t.status() == flagNormal && t.IsBt() {
 			FillBtListAsync(t.Id, t.Cid, nil)
 		}
 	}

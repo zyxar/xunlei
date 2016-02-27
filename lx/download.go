@@ -10,13 +10,13 @@ import (
 	"github.com/zyxar/xunlei/protocol"
 )
 
-var worker fetch.Fetcher = fetch.DefaultFetcher
+var worker = fetch.DefaultFetcher
 
 type taskSink func(uri, filename string, echo bool) error
 
 func dl(uri, filename string, echo bool) error { //TODO: check file existence
 	if len(protocol.M.Gid) == 0 {
-		return errors.New("gdriveid missing.")
+		return errors.New("gdriveid missing")
 	}
 	return worker.Fetch(uri, protocol.M.Gid, filename, echo)
 }

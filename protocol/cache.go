@@ -10,14 +10,14 @@ import (
 type cache struct {
 	Uid         string
 	Gid         string
-	Account     *_user
-	AccountInfo *_userinfo
+	Account     *userAccount
+	AccountInfo *userInfo
 	Tasks       map[string]*Task
 	sync.Mutex
 }
 
 var M cache
-var invalidQueryErr = errors.New("Invalid query string.")
+var errInvalidQuery = errors.New("Invalid query string.")
 
 func init() {
 	M.Tasks = make(map[string]*Task)
@@ -38,7 +38,7 @@ func FindTasks(pattern string) (map[string]*Task, error) {
 	if err != nil {
 		return nil, err
 	}
-	var ts map[string]*Task = M.Tasks
+	var ts = M.Tasks
 	n := v.Get("name")
 	gg := v["group"]
 	ss := v["status"]
@@ -60,7 +60,7 @@ func FindTasks(pattern string) (map[string]*Task, error) {
 					}
 				}
 			default:
-				return nil, invalidQueryErr
+				return nil, errInvalidQuery
 			}
 		}
 		ts = tr
@@ -94,7 +94,7 @@ func FindTasks(pattern string) (map[string]*Task, error) {
 					}
 				}
 			default:
-				return nil, invalidQueryErr
+				return nil, errInvalidQuery
 			}
 		}
 		ts = tr
@@ -134,7 +134,7 @@ func FindTasks(pattern string) (map[string]*Task, error) {
 					}
 				}
 			default:
-				return nil, invalidQueryErr
+				return nil, errInvalidQuery
 			}
 		}
 		ts = tr
@@ -142,7 +142,7 @@ func FindTasks(pattern string) (map[string]*Task, error) {
 	if len(n) > 0 {
 		exp, err := regexp.Compile(`(?i)` + n)
 		if err != nil {
-			return nil, invalidQueryErr
+			return nil, errInvalidQuery
 		}
 		tr := make(map[string]*Task)
 		for i := range ts {

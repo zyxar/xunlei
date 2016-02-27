@@ -1,6 +1,6 @@
 package protocol
 
-type login_resp struct {
+type loginResponse struct {
 	Result int `json:"result"`
 	Data   struct {
 		UserId    string `json:"userid"`
@@ -13,19 +13,19 @@ type login_resp struct {
 	} `json:"data"`
 }
 
-type _task_resp struct {
-	Rtcode   int       `json:"rtcode"`
-	Info     _info     `json:"info"`
-	UserInfo _userinfo `json:"userinfo"`
+type taskResponse struct {
+	Rtcode   int      `json:"rtcode"`
+	Info     taskInfo `json:"info"`
+	UserInfo userInfo `json:"userinfo"`
 	// GlobalNew interface{} `json:"global_new"`
 	// Time      interface{} `json:"time"` // v1: float64, v-current: string
 }
 
-type _info struct {
-	Tasks    []Task `json:"tasks"`
-	User     _user  `json:"user"`
-	ShowArc  int    `json:"show_arc"`
-	TotalNum string `json:"total_num"`
+type taskInfo struct {
+	Tasks    []Task      `json:"tasks"`
+	User     userAccount `json:"user"`
+	ShowArc  int         `json:"show_arc"`
+	TotalNum string      `json:"total_num"`
 }
 
 type Task struct {
@@ -78,7 +78,7 @@ type Task struct {
 	UserType string `json:"user_type"`
 }
 
-type _user struct {
+type userAccount struct {
 	ExpireDate          string `json:"expire_date"`
 	MaxTaskNum          string `json:"max_task_num"`
 	MaxStore            string `json:"max_store"`
@@ -108,7 +108,7 @@ type _user struct {
 	TotalFilterNum      string `json:"total_filter_num"`
 }
 
-type _userinfo struct {
+type userInfo struct {
 	AllSpace       string `json:"all_space"`
 	AllUsedStore   int64  `json:"all_used_store"`
 	AllSpaceFormat string `json:"all_space_format"`
@@ -117,23 +117,23 @@ type _userinfo struct {
 	Percent        string `json:"percent"`
 }
 
-type bt_list struct {
-	Id     string       `json:"Tid"`
-	InfoId string       `json:"Infoid"`
-	BtNum  string       `json:"btnum"`
-	Record []_bt_record `json:"Record"`
+type btList struct {
+	Id     string     `json:"Tid"`
+	InfoId string     `json:"Infoid"`
+	BtNum  string     `json:"btnum"`
+	Record []btRecord `json:"Record"`
 }
 
-type _bt_list struct {
-	Id       string       `json:"Tid"`
-	InfoId   string       `json:"Infoid"`
-	BtNum    string       `json:"btnum"`
-	BtPerNum int          `json:"btpernum"`
-	NowPage  int          `json:"now_page"`
-	Record   []_bt_record `json:"Record"`
+type _btList struct {
+	Id       string     `json:"Tid"`
+	InfoId   string     `json:"Infoid"`
+	BtNum    string     `json:"btnum"`
+	BtPerNum int        `json:"btpernum"`
+	NowPage  int        `json:"now_page"`
+	Record   []btRecord `json:"Record"`
 }
 
-type _bt_record struct {
+type btRecord struct {
 	Id           int    `json:"id"`
 	FileName     string `json:"title"`
 	Status       string `json:"download_status"`
@@ -149,7 +149,7 @@ type _bt_record struct {
 	DirName      string `json:"dirtitle"`
 }
 
-type _task_pre struct {
+type taskPrepare struct {
 	Cid        string
 	GCid       string
 	SizeCost   string
@@ -160,17 +160,17 @@ type _task_pre struct {
 	// Random     []byte
 }
 
-type _btup_result struct {
-	Ret    int           `json:"ret_value"`
-	InfoId string        `json:"infoid"`
-	Name   string        `json:"ftitle"`
-	Size   int           `json:"btsize"`
-	IsFull string        `json:"is_full"`
-	List   []_bt_record2 `json:"filelist"`
-	Random string        `json:"random"`
+type btupResult struct {
+	Ret    int         `json:"ret_value"`
+	InfoId string      `json:"infoid"`
+	Name   string      `json:"ftitle"`
+	Size   int         `json:"btsize"`
+	IsFull string      `json:"is_full"`
+	List   []btRecord2 `json:"filelist"`
+	Random string      `json:"random"`
 }
 
-type _bt_record2 struct {
+type btRecord2 struct {
 	Id    string `json:"id"`
 	Size  string `json:"subsize"`
 	Sizef string `json:"subformatsize"`
@@ -180,7 +180,7 @@ type _bt_record2 struct {
 	Ext   string `json:"ext"`
 }
 
-type _bt_qtask struct {
+type btQtask struct {
 	InfoId string
 	Size   string
 	Name   string
@@ -195,7 +195,7 @@ type _bt_qtask struct {
 	Ret    string
 }
 
-type _ptask_record struct {
+type ptaskRecord struct {
 	Id             string  `json:"tid"`
 	URL            string  `json:"url"`
 	Speed          string  `json:"speed"`
@@ -209,8 +209,8 @@ type _ptask_record struct {
 	FileSize       string  `json:"filesize"`
 }
 
-type _ptask_resp struct {
-	List []_ptask_record `json:"Record"`
+type ptaskResponse struct {
+	List []ptaskRecord `json:"Record"`
 	Info struct {
 		DownNum string `json:"downloading_num"`
 		WaitNum string `json:"waiting_num"`
@@ -231,7 +231,7 @@ type VodHistTask struct {
 	Created  string `json:"createtime"`
 }
 
-type hist_resp struct {
+type histResponse struct {
 	List   []VodHistTask `json:"history_play_list"`
 	MaxNum int           `json:"max_num"`
 	Uid    string        `json:"userid"`
@@ -242,7 +242,7 @@ type hist_resp struct {
 	Type   string        `json:"type"`
 }
 
-type subbt_resp struct {
+type subbtResponse struct {
 	Uid  string `json:"userid"`
 	Ret  byte   `json:"ret"`
 	List []struct {
@@ -259,7 +259,7 @@ type subbt_resp struct {
 	Num      int    `json:"record_num"`
 }
 
-type progress_resp struct {
+type progressResponse struct {
 	List []struct {
 		Progress string `json:"progress"`
 		UrlHash  string `json:"url_hash"`
@@ -288,7 +288,7 @@ type VodLXTask struct {
 	LeftTime  int    `json:"left_live_time"`
 }
 
-type lxtask_resp struct {
+type lxTaskResponse struct {
 	List []VodLXTask `json:"tasklist"`
 	Ret  string      `json:"ret"`
 	User struct {
@@ -308,7 +308,7 @@ type lxtask_resp struct {
 	CountAll string `json:"task_total_cnt_all"`
 }
 
-type mb_resp struct {
+type mbResponse struct {
 	//url: http://i.vod.xunlei.com/miaobo/
 	// infohash/507625D95D7695F9A1F91EC41A633D250419DF26?jsonp=jsonp1383446499423&t=0.7223064277786762
 	InfoHash string `json:"infohash"`
@@ -323,7 +323,7 @@ type VodInfo struct {
 	HasSub byte     `json:"has_subtitle"`
 }
 
-type vod_resp struct {
+type vodResponse struct {
 	Status    byte   `json:"status"`
 	UrlHash   string `json:"url_hash"`
 	TransWait int    `json:"tans_wait"`

@@ -63,7 +63,7 @@ func DelayTaskAsync(id string, callback func(error)) {
 	}()
 }
 
-func FillBtListAsync(taskid, infohash string, callback func(*bt_list, error)) {
+func FillBtListAsync(taskid, infohash string, callback func(*btList, error)) {
 	go func() {
 		l, err := FillBtList(taskid, infohash)
 		if callback != nil {
@@ -160,7 +160,7 @@ func ResumeTaskAsync(id string, callback func(error)) {
 		if t != nil {
 			err = t.Resume()
 		} else {
-			err = noSuchTaskErr
+			err = errNoSuchTask
 		}
 		if callback != nil {
 			callback(err)

@@ -92,18 +92,18 @@ func md5sum(raw interface{}) []byte {
 	return h.Sum(nil)
 }
 
-func getTaskPre(resp []byte) (*_task_pre, error) {
+func getTaskPre(resp []byte) (*taskPrepare, error) {
 	exp := regexp.MustCompile(`queryCid\((.*)\)`)
 	s := exp.FindSubmatch(resp)
 	if s == nil {
-		return nil, invalidResponseErr
+		return nil, errInvalidResponse
 	}
 	ss := bytes.Split(s[1], []byte(","))
 	j := 0
 	if len(ss) >= 10 {
 		j = 1
 	}
-	ret := _task_pre{}
+	ret := taskPrepare{}
 	ret.Cid = string(bytes.Trim(ss[0], "' "))
 	ret.GCid = string(bytes.Trim(ss[1], "' "))
 	ret.SizeCost = string(bytes.Trim(ss[2], "' "))
@@ -117,13 +117,13 @@ func getTaskPre(resp []byte) (*_task_pre, error) {
 	return &ret, err
 }
 
-func evalParse(queryUrl []byte) *_bt_qtask {
+func evalParse(queryURL []byte) *btQtask {
 	exp := regexp.MustCompile(`'([0-9A-Za-z]{40,40})','(\d*)','(.*)','(\d)',new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),'([\d\.]+)','(\d)'`)
-	s := exp.FindSubmatch(queryUrl)
+	s := exp.FindSubmatch(queryURL)
 	if s == nil {
 		return nil
 	}
-	var task _bt_qtask
+	var task btQtask
 	task.InfoId = string(s[1])
 	task.Size = string(s[2])
 	task.Name = string(s[3])

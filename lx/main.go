@@ -44,7 +44,7 @@ func find(req []string) (map[string]*Task, error) {
 func fixedLengthName(name string, size int) string {
 	l := utf8.RuneCountInString(name)
 	var b bytes.Buffer
-	var i int = 0
+	var i int
 	for i < l && i < size {
 		r, s := utf8.DecodeRuneInString(name)
 		b.WriteRune(r)
@@ -69,7 +69,7 @@ func main() {
 	flag.BoolVar(&printVer, "version", false, "print version")
 	flag.BoolVar(&isDaemon, "d", false, "run as daemon/server")
 	loop := flag.Bool("loop", false, "start daemon loop in background")
-	close_fds := flag.Bool("close-fds", false, "close stdout,stderr,stdin")
+	closeFds := flag.Bool("close-fds", false, "close stdout,stderr,stdin")
 	debug := flag.Bool("debug", false, "set log level to debug")
 	flag.Parse()
 	if printVer {
@@ -102,7 +102,7 @@ func main() {
 		return
 	}
 
-	if *close_fds {
+	if *closeFds {
 		os.Stdout.Close()
 		os.Stderr.Close()
 		os.Stdin.Close()
@@ -237,7 +237,7 @@ func main() {
 				}
 			case "head":
 				var ts []*Task
-				var num int = 10
+				var num = 10
 				if len(cmds) > 1 {
 					num, err = strconv.Atoi(cmds[1])
 					if err != nil {
@@ -305,7 +305,7 @@ func main() {
 				}
 			case "status":
 				var b []byte
-				b, err = RPCStatus()
+				b, err = rpcStatus()
 				if err == nil {
 					fmt.Printf("%s\n", b)
 				}
@@ -315,7 +315,7 @@ func main() {
 				if len(cmds) >= 2 && (cmds[1] == "-9" || cmds[1] == "-f") {
 					force = true
 				}
-				s, err = RPCShutdown(force)
+				s, err = rpcShutdown(force)
 				if err == nil {
 					fmt.Println(s)
 				}
@@ -347,7 +347,7 @@ func main() {
 					}
 					for i := range pay {
 						if err = download(pay[i].t, pay[i].s, false, false, func(uri, filename string, echo bool) error {
-							_, err := RPCAddTask(uri, filename)
+							_, err := rpcAddTask(uri, filename)
 							return err
 						}); err != nil {
 							fmt.Println(err)

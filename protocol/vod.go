@@ -1,5 +1,3 @@
-// http://vod.xunlei.com/js/list.js
-
 package protocol
 
 import (
@@ -7,24 +5,26 @@ import (
 	"fmt"
 )
 
+// http://vod.xunlei.com/js/list.js
+
 func GetHistoryPlayList() ([]VodHistTask, error) {
-	uri := fmt.Sprintf(HISTORY_PLAY_URL, 30, 0, "all", "create", currentTimestamp()) //TODO: eliminate hard-code
+	uri := fmt.Sprintf(historyPlayURI, 30, 0, "all", "create", currentTimestamp()) //TODO: eliminate hard-code
 	b, err := get(uri)
 	if err != nil {
 		return nil, err
 	}
 	var resp struct {
-		Data hist_resp `json:"resp"`
+		Data histResponse `json:"resp"`
 	}
 	err = json.Unmarshal(b, &resp)
 	return resp.Data.List, nil
 }
 
-func SubmitBt(infohash string, num int) *subbt_resp {
+func SubmitBt(infohash string, num int) *subbtResponse {
 	return nil
 }
 
-func QueryProgress() *progress_resp {
+func QueryProgress() *progressResponse {
 	return nil
 }
 
@@ -59,11 +59,11 @@ func GetLxtaskList() ([]VodLXTask, error) {
 	if err != nil {
 		return nil, err
 	}
-	v, err := post(LXTASK_LIST_URL, string(b))
+	v, err := post(lxtaskListURI, string(b))
 	if err != nil {
 		return nil, err
 	}
-	var resp lxtask_resp
+	var resp lxTaskResponse
 	err = json.Unmarshal(v, &resp)
 	return resp.List, err
 }
