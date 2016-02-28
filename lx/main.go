@@ -14,7 +14,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/zyxar/taipei"
-	. "github.com/zyxar/xunlei/protocol"
+	"github.com/zyxar/xunlei/protocol"
 )
 
 type Term interface {
@@ -22,17 +22,17 @@ type Term interface {
 	Restore()
 }
 
-func _find(req string) (map[string]*Task, error) {
-	if t, ok := M.Tasks[req]; ok {
-		return map[string]*Task{req: t}, nil
+func _find(req string) (map[string]*protocol.Task, error) {
+	if t, ok := protocol.M.Tasks[req]; ok {
+		return map[string]*protocol.Task{req: t}, nil
 	}
 	if ok, _ := regexp.MatchString(`(.+=.+)+`, req); ok {
-		return FindTasks(req)
+		return protocol.FindTasks(req)
 	}
-	return FindTasks("name=" + req)
+	return protocol.FindTasks("name=" + req)
 }
 
-func find(req []string) (map[string]*Task, error) {
+func find(req []string) (map[string]*protocol.Task, error) {
 	if len(req) == 0 {
 		return nil, errors.New("Empty find query.")
 	} else if len(req) == 1 {
@@ -64,8 +64,6 @@ func fixedLengthName(name string, size int) string {
 
 func main() {
 	initConf()
-	flag.StringVar(&conf.Id, "login", conf.Id, "login account")
-	flag.StringVar(&conf.Pass, "pass", conf.Pass, "password/passhash")
 	flag.BoolVar(&printVer, "version", false, "print version")
 	flag.BoolVar(&isDaemon, "d", false, "run as daemon/server")
 	loop := flag.Bool("loop", false, "start daemon loop in background")
@@ -80,12 +78,12 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 	var login = func() error {
-		if err := ResumeSession(cookieFile); err != nil {
+		if err := protocol.ResumeSession(cookieFile); err != nil {
 			log.Warn(err.Error())
-			if err = Login(conf.Id, conf.Pass); err != nil {
+			if err = protocol.Login(conf.Id, conf.Pass); err != nil {
 				return err
 			}
-			if err = SaveSession(cookieFile); err != nil {
+			if err = protocol.SaveSession(cookieFile); err != nil {
 				return err
 			}
 		}
@@ -113,7 +111,7 @@ func main() {
 			if err := login(); err != nil {
 				os.Exit(1)
 			}
-			GetGdriveId()
+			protocol.GetGdriveId()
 		}()
 		daemonLoop()
 		return
@@ -122,7 +120,7 @@ func main() {
 	if err := login(); err != nil {
 		os.Exit(1)
 	}
-	GetGdriveId()
+	protocol.GetGdriveId()
 	term := newTerm()
 	defer term.Restore()
 	{
@@ -144,22 +142,22 @@ func main() {
 			}
 			switch cmds[0] {
 			case "ison":
-				fmt.Println(IsOn())
+				fmt.Println(protocol.IsOn())
 			case "me":
-				fmt.Printf("%#v\n", *M.Account)
+				fmt.Printf("%#v\n", *protocol.M.Account)
 			case "relogin":
-				if !IsOn() {
-					if err = Login(conf.Id, conf.Pass); err != nil {
+				if !protocol.IsOn() {
+					if err = protocol.Login(conf.Id, conf.Pass); err != nil {
 						fmt.Println(err)
-					} else if err = SaveSession(cookieFile); err != nil {
+					} else if err = protocol.SaveSession(cookieFile); err != nil {
 						fmt.Println(err)
 					}
 				} else {
-					fmt.Println("Already log on.")
+					fmt.Println("Already logon.")
 				}
 			case "saveconf":
 				{
-					conf.Pass = EncryptPass(conf.Pass)
+					conf.Pass = protocol.EncryptPass(conf.Pass)
 					b, err := conf.save(configFileName)
 					if err == nil {
 						fmt.Printf("%s\n", b)
@@ -173,7 +171,7 @@ func main() {
 				}
 			case "savesession":
 				{
-					if err := SaveSession(cookieFile); err != nil {
+					if err := protocol.SaveSession(cookieFile); err != nil {
 						fmt.Println(err)
 					} else {
 						fmt.Println("[done]")
@@ -182,7 +180,7 @@ func main() {
 			case "cls", "clear":
 				clearscr()
 			case "ls":
-				ts, err := GetTasks()
+				ts, err := protocol.GetTasks()
 				if err == nil {
 					k := 0
 					for i := range ts {
@@ -193,7 +191,7 @@ func main() {
 					fmt.Println(err)
 				}
 			case "ld":
-				ts, err := GetDeletedTasks()
+				ts, err := protocol.GetDeletedTasks()
 				if err == nil {
 					k := 0
 					for i := range ts {
@@ -204,7 +202,7 @@ func main() {
 					fmt.Println(err)
 				}
 			case "le":
-				ts, err := GetExpiredTasks()
+				ts, err := protocol.GetExpiredTasks()
 				if err == nil {
 					k := 0
 					for i := range ts {
@@ -215,7 +213,7 @@ func main() {
 					fmt.Println(err)
 				}
 			case "lc":
-				ts, err := GetCompletedTasks()
+				ts, err := protocol.GetCompletedTasks()
 				if err == nil {
 					k := 0
 					for i := range ts {
@@ -226,8 +224,8 @@ func main() {
 					fmt.Println(err)
 				}
 			case "ll":
-				var ts []*Task
-				ts, err = GetTasks()
+				var ts []*protocol.Task
+				ts, err = protocol.GetTasks()
 				if err == nil {
 					k := 0
 					for i := range ts {
@@ -236,7 +234,7 @@ func main() {
 					}
 				}
 			case "head":
-				var ts []*Task
+				var ts []*protocol.Task
 				var num = 10
 				if len(cmds) > 1 {
 					num, err = strconv.Atoi(cmds[1])
@@ -244,7 +242,7 @@ func main() {
 						num = 10
 					}
 				}
-				ts, err = GetTasks()
+				ts, err = protocol.GetTasks()
 				if len(ts) == 0 {
 					err = errors.New("Empty task list")
 				} else if len(ts) < num {
@@ -263,24 +261,24 @@ func main() {
 				} else {
 					switch cmds[1] {
 					case "normal":
-						M.InvalidateGroup(0)
+						protocol.M.InvalidateGroup(0)
 					case "deleted":
-						M.InvalidateGroup(1)
+						protocol.M.InvalidateGroup(1)
 					case "purged":
-						M.InvalidateGroup(2)
+						protocol.M.InvalidateGroup(2)
 					case "invalid":
-						M.InvalidateGroup(3)
+						protocol.M.InvalidateGroup(3)
 					case "expired":
-						M.InvalidateGroup(4)
+						protocol.M.InvalidateGroup(4)
 					case "all":
-						M.InvalidateAll()
+						protocol.M.InvalidateAll()
 					}
 				}
 			case "info":
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						j := 0
 						for i := range ts {
@@ -324,7 +322,7 @@ func main() {
 					err = insufficientArgErr
 				} else {
 					pay := make(map[string]*struct {
-						t *Task
+						t *protocol.Task
 						s string
 					})
 					for i := range cmds[1:] {
@@ -339,7 +337,7 @@ func main() {
 									filter = p[1]
 								}
 								pay[m[i].Id] = &struct {
-									t *Task
+									t *protocol.Task
 									s string
 								}{m[i], filter}
 							}
@@ -359,7 +357,7 @@ func main() {
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i := range ts {
 							if _, err = os.Stat(ts[i].TaskName); err != nil {
@@ -376,7 +374,7 @@ func main() {
 					err = insufficientArgErr
 				} else {
 					pay := make(map[string]*struct {
-						t *Task
+						t *protocol.Task
 						s string
 					})
 					del := false
@@ -403,7 +401,7 @@ func main() {
 										filter = p[1]
 									}
 									pay[m[i].Id] = &struct {
-										t *Task
+										t *protocol.Task
 										s string
 									}{m[i], filter}
 								}
@@ -423,11 +421,11 @@ func main() {
 				}
 			case "dt":
 				if len(cmds) > 1 {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil { // TODO: improve find query
 						for i := range ts {
 							if ts[i].IsBt() {
-								if err = GetTorrentFileByHash(ts[i].Cid, ts[i].TaskName+".torrent"); err != nil {
+								if err = protocol.GetTorrentFileByHash(ts[i].Cid, ts[i].TaskName+".torrent"); err != nil {
 									fmt.Println(err)
 								}
 							}
@@ -439,11 +437,11 @@ func main() {
 				}
 			case "ti":
 				if len(cmds) > 1 {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil { // TODO: improve find query
 						for i := range ts {
 							if ts[i].IsBt() {
-								if b, err := GetTorrentByHash(ts[i].Cid); err != nil {
+								if b, err := protocol.GetTorrentByHash(ts[i].Cid); err != nil {
 									fmt.Println(err)
 								} else {
 									if m, err := taipei.DecodeMetaInfo(b); err != nil {
@@ -466,7 +464,7 @@ func main() {
 				} else {
 					req := cmds[1:]
 					for j := range req {
-						if err = AddTask(req[j]); err != nil {
+						if err = protocol.AddTask(req[j]); err != nil {
 							fmt.Println(err)
 						}
 					}
@@ -476,7 +474,7 @@ func main() {
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i := range ts {
 							if err = ts[i].Remove(); err != nil {
@@ -490,7 +488,7 @@ func main() {
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i := range ts {
 							if err = ts[i].Purge(); err != nil {
@@ -503,20 +501,20 @@ func main() {
 			case "readd":
 				// re-add tasks from deleted or expired
 				if len(cmds) > 1 {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
-						ReAddTasks(ts)
+						protocol.ReAddTasks(ts)
 					}
 				} else {
 					err = insufficientArgErr
 				}
 			case "delayall":
 				{
-					DelayAllTasks()
+					protocol.DelayAllTasks()
 				}
 			case "pause":
 				if len(cmds) > 1 {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i := range ts {
 							if err = ts[i].Pause(); err != nil {
@@ -530,7 +528,7 @@ func main() {
 				}
 			case "resume":
 				if len(cmds) > 1 {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i := range ts {
 							if err = ts[i].Resume(); err != nil {
@@ -545,7 +543,7 @@ func main() {
 			case "rename", "mv":
 				if len(cmds) > 2 {
 					// must be task id here
-					if t, ok := M.Tasks[cmds[1]]; ok {
+					if t, ok := protocol.M.Tasks[cmds[1]]; ok {
 						t.Rename(strings.Join(cmds[2:], " "))
 					} else {
 						err = noTasksMatchesErr
@@ -557,7 +555,7 @@ func main() {
 				if len(cmds) < 2 {
 					err = insufficientArgErr
 				} else {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i := range ts {
 							if err = ts[i].Delay(); err != nil {
@@ -569,7 +567,7 @@ func main() {
 				}
 			case "link":
 				if len(cmds) > 1 {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						k := 0
 						for i := range ts {
@@ -594,7 +592,7 @@ func main() {
 				}
 			case "find":
 				if len(cmds) > 1 {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						k := 0
 						for i := range ts {
@@ -614,7 +612,7 @@ func main() {
 				}
 			case "play":
 				if len(cmds) > 1 {
-					var ts map[string]*Task
+					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i := range ts {
 							low, high, err := ts[i].GetVodURL()
@@ -632,9 +630,9 @@ func main() {
 					for i := range cmds[1:] {
 						switch cmds[1:][i] {
 						case "hist":
-							list, err = GetHistoryPlayList()
+							list, err = protocol.GetHistoryPlayList()
 						case "lx":
-							list, err = GetLxtaskList()
+							list, err = protocol.GetLxtaskList()
 						default:
 							err = errors.New("Unkown vod command.")
 						}
@@ -648,7 +646,7 @@ func main() {
 			case "version":
 				printVersion()
 			case "update":
-				err = ProcessTask(func(t *Task) {
+				err = protocol.ProcessTask(func(t *protocol.Task) {
 					fmt.Printf("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
 				})
 			case "quit", "exit":
