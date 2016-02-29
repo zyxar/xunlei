@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -46,6 +47,19 @@ func readBody(resp *http.Response) ([]byte, error) {
 	}()
 	_, err = buffer.ReadFrom(rd)
 	return buffer.Bytes(), err
+}
+
+func parseHistory(in []byte, ty string) ([]*Task, bool) {
+	es := `<input id="d_status(\d+)"[^<>]+value="(.*)" />\s+<input id="dflag\d+"[^<>]+value="(.*)" />\s+<input id="dcid\d+"[^<>]+value="(.*)" />\s+<input id="f_url\d+"[^<>]+value="(.*)" />\s+<input id="taskname\d+"[^<>]+value="(.*)" />\s+<input id="d_tasktype\d+"[^<>]+value="(.*)" />`
+	exp := regexp.MustCompile(es)
+	s := exp.FindAllSubmatch(in, -1)
+	ret := make([]*Task, len(s))
+	for i := range s {
+		b, _ := strconv.Atoi(string(s[i][7]))
+		ret[i] = &Task{Id: string(s[i][1]), DownloadStatus: string(s[i][2]), Cid: string(s[i][4]), URL: string(s[i][5]), TaskName: unescapeName(string(s[i][6])), TaskType: byte(b), Flag: ty}
+	}
+	exp = regexp.MustCompile(`<li class="next"><a href="([^"]+)">[^<>]*</a></li>`)
+	return ret, exp.FindSubmatch(in) != nil
 }
 
 func currentTimestamp() int64 {
@@ -117,50 +131,50 @@ func getTaskPre(resp []byte) (*taskPrepare, error) {
 	return &ret, err
 }
 
-func evalParse(queryURL []byte) *btQtask {
+func parseBtQueryResponse(queryURL []byte) *btQueryResponse {
 	exp := regexp.MustCompile(`'([0-9A-Za-z]{40,40})','(\d*)','(.*)','(\d)',new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),'([\d\.]+)','(\d)'`)
 	s := exp.FindSubmatch(queryURL)
 	if s == nil {
 		return nil
 	}
-	var task btQtask
-	task.InfoId = string(s[1])
-	task.Size = string(s[2])
-	task.Name = string(s[3])
-	task.IsFull = string(s[4])
+	var resp btQueryResponse
+	resp.InfoId = string(s[1])
+	resp.Size = string(s[2])
+	resp.Name = string(s[3])
+	resp.IsFull = string(s[4])
 	a := bytes.Split(s[5], []byte(","))
-	task.Files = make([]string, len(a))
+	resp.Files = make([]string, len(a))
 	for i := 0; i < len(a); i++ {
-		task.Files[i] = string(bytes.Trim(a[i], "' "))
+		resp.Files[i] = string(bytes.Trim(a[i], "' "))
 	}
 	a = bytes.Split(s[6], []byte(","))
-	task.Sizesf = make([]string, len(a))
+	resp.Sizesf = make([]string, len(a))
 	for i := 0; i < len(a); i++ {
-		task.Sizesf[i] = string(bytes.Trim(a[i], "' "))
+		resp.Sizesf[i] = string(bytes.Trim(a[i], "' "))
 	}
 	a = bytes.Split(s[7], []byte(","))
-	task.Sizes = make([]string, len(a))
+	resp.Sizes = make([]string, len(a))
 	for i := 0; i < len(a); i++ {
-		task.Sizes[i] = string(bytes.Trim(a[i], "' "))
+		resp.Sizes[i] = string(bytes.Trim(a[i], "' "))
 	}
 	a = bytes.Split(s[8], []byte(","))
-	task.Picked = make([]string, len(a))
+	resp.Picked = make([]string, len(a))
 	for i := 0; i < len(a); i++ {
-		task.Picked[i] = string(bytes.Trim(a[i], "' "))
+		resp.Picked[i] = string(bytes.Trim(a[i], "' "))
 	}
 	a = bytes.Split(s[9], []byte(","))
-	task.Ext = make([]string, len(a))
+	resp.Ext = make([]string, len(a))
 	for i := 0; i < len(a); i++ {
-		task.Ext[i] = string(bytes.Trim(a[i], "' "))
+		resp.Ext[i] = string(bytes.Trim(a[i], "' "))
 	}
 	a = bytes.Split(s[10], []byte(","))
-	task.Index = make([]string, len(a))
+	resp.Index = make([]string, len(a))
 	for i := 0; i < len(a); i++ {
-		task.Index[i] = string(bytes.Trim(a[i], "' "))
+		resp.Index[i] = string(bytes.Trim(a[i], "' "))
 	}
-	task.Random = string(s[11])
-	task.Ret = string(s[12])
-	return &task
+	resp.Random = string(s[11])
+	resp.Ret = string(s[12])
+	return &resp
 }
 
 func extractTasks(ts []*Task) (urls []string, ids []string) {
@@ -193,17 +207,23 @@ func getEd2kHashFromURL(uri string) string {
 	return ""
 }
 
-func unescape_name(s string) (string, int) {
-	v := html.UnescapeString(s)
-	return v, len(v)
-}
-
 func unescapeName(s string) string {
-	ll := len(s)
-	l := 0
-	for ll != l {
-		ll = len(s)
-		s, l = unescape_name(s)
+	var length int
+	for {
+		length = len(s)
+		s = html.UnescapeString(s)
+		if len(s) == length {
+			break
+		}
 	}
 	return s
+}
+
+func trimHTMLFontTag(raw string) string {
+	exp := regexp.MustCompile(`<font color='([a-z]*)'>(.*)</font>`)
+	sub := exp.FindStringSubmatch(raw)
+	if sub == nil {
+		return raw
+	}
+	return sub[2]
 }

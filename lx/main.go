@@ -646,8 +646,9 @@ func main() {
 			case "version":
 				printVersion()
 			case "update":
-				err = protocol.ProcessTask(func(t *protocol.Task) {
+				err = protocol.ProcessTask(func(t *protocol.Task) error {
 					fmt.Printf("%s %s %sB/s %.2f%%\n", t.Id, fixedLengthName(t.TaskName, 32), t.Speed, t.Progress)
+					return nil
 				})
 			case "quit", "exit":
 				break LOOP

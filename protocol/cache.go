@@ -16,12 +16,7 @@ type cache struct {
 	sync.Mutex
 }
 
-var M cache
 var errInvalidQuery = errors.New("Invalid query string.")
-
-func init() {
-	M.Tasks = make(map[string]*Task)
-}
 
 func (c *cache) getTaskbyId(taskid string) *Task {
 	return c.Tasks[taskid]

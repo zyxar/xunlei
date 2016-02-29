@@ -144,15 +144,6 @@ func PurgeTaskAsync(id string, callback func(error)) {
 	}()
 }
 
-func DeleteTasksAsync(ids []string, callback func(error)) {
-	go func() {
-		err := DeleteTasks(ids)
-		if callback != nil {
-			callback(err)
-		}
-	}()
-}
-
 func ResumeTaskAsync(id string, callback func(error)) {
 	go func() {
 		t := M.getTaskbyId(id)
@@ -162,15 +153,6 @@ func ResumeTaskAsync(id string, callback func(error)) {
 		} else {
 			err = errNoSuchTask
 		}
-		if callback != nil {
-			callback(err)
-		}
-	}()
-}
-
-func ResumeTasksAsync(pattern string, callback func(error)) {
-	go func() {
-		err := ResumeTasks(pattern)
 		if callback != nil {
 			callback(err)
 		}

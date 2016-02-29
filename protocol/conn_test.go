@@ -35,7 +35,7 @@ func TestConn(t *testing.T) {
 }
 
 func TestTaskNoFresh(t *testing.T) {
-	_, err := tasklistNofresh(4, 1)
+	_, err := defaultSession.tasklistNofresh(4, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,8 +51,9 @@ func TestTaskNoFresh(t *testing.T) {
 
 func TestProcessTask(t *testing.T) {
 	ch := make(chan byte)
-	ProcessTaskDaemon(ch, func(t *Task) {
+	ProcessTaskDaemon(ch, func(t *Task) error {
 		fmt.Printf("%s %sB/s %.2f%%\n", t.Id, t.Speed, t.Progress)
+		return nil
 	})
 	go func() {
 		for {
@@ -139,7 +140,7 @@ func TestGetDeletedTasks(t *testing.T) {
 // 	if err != nil {
 // 		t.Error(err)
 // 	}
-// 	err = addTorrentTask("test.torrent")
+// 	err = defaultSession.addTorrentTask("test.torrent")
 // 	if err != nil && err != btTaskAlreadyErr {
 // 		t.Error(err)
 // 	}

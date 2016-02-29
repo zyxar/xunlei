@@ -21,7 +21,6 @@ var register = map[string]interface{}{
 	"AddTask":              protocol.AddTask,
 	"DelayTask":            protocol.DelayTask,
 	"DeleteTask":           protocol.DeleteTask,
-	"DeleteTasks":          protocol.DeleteTasks,
 	"FillBtList":           protocol.FillBtList,
 	"GetCompletedTasks":    protocol.GetCompletedTasks,
 	"GetDeletedTasks":      protocol.GetDeletedTasks,
@@ -36,7 +35,6 @@ var register = map[string]interface{}{
 	"PurgeTask":            protocol.PurgeTask,
 	"DelayAllTasks":        protocol.DelayAllTasks,
 	"RenameTask":           protocol.RenameTask,
-	"ResumeTasks":          protocol.ResumeTasks,
 }
 
 type payload struct {
@@ -113,7 +111,8 @@ func unpack(ctx *web.Context, action func(*payload)) {
 
 func daemonLoop() {
 	ch := make(chan byte)
-	protocol.ProcessTaskDaemon(ch, func(t *protocol.Task) {
+	protocol.ProcessTaskDaemon(ch, func(t *protocol.Task) error {
+		return nil
 	})
 	go protocol.GetTasks()
 

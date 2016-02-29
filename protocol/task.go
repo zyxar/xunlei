@@ -34,13 +34,104 @@ var (
 	}
 )
 
-func trim(raw string) string {
-	exp := regexp.MustCompile(`<font color='([a-z]*)'>(.*)</font>`)
-	s := exp.FindStringSubmatch(raw)
-	if s == nil {
-		return raw
-	}
-	return s[2]
+type TaskCallback func(*Task) error
+
+type taskResponse struct {
+	Rtcode   int      `json:"rtcode"`
+	Info     taskInfo `json:"info"`
+	UserInfo userInfo `json:"userinfo"`
+	// GlobalNew interface{} `json:"global_new"`
+	// Time      interface{} `json:"time"` // v1: float64, v-current: string
+}
+
+type taskInfo struct {
+	Tasks    []Task      `json:"tasks"`
+	User     userAccount `json:"user"`
+	ShowArc  int         `json:"show_arc"`
+	TotalNum string      `json:"total_num"`
+}
+
+type taskPrepare struct {
+	Cid        string
+	GCid       string
+	SizeCost   string
+	FileName   string
+	Goldbean   string
+	Silverbean string
+	// IsFull     string
+	// Random     []byte
+}
+
+type ptaskRecord struct {
+	Id             string  `json:"tid"`
+	URL            string  `json:"url"`
+	Speed          string  `json:"speed"`
+	Progress       float32 `json:"fpercent"` // diff between 'percent' and 'fpercent'?
+	LeaveTime      string  `json:"leave_time"`
+	Size           string  `json:"fsize"`
+	DownloadStatus string  `json:"download_status"`
+	LixianURL      string  `json:"lixian_url"`
+	LeftLiveTime   string  `json:"left_live_time"`
+	TaskType       string  `json:"tasktype"`
+	FileSize       string  `json:"filesize"`
+}
+
+type ptaskResponse struct {
+	List []ptaskRecord `json:"Record"`
+	Info struct {
+		DownNum string `json:"downloading_num"`
+		WaitNum string `json:"waiting_num"`
+	} `json:"Task"`
+}
+
+type Task struct {
+	Id   string `json:"id"`
+	Flag string `json:"flag"`
+	// Database            string `json:"database"`
+	// ClassValue          string `json:"class_value"`
+	GlobalId       string  `json:"global_id"`
+	ResType        string  `json:"restype"`
+	FileSize       string  `json:"filesize"`
+	FileType       string  `json:"filetype"`
+	Cid            string  `json:"cid"`
+	GCid           string  `json:"gcid"`
+	TaskName       string  `json:"taskname"`
+	DownloadStatus string  `json:"download_status"`
+	Speed          string  `json:"speed"`
+	Progress       float32 `json:"progress"`
+	// UsedTime            string `json:"used_time"`
+	LeftLiveTime string `json:"left_live_time"`
+	LixianURL    string `json:"lixian_url"`
+	URL          string `json:"url"`
+	ReferURL     string `json:"refer_url"`
+	Cookie       string `json:"cookie"`
+	// Vod                 string `json:"vod"`
+	Status string `json:"status"`
+	// Message             string `json:"message"`
+	// DtCommitted         string `json:"dt_committed"`
+	// DtDeleted           string `json:"dt_deleted"`
+	// ListSum             string `json:"list_sum"`
+	// FinishSum           string `json:"finish_sum"`
+	// FlagKilledInASecond string `json:"flag_killed_in_a_second"`
+	// ResCount            string `json:"res_count"`
+	// UsingResCount       string `json:"using_res_count"`
+	// VerifyFlag          string `json:"verify_flag"`
+	// VerifyTime          string `json:"verify_time"`
+	// ProgressText 			 string `json:"progress_text"`
+	// ProgressImg         string `json:"progress_img"`
+	// ProgressClass       string `json:"progress_class"`
+	LeftTime string `json:"left_time"`
+	UserId   int    `json:"userid"`
+	// OpenFormat string `json:"openformat"`
+	// TaskNameShow        string `json:"taskname_show"`
+	// Ext                 string `json:"ext"`
+	// ExtShow             string `json:"ext_show"`
+	TaskType byte `json:"tasktype"`
+	// FormatImg           string `json:"format_img"`
+	// ResCountDegree      byte   `json:"res_count_degree"`
+	YsFileSize string `json:"ysfilesize"`
+	// BtMovie             byte   `json:"bt_movie"`
+	UserType string `json:"user_type"`
 }
 
 func (t Task) Coloring() string {
@@ -50,11 +141,11 @@ func (t Task) Coloring() string {
 		j += k
 	}
 	status := stats[j]
-	return fmt.Sprintf("%s%s %s %s %s%s %.1f%% %s%s", coloring[j], t.Id, t.TaskName, status, coloring[j], t.FileSize, t.Progress, trim(t.LeftLiveTime), colorReset)
+	return fmt.Sprintf("%s%s %s %s %s%s %.1f%% %s%s", coloring[j], t.Id, t.TaskName, status, coloring[j], t.FileSize, t.Progress, trimHTMLFontTag(t.LeftLiveTime), colorReset)
 }
 
 func (t Task) String() string {
-	return fmt.Sprintf("%s %s [%s] %s %.1f%% %s", t.Id, t.TaskName, t.DownloadStatus, t.FileSize, t.Progress, trim(t.LeftLiveTime))
+	return fmt.Sprintf("%s %s [%s] %s %.1f%% %s", t.Id, t.TaskName, t.DownloadStatus, t.FileSize, t.Progress, trimHTMLFontTag(t.LeftLiveTime))
 }
 
 func (t Task) Repr() string {
@@ -64,7 +155,7 @@ func (t Task) Repr() string {
 		j += k
 	}
 	status := stats[j]
-	ret := coloring[j] + t.Id + " " + t.TaskName + " " + status + coloring[j] + " " + t.FileSize + " " + trim(t.LeftLiveTime) + "\n"
+	ret := coloring[j] + t.Id + " " + t.TaskName + " " + status + coloring[j] + " " + t.FileSize + " " + trimHTMLFontTag(t.LeftLiveTime) + "\n"
 	if t.Cid != "" {
 		ret += t.Cid + " "
 	}
@@ -178,7 +269,7 @@ func (t *Task) remove(flag byte) error {
 	data.Add("taskids", t.Id+",")
 	data.Add("databases", "0,")
 	data.Add("interfrom", "task")
-	r, err := post(uri, data.Encode())
+	r, err := defaultSession.post(uri, data.Encode())
 	if err != nil {
 		return err
 	}
@@ -196,13 +287,13 @@ func (t *Task) remove(flag byte) error {
 }
 
 func (t *Task) Rename(name string) error {
-	return renameTask(t.Id, name, t.TaskType)
+	return defaultSession.renameTask(t.Id, name, t.TaskType)
 }
 
 func (t *Task) Pause() error {
 	tids := t.Id + ","
 	uri := fmt.Sprintf(taskpauseURI, tids, M.Uid, currentTimestamp())
-	r, err := get(uri)
+	r, err := defaultSession.get(uri)
 	if err != nil {
 		return err
 	}
@@ -217,9 +308,9 @@ func (t *Task) Readd() error {
 		return errors.New("Task already in progress.")
 	}
 	if t.purged() {
-		return addSimpleTask(t.URL)
+		return defaultSession.addSimpleTask(t.URL)
 	}
-	return addSimpleTask(t.URL, t.Id)
+	return defaultSession.addSimpleTask(t.URL, t.Id)
 }
 
 func (t *Task) Resume() error {
@@ -241,7 +332,7 @@ func (t *Task) Resume() error {
 	form = append(form, "type=1")
 	form = append(form, "interfrom=task")
 	uri := fmt.Sprintf(redownloadURI, currentTimestamp())
-	r, err := post(uri, strings.Join(form, "&"))
+	r, err := defaultSession.post(uri, strings.Join(form, "&"))
 	if err != nil {
 		return err
 	}
@@ -254,7 +345,7 @@ func (t *Task) Delay() error {
 }
 
 func (t Task) GetVodURL() (lurl, hurl string, err error) {
-	sid := getCookie("sessionid")
+	sid := defaultSession.getCookie("sessionid")
 	v := url.Values{}
 	v.Add("url", t.URL)
 	v.Add("video_name", t.TaskName)
@@ -269,7 +360,7 @@ func (t Task) GetVodURL() (lurl, hurl string, err error) {
 	v.Add("from", "lxweb")
 	v.Add("jsonp", "XL_CLOUD_FX_INSTANCEqueryBack")
 	uri := reqGetMethodVodURI + v.Encode()
-	r, err := get(uri)
+	r, err := defaultSession.get(uri)
 	if err != nil {
 		return
 	}
@@ -296,22 +387,6 @@ func (t Task) GetVodURL() (lurl, hurl string, err error) {
 		err = errors.New(res.Resp.ErrMsg)
 	}
 	return
-}
-
-func (t _btList) String() string {
-	r := fmt.Sprintf("%s %s %s/%d\n", t.Id, t.InfoId, t.BtNum, t.BtPerNum)
-	for i := range t.Record {
-		r += fmt.Sprintf("#%d %s %s %s\n", t.Record[i].Id, t.Record[i].FileName, t.Record[i].SizeReadable, t.Record[i].Status)
-	}
-	return r
-}
-
-func (t btList) String() string {
-	r := fmt.Sprintf("%s %s %s\n", t.Id, t.InfoId, t.BtNum)
-	for i := range t.Record {
-		r += fmt.Sprintf("#%d %s %s %s\n", t.Record[i].Id, t.Record[i].FileName, t.Record[i].SizeReadable, t.Record[i].Status)
-	}
-	return r
 }
 
 func (t Task) Verify(path string) bool {
@@ -348,14 +423,4 @@ func (t Task) Verify(path string) bool {
 		}
 	}
 	return true
-}
-
-func (t VodLXTask) String() string {
-	name, _ := url.QueryUnescape(t.Name)
-	return fmt.Sprintf("%s %s [%d] %dMB %d%% %dDays", t.Id, name, t.Status, t.Size/1024/1204, t.Progress/100, t.LeftTime/3600/24)
-}
-
-func (t VodHistTask) String() string {
-	name, _ := url.QueryUnescape(t.Name)
-	return fmt.Sprintf("%s %dMB %d", name, t.Size/1024/1204, t.Duration)
 }
