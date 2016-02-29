@@ -44,7 +44,7 @@ func init() {
 	urlXunleiCom, _ = url.Parse("http://xunlei.com")
 	urlDynamicCloudVipXunleiCom, _ = url.Parse("http://dynamic.cloud.vip.xunlei.com")
 	defaultSession = newSession(3000 * time.Millisecond)
-	M = &defaultSession.cache
+	M = defaultSession.cache
 	log.SetHandler(text.New(os.Stderr))
 	log.SetLevel(log.InfoLevel)
 }
@@ -52,8 +52,8 @@ func init() {
 type session struct {
 	*http.Client
 	mutex   *sync.Mutex
+	cache   *cache
 	timeout time.Duration
-	cache   cache
 }
 
 func newSession(timeout time.Duration) *session {
@@ -68,9 +68,7 @@ func newSession(timeout time.Duration) *session {
 			},
 		},
 		mutex: &sync.Mutex{},
-		cache: cache{
-			Tasks: make(map[string]*Task),
-		},
+		cache: newCache(),
 	}
 }
 

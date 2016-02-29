@@ -7,6 +7,8 @@ import (
 	"sync"
 )
 
+var errInvalidQuery = errors.New("Invalid query string.")
+
 type cache struct {
 	Uid         string
 	Gid         string
@@ -16,7 +18,11 @@ type cache struct {
 	sync.Mutex
 }
 
-var errInvalidQuery = errors.New("Invalid query string.")
+func newCache() *cache {
+	return &cache{
+		Tasks: make(map[string]*Task),
+	}
+}
 
 func (c *cache) getTaskbyId(taskid string) *Task {
 	return c.Tasks[taskid]
