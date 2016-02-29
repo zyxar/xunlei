@@ -1,12 +1,6 @@
 package protocol
 
 const (
-	userAgent  = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36"
-	pageSize   = "100"
-	btPageSize = "999"
-)
-
-const (
 	taskTypeOrdinary = iota
 	taskTypeBt
 	taskTypeEd2k
@@ -32,11 +26,11 @@ const (
 )
 
 const (
-	deletedCk = `page_check_all=history&fltask_all_guoqi=1&class_check=0&page_check=task&fl_page_id=0&class_check_new=0&set_tab_status=11`
-	expiredCk = `page_check_all=history&class_check=0&page_check=task&fl_page_id=0&class_check_new=0&set_tab_status=13`
-)
-
-const (
+	userAgent          = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36"
+	pageSize           = "100"
+	btPageSize         = "999"
+	deletedCk          = `page_check_all=history&fltask_all_guoqi=1&class_check=0&page_check=task&fl_page_id=0&class_check_new=0&set_tab_status=11`
+	expiredCk          = `page_check_all=history&class_check=0&page_check=task&fl_page_id=0&class_check_new=0&set_tab_status=13`
 	domainLixianURI    = "http://dynamic.cloud.vip.xunlei.com/"
 	taskBaseURI        = domainLixianURI + "user_task?userid=%s"
 	taskHomeURI        = domainLixianURI + "user_task?userid=%s&st=4"
@@ -69,10 +63,4 @@ const (
 	taskdeleteURI      = interfaceURI + "/task_delete?callback=jsonp%d&type=%d&noCacheIE=%d"
 	showtaskUnfreshURI = interfaceURI + "/showtask_unfresh?type_id=%d&page=%d&tasknum=%s&p=%d&interfrom=task"
 	getplayurlURI      = interfaceURI + "/get_play_url?callback=jsonp%d&t=%d"
-	vodBaseURI         = "http://i.vod.xunlei.com"
-	reqGetMethodVodURI = vodBaseURI + "/req_get_method_vod?"
-	historyPlayURI     = vodBaseURI + "/req_history_play_list/req_num/%d/req_offset/%d?type=%s&order=%s&t=%d"
-	subbtURI           = vodBaseURI + "/req_subBT/info_hash/%s/req_num/%d/req_offset/%d"
-	progressURI        = vodBaseURI + "/req_progress_query?&t=%d"
-	lxtaskListURI      = vodBaseURI + "/req_lxtask_list"
 )

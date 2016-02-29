@@ -64,23 +64,6 @@ type btQueryResponse struct {
 	Ret    string
 }
 
-type subbtResponse struct {
-	Uid  string `json:"userid"`
-	Ret  byte   `json:"ret"`
-	List []struct {
-		GCid     string `json:"gcid"`
-		UrlHash  string `json:"url_hash"`
-		Name     string `json:"name"`
-		Index    int    `json:"index"`
-		Cid      string `json:"cid"`
-		Size     int64  `json:"file_size"`
-		Duration int64  `json:"duration"`
-	} `json:"subfile_list"`
-	UrlHash  string `json:"main_task_url_hash"`
-	InfoHash string `json:"info_hash"`
-	Num      int    `json:"record_num"`
-}
-
 func (t btList) String() string {
 	r := fmt.Sprintf("%s %s %s\n", t.Id, t.InfoId, t.BtNum)
 	for i := range t.Record {
