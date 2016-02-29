@@ -709,7 +709,7 @@ func (s *session) renameTask(taskid, newname string, tasktype byte) error {
 }
 
 func (s *session) readExpired() ([]byte, error) {
-	uri := fmt.Sprintf(expireHomeURI, defaultSession.cache.Uid)
+	uri := fmt.Sprintf(expireHomeURI, s.cache.Uid)
 	log.Debugf("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -731,9 +731,9 @@ func (s *session) readExpired() ([]byte, error) {
 func (s *session) readHistory(page int) ([]byte, error) {
 	var uri string
 	if page > 0 {
-		uri = fmt.Sprintf(historyPageURI, defaultSession.cache.Uid, page)
+		uri = fmt.Sprintf(historyPageURI, s.cache.Uid, page)
 	} else {
-		uri = fmt.Sprintf(historyHomeURI, defaultSession.cache.Uid)
+		uri = fmt.Sprintf(historyHomeURI, s.cache.Uid)
 	}
 
 	log.Debugf("==> %s", uri)
@@ -782,7 +782,7 @@ func (s *session) redownload(tasks []*Task) error {
 }
 
 func (s *session) fillBtList(taskid, infohash string, page int, pgsize string) (*btList, error) {
-	uri := fmt.Sprintf(fillbtlistURI, taskid, infohash, page, defaultSession.cache.Uid, "task", currentTimestamp())
+	uri := fmt.Sprintf(fillbtlistURI, taskid, infohash, page, s.cache.Uid, "task", currentTimestamp())
 	log.Debugf("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -847,7 +847,7 @@ func (s *session) addSimpleTask(uri string, oid ...string) error {
 		}
 		v := url.Values{}
 		v.Add("callback", "ret_task")
-		v.Add("uid", defaultSession.cache.Uid)
+		v.Add("uid", s.cache.Uid)
 		v.Add("cid", taskPre.Cid)
 		v.Add("gcid", taskPre.GCid)
 		v.Add("size", taskPre.SizeCost)
@@ -877,13 +877,13 @@ func (s *session) addSimpleTask(uri string, oid ...string) error {
 
 func (s *session) addBtTask(uri string) error {
 	if strings.HasPrefix(uri, "bt://") {
-		return s.addMagnetTask(fmt.Sprintf(gettorrentURI, defaultSession.cache.Uid, uri[5:]))
+		return s.addMagnetTask(fmt.Sprintf(gettorrentURI, s.cache.Uid, uri[5:]))
 	}
 	return s.addTorrentTask(uri)
 }
 
 func (s *session) addMagnetTask(link string, oid ...string) error {
-	r, err := defaultSession.get(fmt.Sprintf(urlqueryURI, url.QueryEscape(link), currentRandom()))
+	r, err := s.get(fmt.Sprintf(urlqueryURI, url.QueryEscape(link), currentRandom()))
 	if err != nil {
 		return err
 	}
@@ -897,7 +897,7 @@ func (s *session) addMagnetTask(link string, oid ...string) error {
 	}
 	if resp := parseBtQueryResponse(sub[1]); resp != nil {
 		v := url.Values{}
-		v.Add("uid", defaultSession.cache.Uid)
+		v.Add("uid", s.cache.Uid)
 		v.Add("btname", resp.Name)
 		v.Add("cid", resp.InfoId)
 		v.Add("tsize", resp.Size)
@@ -966,7 +966,7 @@ func (s *session) addTorrentTask(filename string) (err error) {
 		var result btUploadResponse
 		json.Unmarshal(sub[1], &result)
 		v := url.Values{}
-		v.Add("uid", defaultSession.cache.Uid)
+		v.Add("uid", s.cache.Uid)
 		v.Add("btname", result.Name) // TODO: filter illegal char
 		v.Add("cid", result.InfoId)
 		v.Add("tsize", strconv.Itoa(result.Size))
@@ -987,7 +987,7 @@ func (s *session) addTorrentTask(filename string) (err error) {
 			fmt.Printf("%s\n", r)
 			return errInvalidResponse
 		}
-		// defaultSession.tasklistNofresh(4, 1)
+		// s.tasklistNofresh(4, 1)
 		// FillBtList(string(sub[1]))
 		return nil
 	}
@@ -1025,7 +1025,7 @@ func (s *session) processTask(callback TaskCallback) error {
 	v.Add("list", strings.Join(list, ","))
 	v.Add("nm_list", strings.Join(nmList, ","))
 	v.Add("bt_list", strings.Join(btList, ","))
-	v.Add("uid", defaultSession.cache.Uid)
+	v.Add("uid", s.cache.Uid)
 	v.Add("interfrom", "task")
 	var r []byte
 	var err error
