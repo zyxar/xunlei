@@ -2,7 +2,7 @@ package protocol
 
 func GetTasksAsync(callback func([]*Task, error)) {
 	go func() {
-		ts, err := GetTasks()
+		ts, err := defaultSession.GetTasks()
 		if callback != nil {
 			callback(ts, err)
 		}
@@ -11,7 +11,7 @@ func GetTasksAsync(callback func([]*Task, error)) {
 
 func GetCompletedTasksAsync(callback func([]*Task, error)) {
 	go func() {
-		ts, err := GetCompletedTasks()
+		ts, err := defaultSession.GetCompletedTasks()
 		if callback != nil {
 			callback(ts, err)
 		}
@@ -20,7 +20,7 @@ func GetCompletedTasksAsync(callback func([]*Task, error)) {
 
 func GetIncompletedTasksAsync(callback func([]*Task, error)) {
 	go func() {
-		ts, err := GetIncompletedTasks()
+		ts, err := defaultSession.GetIncompletedTasks()
 		if callback != nil {
 			callback(ts, err)
 		}
@@ -29,7 +29,7 @@ func GetIncompletedTasksAsync(callback func([]*Task, error)) {
 
 func GetExpiredTasksAsync(callback func([]*Task, error)) {
 	go func() {
-		ts, err := GetExpiredTasks()
+		ts, err := defaultSession.GetExpiredTasks()
 		if callback != nil {
 			callback(ts, err)
 		}
@@ -38,7 +38,7 @@ func GetExpiredTasksAsync(callback func([]*Task, error)) {
 
 func GetDeletedTasksAsync(callback func([]*Task, error)) {
 	go func() {
-		ts, err := GetDeletedTasks()
+		ts, err := defaultSession.GetDeletedTasks()
 		if callback != nil {
 			callback(ts, err)
 		}
@@ -47,7 +47,7 @@ func GetDeletedTasksAsync(callback func([]*Task, error)) {
 
 func GetGdriveIdAsync(callback func(string, error)) {
 	go func() {
-		gid, err := GetGdriveId()
+		gid, err := defaultSession.GetGdriveId()
 		if callback != nil {
 			callback(gid, err)
 		}
@@ -56,7 +56,7 @@ func GetGdriveIdAsync(callback func(string, error)) {
 
 func DelayTaskAsync(id string, callback func(error)) {
 	go func() {
-		err := DelayTask(id)
+		err := defaultSession.DelayTaskById(id)
 		if callback != nil {
 			callback(err)
 		}
@@ -65,7 +65,7 @@ func DelayTaskAsync(id string, callback func(error)) {
 
 func FillBtListAsync(taskid, infohash string, callback func(*btList, error)) {
 	go func() {
-		l, err := FillBtList(taskid, infohash)
+		l, err := defaultSession.FillBtListById(taskid, infohash)
 		if callback != nil {
 			callback(l, err)
 		}
@@ -74,7 +74,7 @@ func FillBtListAsync(taskid, infohash string, callback func(*btList, error)) {
 
 func AddTaskAsync(req string, callback func(error)) {
 	go func() {
-		err := AddTask(req)
+		err := defaultSession.AddTask(req)
 		if callback != nil {
 			callback(err)
 		}
@@ -83,7 +83,7 @@ func AddTaskAsync(req string, callback func(error)) {
 
 func AddBatchTasksAsync(req []string, callback func(error), oids ...string) {
 	go func() {
-		err := AddBatchTasks(req, oids...)
+		err := defaultSession.AddBatchTasks(req, oids...)
 		if callback != nil {
 			callback(err)
 		}
@@ -92,7 +92,7 @@ func AddBatchTasksAsync(req []string, callback func(error), oids ...string) {
 
 func GetTorrentByHashAsync(hash string, callback func([]byte, error)) {
 	go func() {
-		b, err := GetTorrentByHash(hash)
+		b, err := defaultSession.GetTorrentByHash(hash)
 		if callback != nil {
 			callback(b, err)
 		}
@@ -101,7 +101,7 @@ func GetTorrentByHashAsync(hash string, callback func([]byte, error)) {
 
 func PauseTasksAsync(ids []string, callback func(error)) {
 	go func() {
-		err := PauseTasks(ids)
+		err := defaultSession.PauseTasks(ids)
 		if callback != nil {
 			callback(err)
 		}
@@ -110,7 +110,7 @@ func PauseTasksAsync(ids []string, callback func(error)) {
 
 func DelayAllTasksAsync(callback func(error)) {
 	go func() {
-		err := DelayAllTasks()
+		err := defaultSession.DelayAllTasks()
 		if callback != nil {
 			callback(err)
 		}
@@ -119,7 +119,7 @@ func DelayAllTasksAsync(callback func(error)) {
 
 func RenameTaskAsync(id, name string, callback func(error)) {
 	go func() {
-		err := RenameTask(id, name)
+		err := defaultSession.RenameTaskById(id, name)
 		if callback != nil {
 			callback(err)
 		}
@@ -128,7 +128,7 @@ func RenameTaskAsync(id, name string, callback func(error)) {
 
 func DeleteTaskAsync(id string, callback func(error)) {
 	go func() {
-		err := DeleteTask(id)
+		err := defaultSession.DeleteTaskById(id)
 		if callback != nil {
 			callback(err)
 		}
@@ -137,7 +137,7 @@ func DeleteTaskAsync(id string, callback func(error)) {
 
 func PurgeTaskAsync(id string, callback func(error)) {
 	go func() {
-		err := PurgeTask(id)
+		err := defaultSession.PurgeTaskById(id)
 		if callback != nil {
 			callback(err)
 		}
@@ -146,13 +146,7 @@ func PurgeTaskAsync(id string, callback func(error)) {
 
 func ResumeTaskAsync(id string, callback func(error)) {
 	go func() {
-		t := M.getTaskbyId(id)
-		var err error
-		if t != nil {
-			err = t.Resume()
-		} else {
-			err = errNoSuchTask
-		}
+		err := defaultSession.ResumeTaskById(id)
 		if callback != nil {
 			callback(err)
 		}

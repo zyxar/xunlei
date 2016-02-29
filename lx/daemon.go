@@ -156,12 +156,12 @@ func daemonLoop() {
 	web.Get("/session", func(ctx *web.Context) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
-		if protocol.M.Account == nil {
+		if protocol.GetAccount() == nil {
 			ctx.WriteHeader(404)
 			ctx.Write(errorMsg("ACCOUNT INFORMATION NOT RETRIEVED"))
 			return
 		}
-		r, err := json.Marshal(protocol.M.Account)
+		r, err := json.Marshal(protocol.GetAccount())
 		if err != nil {
 			ctx.WriteHeader(503)
 			ctx.Write(errorMsg(err.Error()))
@@ -191,7 +191,7 @@ func daemonLoop() {
 	web.Get("/task/bt/([0-9]+)/(.*)", func(ctx *web.Context, taskId string, taskHash string) {
 		flusher, _ := ctx.ResponseWriter.(http.Flusher)
 		defer flusher.Flush()
-		m, err := protocol.RawFillBtList(taskId, taskHash, 1)
+		m, err := protocol.RawFillBtListById(taskId, taskHash, 1)
 		if err != nil {
 			ctx.WriteHeader(503)
 			ctx.Write(errorMsg(err.Error()))

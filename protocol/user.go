@@ -13,7 +13,7 @@ type loginResponse struct {
 	} `json:"data"`
 }
 
-type userAccount struct {
+type UserAccount struct {
 	ExpireDate          string `json:"expire_date"`
 	MaxTaskNum          string `json:"max_task_num"`
 	MaxStore            string `json:"max_store"`
@@ -43,7 +43,7 @@ type userAccount struct {
 	TotalFilterNum      string `json:"total_filter_num"`
 }
 
-type userInfo struct {
+type UserInfo struct {
 	AllSpace       string `json:"all_space"`
 	AllUsedStore   int64  `json:"all_used_store"`
 	AllSpaceFormat string `json:"all_space_format"`

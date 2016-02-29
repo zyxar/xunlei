@@ -15,6 +15,8 @@ var conf struct {
 	Pass string `json:"password"`
 }
 
+var testSession = newSession(3000 * time.Millisecond)
+
 func init() {
 	home := os.Getenv("HOME")
 	f, _ := ioutil.ReadFile(filepath.Join(home, ".xltask/config.json"))
@@ -22,12 +24,12 @@ func init() {
 }
 
 func TestConn(t *testing.T) {
-	err := Login(conf.Id, conf.Pass)
+	err := testSession.Login(conf.Id, conf.Pass)
 	if err != nil {
 		t.Fatal(err)
 	}
-	SaveSession("test_cookie.js")
-	err = ResumeSession("test_cookie.js")
+	testSession.SaveSession("test_cookie.js")
+	err = testSession.ResumeSession("test_cookie.js")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +37,7 @@ func TestConn(t *testing.T) {
 }
 
 func TestTaskNoFresh(t *testing.T) {
-	_, err := defaultSession.tasklistNofresh(4, 1)
+	_, err := testSession.tasklistNofresh(4, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +45,7 @@ func TestTaskNoFresh(t *testing.T) {
 		for {
 			select {
 			case <-time.After(time.Second):
-				fmt.Println("tasks in cache:", len(M.Tasks))
+				fmt.Println("tasks in cache:", len(testSession.cache.Tasks))
 			}
 		}
 	}()
@@ -51,7 +53,7 @@ func TestTaskNoFresh(t *testing.T) {
 
 func TestProcessTask(t *testing.T) {
 	ch := make(chan byte)
-	ProcessTaskDaemon(ch, func(t *Task) error {
+	testSession.ProcessTaskDaemon(ch, func(t *Task) error {
 		fmt.Printf("%s %sB/s %.2f%%\n", t.Id, t.Speed, t.Progress)
 		return nil
 	})
@@ -70,17 +72,17 @@ func TestProcessTask(t *testing.T) {
 }
 
 func TestGetGid(t *testing.T) {
-	gid, err := GetGdriveId()
+	gid, err := testSession.GetGdriveId()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(gid) == 0 || gid != M.Gid {
+	if len(gid) == 0 || gid != testSession.gid {
 		t.Fatal("Invalid gdriveid")
 	}
 }
 
 func TestGetCompletedTasks(t *testing.T) {
-	ts, err := GetCompletedTasks()
+	ts, err := testSession.GetCompletedTasks()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +94,7 @@ func TestGetCompletedTasks(t *testing.T) {
 }
 
 func TestGetIncompletedTasks(t *testing.T) {
-	ts, err := GetIncompletedTasks()
+	ts, err := testSession.GetIncompletedTasks()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +107,7 @@ func TestGetIncompletedTasks(t *testing.T) {
 }
 
 func TestGetExpiredTasks(t *testing.T) {
-	b, err := GetExpiredTasks()
+	b, err := testSession.GetExpiredTasks()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +119,7 @@ func TestGetExpiredTasks(t *testing.T) {
 }
 
 func TestGetDeletedTasks(t *testing.T) {
-	b, err := GetDeletedTasks()
+	b, err := testSession.GetDeletedTasks()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,40 +130,8 @@ func TestGetDeletedTasks(t *testing.T) {
 	}
 }
 
-// func TestAddTask(t *testing.T) {
-// 	err := AddTask("26B092652A3D8263BABDE5D32BEB0F01F6D208F7")
-// 	if err != nil && err != btTaskAlreadyErr {
-// 		t.Error(err)
-// 	}
-// }
-
-// func TestTorrent(t *testing.T) {
-// 	err := GetTorrentFileByHash("26B092652A3D8263BABDE5D32BEB0F01F6D208F7", "test.torrent")
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	err = defaultSession.addTorrentTask("test.torrent")
-// 	if err != nil && err != btTaskAlreadyErr {
-// 		t.Error(err)
-// 	}
-// 	os.Remove("test.torrent")
-// }
-
-func TestFillBtListAsync(t *testing.T) {
-	for i := range M.Tasks {
-		t := M.Tasks[i]
-		if t.status() == flagNormal && t.IsBt() {
-			FillBtListAsync(t.Id, t.Cid, nil)
-		}
-	}
-	select {
-	case <-time.After(5 * time.Second):
-		return
-	}
-}
-
 func TestFind(t *testing.T) {
-	m, err := FindTasks("group=completed")
+	m, err := testSession.FindTasks("group=completed")
 	if err != nil {
 		t.Error(err)
 	}
@@ -169,7 +139,7 @@ func TestFind(t *testing.T) {
 	for i := range m {
 		fmt.Printf("%v\n", m[i])
 	}
-	m, err = FindTasks("status=deleted")
+	m, err = testSession.FindTasks("status=deleted")
 	if err != nil {
 		t.Error(err)
 	}
@@ -177,7 +147,7 @@ func TestFind(t *testing.T) {
 	for i := range m {
 		fmt.Printf("%v\n", m[i])
 	}
-	m, err = FindTasks("type=bt")
+	m, err = testSession.FindTasks("type=bt")
 	if err != nil {
 		t.Error(err)
 	}
@@ -185,7 +155,7 @@ func TestFind(t *testing.T) {
 	for i := range m {
 		fmt.Printf("%v\n", m[i])
 	}
-	m, err = FindTasks("name=monsters")
+	m, err = testSession.FindTasks("name=monsters")
 	if err != nil {
 		t.Error(err)
 	}
@@ -193,7 +163,7 @@ func TestFind(t *testing.T) {
 	for i := range m {
 		fmt.Printf("%v\n", m[i])
 	}
-	m, err = FindTasks("name=monsters&group=completed&status=deleted&type=bt")
+	m, err = testSession.FindTasks("name=monsters&group=completed&status=deleted&type=bt")
 	if err != nil {
 		t.Error(err)
 	}

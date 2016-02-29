@@ -1,16 +1,8 @@
 package protocol
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
-	"net/url"
-	"regexp"
 	"strconv"
-	"strings"
-
-	"github.com/apex/log"
-	"github.com/zyxar/taipei"
 )
 
 var (
@@ -38,14 +30,14 @@ type TaskCallback func(*Task) error
 type taskResponse struct {
 	Rtcode   int      `json:"rtcode"`
 	Info     taskInfo `json:"info"`
-	UserInfo userInfo `json:"userinfo"`
+	UserInfo UserInfo `json:"userinfo"`
 	// GlobalNew interface{} `json:"global_new"`
 	// Time      interface{} `json:"time"` // v1: float64, v-current: string
 }
 
 type taskInfo struct {
 	Tasks    []Task      `json:"tasks"`
-	User     userAccount `json:"user"`
+	User     UserAccount `json:"user"`
 	ShowArc  int         `json:"show_arc"`
 	TotalNum string      `json:"total_num"`
 }
@@ -229,152 +221,4 @@ func (t *Task) update(r *ptaskRecord) {
 	t.Progress = r.Progress
 	t.DownloadStatus = r.DownloadStatus
 	t.LixianURL = r.LixianURL
-}
-
-func (t *Task) FillBtList() (*btList, error) {
-	if !t.IsBt() {
-		return nil, errors.New("Not BT task.")
-	}
-	return FillBtList(t.Id, t.Cid)
-}
-
-func (t *Task) Remove() error {
-	return t.remove(0)
-}
-
-func (t *Task) Purge() error {
-	if t.deleted() {
-		return t.remove(1)
-	}
-	err := t.remove(0)
-	if err != nil {
-		return err
-	}
-	return t.remove(1)
-}
-
-func (t *Task) remove(flag byte) error {
-	var delType = t.status()
-	if delType == flagInvalid {
-		return errors.New("Invalid flag in task.")
-	} else if delType == flagPurged {
-		return errors.New("Task already purged.")
-	} else if flag == 0 && delType == flagDeleted {
-		return errors.New("Task already deleted.")
-	}
-	ct := currentTimestamp()
-	uri := fmt.Sprintf(taskdeleteURI, ct, delType, ct)
-	data := url.Values{}
-	data.Add("taskids", t.Id+",")
-	data.Add("databases", "0,")
-	data.Add("interfrom", "task")
-	r, err := defaultSession.post(uri, data.Encode())
-	if err != nil {
-		return err
-	}
-	if ok, _ := regexp.Match(`\{"result":1,"type":`, r); ok {
-		log.Debugf("%s\n", r)
-		if t.status() == flagDeleted {
-			t.Flag = "2"
-		} else {
-			t.Flag = "1"
-		}
-		t.Progress = 0
-		return nil
-	}
-	return errUnexpected
-}
-
-func (t *Task) Rename(name string) error {
-	return defaultSession.renameTask(t.Id, name, t.TaskType)
-}
-
-func (t *Task) Pause() error {
-	tids := t.Id + ","
-	uri := fmt.Sprintf(taskpauseURI, tids, M.Uid, currentTimestamp())
-	r, err := defaultSession.get(uri)
-	if err != nil {
-		return err
-	}
-	if bytes.Compare(r, []byte("pause_task_resp()")) != 0 {
-		return errInvalidResponse
-	}
-	return nil
-}
-
-func (t *Task) Readd() error {
-	if t.normal() {
-		return errors.New("Task already in progress.")
-	}
-	if t.purged() {
-		return defaultSession.addSimpleTask(t.URL)
-	}
-	return defaultSession.addSimpleTask(t.URL, t.Id)
-}
-
-func (t *Task) Resume() error {
-	if t.expired() {
-		return errTaskNoRedownCap
-	}
-	status := t.DownloadStatus
-	if status != "5" && status != "3" {
-		return errTaskNoRedownCap // only valid for `pending` and `failed` tasks
-	}
-	form := make([]string, 0, 3)
-	v := url.Values{}
-	v.Add("id[]", t.Id)
-	v.Add("url[]", t.URL)
-	v.Add("cid[]", t.Cid)
-	v.Add("download_status[]", status)
-	v.Add("taskname[]", t.TaskName)
-	form = append(form, v.Encode())
-	form = append(form, "type=1")
-	form = append(form, "interfrom=task")
-	uri := fmt.Sprintf(redownloadURI, currentTimestamp())
-	r, err := defaultSession.post(uri, strings.Join(form, "&"))
-	if err != nil {
-		return err
-	}
-	log.Debugf("%s\n", r)
-	return nil
-}
-
-func (t *Task) Delay() error {
-	return DelayTask(t.Id)
-}
-
-func (t Task) Verify(path string) bool {
-	if t.IsBt() {
-		fmt.Println("Verifying [BT]", path)
-		var b []byte
-		var err error
-		if b, err = GetTorrentByHash(t.Cid); err != nil {
-			fmt.Println(err)
-			return false
-		}
-		var m *taipei.MetaInfo
-		if m, err = taipei.DecodeMetaInfo(b); err != nil {
-			fmt.Println(err)
-			return false
-		}
-		taipei.Iconv(m)
-		taipei.SetEcho(true)
-		g, err := taipei.VerifyContent(m, path)
-		taipei.SetEcho(false)
-		if err != nil {
-			fmt.Println(err)
-		}
-		return g
-	} else if strings.HasPrefix(t.URL, "ed2k://") {
-		fmt.Println("Verifying [ED2K]", path)
-		h, err := getEd2kHash(path)
-		if err != nil {
-			fmt.Println(err)
-			return false
-		}
-		if !strings.EqualFold(h, getEd2kHashFromURL(t.URL)) {
-			return false
-		}
-	}
-	return true
 }

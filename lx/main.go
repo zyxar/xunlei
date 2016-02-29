@@ -23,7 +23,7 @@ type Term interface {
 }
 
 func _find(req string) (map[string]*protocol.Task, error) {
-	if t, ok := protocol.M.Tasks[req]; ok {
+	if t, ok := protocol.GetTaskById(req); ok {
 		return map[string]*protocol.Task{req: t}, nil
 	}
 	if ok, _ := regexp.MatchString(`(.+=.+)+`, req); ok {
@@ -144,7 +144,7 @@ func main() {
 			case "ison":
 				fmt.Println(protocol.IsOn())
 			case "me":
-				fmt.Printf("%#v\n", *protocol.M.Account)
+				fmt.Printf("%#v\n", *protocol.GetAccount())
 			case "relogin":
 				if !protocol.IsOn() {
 					if err = protocol.Login(conf.Id, conf.Pass); err != nil {
@@ -261,17 +261,17 @@ func main() {
 				} else {
 					switch cmds[1] {
 					case "normal":
-						protocol.M.InvalidateGroup(0)
+						protocol.InvalidateCache(0)
 					case "deleted":
-						protocol.M.InvalidateGroup(1)
+						protocol.InvalidateCache(1)
 					case "purged":
-						protocol.M.InvalidateGroup(2)
+						protocol.InvalidateCache(2)
 					case "invalid":
-						protocol.M.InvalidateGroup(3)
+						protocol.InvalidateCache(3)
 					case "expired":
-						protocol.M.InvalidateGroup(4)
+						protocol.InvalidateCache(4)
 					case "all":
-						protocol.M.InvalidateAll()
+						protocol.InvalidateCacheAll()
 					}
 				}
 			case "info":
@@ -283,7 +283,7 @@ func main() {
 						j := 0
 						for i := range ts {
 							if ts[i].IsBt() {
-								m, err := ts[i].FillBtList()
+								m, err := protocol.FillBtList(ts[i])
 								fmt.Printf("#%d %v\n", j, ts[i].Repr())
 								if err == nil {
 									fmt.Printf("%v\n", m)
@@ -364,7 +364,7 @@ func main() {
 								fmt.Println(err)
 								continue
 							}
-							fmt.Printf("Task verified? %v\n", ts[i].Verify(ts[i].TaskName))
+							fmt.Printf("Task verified? %v\n", protocol.VerifyTask(ts[i], ts[i].TaskName))
 						}
 						err = nil
 					}
@@ -412,7 +412,7 @@ func main() {
 						if err = download(pay[i].t, pay[i].s, true, check, dl); err != nil {
 							fmt.Println(err)
 						} else if del {
-							if err = pay[i].t.Remove(); err != nil {
+							if err = protocol.DeleteTask(pay[i].t); err != nil {
 								fmt.Println(err)
 							}
 						}
@@ -477,7 +477,7 @@ func main() {
 					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i := range ts {
-							if err = ts[i].Remove(); err != nil {
+							if err = protocol.DeleteTask(ts[i]); err != nil {
 								fmt.Println(err)
 							}
 						}
@@ -491,7 +491,7 @@ func main() {
 					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i := range ts {
-							if err = ts[i].Purge(); err != nil {
+							if err = protocol.PurgeTask(ts[i]); err != nil {
 								fmt.Println(err)
 							}
 						}
@@ -517,7 +517,7 @@ func main() {
 					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i := range ts {
-							if err = ts[i].Pause(); err != nil {
+							if err = protocol.PauseTask(ts[i]); err != nil {
 								fmt.Println(err)
 							}
 						}
@@ -531,7 +531,7 @@ func main() {
 					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i := range ts {
-							if err = ts[i].Resume(); err != nil {
+							if err = protocol.ResumeTask(ts[i]); err != nil {
 								fmt.Println(err)
 							}
 						}
@@ -543,8 +543,8 @@ func main() {
 			case "rename", "mv":
 				if len(cmds) > 2 {
 					// must be task id here
-					if t, ok := protocol.M.Tasks[cmds[1]]; ok {
-						t.Rename(strings.Join(cmds[2:], " "))
+					if t, ok := protocol.GetTaskById(cmds[1]); ok {
+						protocol.RenameTask(t, strings.Join(cmds[2:], " "))
 					} else {
 						err = noTasksMatchesErr
 					}
@@ -558,7 +558,7 @@ func main() {
 					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
 						for i := range ts {
-							if err = ts[i].Delay(); err != nil {
+							if err = protocol.DelayTask(ts[i]); err != nil {
 								fmt.Println(err)
 							}
 						}
@@ -574,7 +574,7 @@ func main() {
 							if !ts[i].IsBt() {
 								fmt.Printf("#%d %s: %v\n", k, ts[i].Id, ts[i].LixianURL)
 							} else {
-								m, err := ts[i].FillBtList()
+								m, err := protocol.FillBtList(ts[i])
 								if err == nil {
 									fmt.Printf("#%d %s:\n", k, ts[i].Id)
 									for j := range m.Record {
@@ -602,45 +602,6 @@ func main() {
 					}
 				} else {
 					fmt.Println(`pattern == "name=abc&group=completed&status=normal&type=bt"`)
-					err = insufficientArgErr
-				}
-			case "st":
-				{
-				}
-			case "rpc":
-				{
-				}
-			case "play":
-				if len(cmds) > 1 {
-					var ts map[string]*protocol.Task
-					if ts, err = find(cmds[1:]); err == nil {
-						for i := range ts {
-							low, high, err := ts[i].GetVodURL()
-							if err == nil {
-								fmt.Printf("%s\n%s\n", low, high)
-							}
-						}
-					}
-				} else {
-					err = insufficientArgErr
-				}
-			case "vod":
-				if len(cmds) > 1 {
-					var list interface{}
-					for i := range cmds[1:] {
-						switch cmds[1:][i] {
-						case "hist":
-							list, err = protocol.GetHistoryPlayList()
-						case "lx":
-							list, err = protocol.GetLxtaskList()
-						default:
-							err = errors.New("Unkown vod command.")
-						}
-						if err == nil {
-							fmt.Println(list)
-						}
-					}
-				} else {
 					err = insufficientArgErr
 				}
 			case "version":

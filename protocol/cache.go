@@ -10,11 +10,7 @@ import (
 var errInvalidQuery = errors.New("Invalid query string.")
 
 type cache struct {
-	Uid         string
-	Gid         string
-	Account     *userAccount
-	AccountInfo *userInfo
-	Tasks       map[string]*Task
+	Tasks map[string]*Task
 	sync.Mutex
 }
 
@@ -28,18 +24,23 @@ func (c *cache) getTaskbyId(taskid string) *Task {
 	return c.Tasks[taskid]
 }
 
+func (c *cache) GetTaskById(taskid string) (t *Task, exist bool) {
+	t, exist = c.Tasks[taskid]
+	return
+}
+
 // Find tasks in local cache by query: `name=xxx`, `group=g`, `status=s`, `type=t`
 // name: `xxx` is considered as a regular expression.
 // group: waiting, downloading, completed, failed, pending
 // status: normal, expired, deleted, purged
 // type: bt, nbt
 // e.g. pattern == "name=abc&group=completed&status=normal&type=bt"
-func FindTasks(pattern string) (map[string]*Task, error) {
+func (c *cache) FindTasks(pattern string) (map[string]*Task, error) {
 	v, err := url.ParseQuery(pattern)
 	if err != nil {
 		return nil, err
 	}
-	var ts = M.Tasks
+	var ts = c.Tasks
 	n := v.Get("name")
 	gg := v["group"]
 	ss := v["status"]

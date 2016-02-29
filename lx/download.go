@@ -15,15 +15,19 @@ var worker = fetch.DefaultFetcher
 type taskSink func(uri, filename string, echo bool) error
 
 func dl(uri, filename string, echo bool) error { //TODO: check file existence
-	if len(protocol.M.Gid) == 0 {
+	gid, err := protocol.GetGdriveId()
+	if err != nil {
+		return err
+	}
+	if len(gid) == 0 {
 		return errors.New("gdriveid missing")
 	}
-	return worker.Fetch(uri, protocol.M.Gid, filename, echo)
+	return worker.Fetch(uri, gid, filename, echo)
 }
 
 func download(t *protocol.Task, filter string, echo, verify bool, sink taskSink) error {
 	if t.IsBt() {
-		m, err := t.FillBtList()
+		m, err := protocol.FillBtList(t)
 		if err != nil {
 			return err
 		}
@@ -56,7 +60,7 @@ func download(t *protocol.Task, filter string, echo, verify bool, sink taskSink)
 			return err
 		}
 	}
-	if verify && !t.Verify(t.TaskName) {
+	if verify && !protocol.VerifyTask(t, t.TaskName) {
 		return errors.New("Verification failed.")
 	}
 	return nil

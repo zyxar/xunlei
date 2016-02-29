@@ -33,8 +33,12 @@ func newOpt(gdriveid, filename string) (rpc.Option, error) {
 	return r, nil
 }
 
-func rpcAddTask(uri, filename string) (gid string, err error) {
-	lxhead, err := newOpt(protocol.M.Gid, filename)
+func rpcAddTask(uri, filename string) (string, error) {
+	gid, err := protocol.GetGdriveId()
+	if err != nil {
+		return "", err
+	}
+	lxhead, err := newOpt(gid, filename)
 	if err != nil {
 		return "", err
 	}
