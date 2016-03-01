@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# this script builds `lxc` for OS X, Linux amd64, Windows x64, and Linux arm.
+# this script builds `lx` for OS X, Linux amd64, Windows x64, and Linux arm.
 # this script works on "darwin/amd64" and "linux/amd64";
 
 OS=$(uname -s)
@@ -11,7 +11,7 @@ fi
 
 pushd ${this_dir} >/dev/null
 
-FILES=$(find .. -type f -name "*.go" | grep -v "_test.go")
+FILES=$(find . -type f -name "*.go" | grep -v "_test.go")
 REPOS=$(
 for file in ${FILES}; do
   cat ${file} | grep "github.com" | cut -d ' ' -f 1
@@ -31,26 +31,25 @@ HASHES=$(echo ${HASHES} | sed 's/\ /,/g')
 
 LDFLAGS="-X main.hashes=${HASHES}"
 
+pushd lx >/dev/null
 if [[ -z $1 ]]; then
   go install -v -ldflags "${LDFLAGS}"
 else
-  TARGETLIST="darwin/amd64 linux/amd64 windows/amd64 linux/arm"
-  mkdir -p lxc
-
-  for target in ${TARGETLIST};do
+  for target in darwin/amd64 linux/amd64 windows/amd64 linux/arm;do
     os=$(echo ${target} | cut -d '/' -f 1)
     arch=$(echo ${target} | cut -d '/' -f 2)
     suffix=""
     if [[ ${os} == "windows" ]];then
       suffix=".exe"
     fi
-    go build -v -ldflags "${LDFLAGS}" -o lxc/lxc-${os}-${arch}
+    go build -v -ldflags "${LDFLAGS}" -o lx/lx-${os}-${arch}
   done
 
-  tar czf lxc.bin-${VER}.tgz lxc/
-  rm -fr lxc/
+  tar czf ../lx.release.tgz lx/
+  rm -fr lx/
   echo
   echo -e "\x1b[32mPackage Done\x1b[0m."
 fi
+popd >/dev/null
 
 popd >/dev/null
