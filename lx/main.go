@@ -22,7 +22,12 @@ type Term interface {
 	Restore()
 }
 
-func _find(req string) (map[string]*protocol.Task, error) {
+var (
+	errInsufficientArg = errors.New("insufficient arguments")
+	errNoSuchTasks     = errors.New("no such tasks")
+)
+
+func query(req string) (map[string]*protocol.Task, error) {
 	if t, ok := protocol.GetTaskById(req); ok {
 		return map[string]*protocol.Task{req: t}, nil
 	}
@@ -36,9 +41,9 @@ func find(req []string) (map[string]*protocol.Task, error) {
 	if len(req) == 0 {
 		return nil, errors.New("Empty find query.")
 	} else if len(req) == 1 {
-		return _find(req[0])
+		return query(req[0])
 	}
-	return _find("name=" + strings.Join(req, "|"))
+	return query("name=" + strings.Join(req, "|"))
 }
 
 func fixedLengthName(name string, size int) string {
@@ -125,8 +130,6 @@ func main() {
 	defer term.Restore()
 	{
 		var err error
-		insufficientArgErr := errors.New("Insufficient arguments.")
-		noTasksMatchesErr := errors.New("No task matches.")
 		var line string
 		var cmds []string
 		clearscr()
@@ -257,7 +260,7 @@ func main() {
 				}
 			case "cache_clean", "cc":
 				if len(cmds) < 2 {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				} else {
 					switch cmds[1] {
 					case "normal":
@@ -276,7 +279,7 @@ func main() {
 				}
 			case "info":
 				if len(cmds) < 2 {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				} else {
 					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
@@ -296,30 +299,28 @@ func main() {
 					}
 				}
 			case "launch":
-				var b []byte
-				b, err = launchAria2cDaemon()
+				info, err := rpcc.LaunchAria2cDaemon()
 				if err == nil {
-					fmt.Printf("%s\n", b)
+					fmt.Printf("aria2: %+v\n", info)
 				}
 			case "status":
-				var b []byte
-				b, err = rpcStatus()
+				stat, err := rpcc.GetGlobalStat()
 				if err == nil {
-					fmt.Printf("%s\n", b)
+					fmt.Printf("%+v\n", stat)
 				}
 			case "kill":
 				var s string
-				force := false
 				if len(cmds) >= 2 && (cmds[1] == "-9" || cmds[1] == "-f") {
-					force = true
+					s, err = rpcc.ForceShutdown()
+				} else {
+					s, err = rpcc.Shutdown()
 				}
-				s, err = rpcShutdown(force)
 				if err == nil {
 					fmt.Println(s)
 				}
 			case "submit", "sub":
 				if len(cmds) < 2 {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				} else {
 					pay := make(map[string]*struct {
 						t *protocol.Task
@@ -327,7 +328,7 @@ func main() {
 					})
 					for i := range cmds[1:] {
 						p := strings.Split(cmds[1:][i], "/")
-						m, err := _find(p[0])
+						m, err := query(p[0])
 						if err == nil {
 							for i := range m {
 								var filter string
@@ -355,7 +356,7 @@ func main() {
 				}
 			case "verify":
 				if len(cmds) < 2 {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				} else {
 					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
@@ -371,7 +372,7 @@ func main() {
 				}
 			case "dl", "download":
 				if len(cmds) < 2 {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				} else {
 					pay := make(map[string]*struct {
 						t *protocol.Task
@@ -391,7 +392,7 @@ func main() {
 							}
 						} else {
 							p := strings.Split(cmds[1:][i], "/")
-							m, err := _find(p[0])
+							m, err := query(p[0])
 							if err == nil {
 								for i := range m {
 									var filter string
@@ -433,7 +434,7 @@ func main() {
 						err = nil
 					}
 				} else {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				}
 			case "ti":
 				if len(cmds) > 1 {
@@ -456,11 +457,11 @@ func main() {
 						err = nil
 					}
 				} else {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				}
 			case "add":
 				if len(cmds) < 2 {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				} else {
 					req := cmds[1:]
 					for j := range req {
@@ -472,7 +473,7 @@ func main() {
 				}
 			case "rm", "delete":
 				if len(cmds) < 2 {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				} else {
 					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
@@ -486,7 +487,7 @@ func main() {
 				}
 			case "purge":
 				if len(cmds) < 2 {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				} else {
 					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
@@ -506,7 +507,7 @@ func main() {
 						protocol.ReAddTasks(ts)
 					}
 				} else {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				}
 			case "delayall":
 				{
@@ -524,7 +525,7 @@ func main() {
 						err = nil
 					}
 				} else {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				}
 			case "resume":
 				if len(cmds) > 1 {
@@ -538,7 +539,7 @@ func main() {
 						err = nil
 					}
 				} else {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				}
 			case "rename", "mv":
 				if len(cmds) > 2 {
@@ -546,14 +547,14 @@ func main() {
 					if t, ok := protocol.GetTaskById(cmds[1]); ok {
 						protocol.RenameTask(t, strings.Join(cmds[2:], " "))
 					} else {
-						err = noTasksMatchesErr
+						err = errNoSuchTasks
 					}
 				} else {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				}
 			case "delay":
 				if len(cmds) < 2 {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				} else {
 					var ts map[string]*protocol.Task
 					if ts, err = find(cmds[1:]); err == nil {
@@ -588,7 +589,7 @@ func main() {
 						}
 					}
 				} else {
-					err = insufficientArgErr
+					err = errInsufficientArg
 				}
 			case "find":
 				if len(cmds) > 1 {
@@ -602,7 +603,7 @@ func main() {
 					}
 				} else {
 					fmt.Println(`pattern == "name=abc&group=completed&status=normal&type=bt"`)
-					err = insufficientArgErr
+					err = errInsufficientArg
 				}
 			case "version":
 				printVersion()
