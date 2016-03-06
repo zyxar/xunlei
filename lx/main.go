@@ -12,6 +12,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/apex/log"
+	"github.com/zyxar/argo/rpc"
 	"github.com/zyxar/xunlei/protocol"
 )
 
@@ -129,6 +130,7 @@ func main() {
 	var line string
 	var args []string
 	clearscr()
+	rpcc.SetNotifier(&rpc.DummyNotifier{})
 LOOP:
 	for {
 		line, err = term.ReadLine()

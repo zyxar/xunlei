@@ -7,7 +7,7 @@ import (
 	"github.com/zyxar/xunlei/protocol"
 )
 
-var rpcc = rpc.New("http://localhost:6800/jsonrpc")
+var rpcc, _ = rpc.New("http://localhost:6800/jsonrpc")
 
 // {'header':['Cookie: XXXX']}
 // --file-allocation=none", "-x5", "-c", "--summary-interval=0", "--follow-torrent=false"
