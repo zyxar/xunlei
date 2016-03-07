@@ -132,7 +132,8 @@ func getTaskPre(resp []byte) (*taskPrepare, error) {
 }
 
 func parseBtQueryResponse(queryURL []byte) *btQueryResponse {
-	exp := regexp.MustCompile(`'([0-9A-Za-z]{40,40})','(\d*)','(.*)','(\d)',new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),'([\d\.]+)','(\d)'`)
+	// exp := regexp.MustCompile(`'([0-9A-Za-z]{40,40})','(\d*)','(.*)','(\d)',new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),'([\d\.]+)','(\d)'`)
+	exp := regexp.MustCompile(`'([0-9A-Za-z]{40,40})','(\d*)','(.*)','(\d)',new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),new Array\((.*)\),'([\d\.]+)','(\d)'`)
 	s := exp.FindSubmatch(queryURL)
 	if s == nil {
 		return nil
@@ -172,8 +173,8 @@ func parseBtQueryResponse(queryURL []byte) *btQueryResponse {
 	for i := 0; i < len(a); i++ {
 		resp.Index[i] = string(bytes.Trim(a[i], "' "))
 	}
-	resp.Random = string(s[11])
-	resp.Ret = string(s[12])
+	resp.Random = s[12]
+	resp.Ret = s[13]
 	return &resp
 }
 
