@@ -55,7 +55,7 @@ func printVersion() {
 		var deps map[string]string
 		if json.Unmarshal([]byte(hashes), &deps) == nil {
 			for k, v := range deps {
-				fmt.Printf("     %s:\r\t\t\t\t%s\n", k, v)
+				fmt.Printf("  %s:\r\t\t\t\t%s\n", k, v)
 			}
 		}
 		fmt.Println()

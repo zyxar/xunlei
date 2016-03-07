@@ -21,6 +21,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
+	"github.com/zyxar/image2ascii/ascii"
 	"github.com/zyxar/taipei"
 )
 
@@ -30,21 +31,28 @@ var (
 	urlDynamicCloudVipXunleiCom *url.URL
 	defaultSession              Session
 	errInvalidSession           = errors.New("invalid session")
-	errNoSuchTask               = errors.New("no such taskid in list")
 	errInvalidResponse          = errors.New("invalid response")
-	errUnexpected               = errors.New("unexpected error")
-	errTaskNotCompleted         = errors.New("task not completed")
 	errInvalidAccount           = errors.New("invalid login account")
+	errUnexpected               = errors.New("unexpected error")
 	errLoginFailed              = errors.New("login failed")
-	errSessionExpired           = errors.New("previous session exipred")
-	errBtTaskAlready            = errors.New("bt task already exists")
-	errTaskNoRedownCap          = errors.New("task not capable for restart")
 	errTimeout                  = errors.New("request time out")
+	errSessionExpired           = errors.New("previous session exipred")
+	errBtTaskExisted            = errors.New("bt task already exists")
 	errNoTasksInProgress        = errors.New("no tasks in progress")
 	errInvalidTaskFlag          = errors.New("invalid flag in task")
+	errTaskNoRedownCap          = errors.New("task not capable for restart")
+	errTaskNotFound             = errors.New("no such taskid in list")
+	errTaskNotCompleted         = errors.New("task not completed")
 	errTaskAlreadyQueued        = errors.New("task already in queue")
 	errTaskAlreadyPurged        = errors.New("task already purged")
 	errTaskAlreadyRemoved       = errors.New("task already deleted")
+	errTaskSubmissionFailed     = errors.New("task submission failed")
+	errTaskNeedVerification     = errors.New("task submission need verification")
+	verifyBaseURLs              = []string{
+		"http://verify2.xunlei.com/image?t=MVA&cachetime=%d",
+		"http://verify.xunlei.com/image?t=MVA&cachetime=%d",
+		"http://verify3.xunlei.com/image?t=MVA&cachetime=%d",
+	}
 )
 
 func init() {
@@ -407,7 +415,7 @@ func (s *session) GetDeletedTasks() ([]*Task, error) {
 
 func (s *session) DelayTask(t *Task) error {
 	if t == nil {
-		return errNoSuchTask
+		return errTaskNotFound
 	}
 	return s.DelayTaskById(t.Id)
 }
@@ -435,7 +443,7 @@ func (s *session) DelayTaskById(taskid string) error {
 
 func (s *session) FillBtList(t *Task) (*btList, error) {
 	if t == nil {
-		return nil, errNoSuchTask
+		return nil, errTaskNotFound
 	}
 	return s.FillBtListById(t.Id, t.Cid)
 }
@@ -472,7 +480,7 @@ retry:
 
 func (s *session) RawFillBtList(t *Task, page int) ([]byte, error) {
 	if t == nil {
-		return nil, errNoSuchTask
+		return nil, errTaskNotFound
 	}
 	return s.RawFillBtListById(t.Id, t.Cid, page)
 }
@@ -650,7 +658,7 @@ func (s *session) DelayAllTasks() error {
 
 func (s *session) ReAddTask(t *Task) error {
 	if t == nil {
-		return errNoSuchTask
+		return errTaskNotFound
 	}
 	if t.normal() {
 		return errTaskAlreadyQueued
@@ -692,7 +700,7 @@ func (s *session) ReAddTasks(ts map[string]*Task) {
 
 func (s *session) RenameTask(t *Task, newname string) error {
 	if t == nil {
-		return errNoSuchTask
+		return errTaskNotFound
 	}
 	return s.RenameTaskById(t.Id, newname)
 }
@@ -700,14 +708,14 @@ func (s *session) RenameTask(t *Task, newname string) error {
 func (s *session) RenameTaskById(taskid, newname string) error {
 	t := s.cache.getTaskbyId(taskid)
 	if t == nil {
-		return errNoSuchTask
+		return errTaskNotFound
 	}
 	return s.renameTask(taskid, newname, t.TaskType)
 }
 
 func (s *session) ResumeTask(t *Task) error {
 	if t == nil {
-		return errNoSuchTask
+		return errTaskNotFound
 	}
 	return s.ResumeTaskById(t.Id)
 }
@@ -715,7 +723,7 @@ func (s *session) ResumeTask(t *Task) error {
 func (s *session) ResumeTaskById(taskid string) error {
 	t := s.cache.getTaskbyId(taskid)
 	if t == nil {
-		return errNoSuchTask
+		return errTaskNotFound
 	}
 	if t.expired() {
 		return errTaskNoRedownCap
@@ -745,7 +753,7 @@ func (s *session) ResumeTaskById(taskid string) error {
 
 func (s *session) DeleteTask(t *Task) error {
 	if t == nil {
-		return errNoSuchTask
+		return errTaskNotFound
 	}
 	return s.DeleteTaskById(t.Id)
 }
@@ -753,14 +761,14 @@ func (s *session) DeleteTask(t *Task) error {
 func (s *session) DeleteTaskById(taskid string) error {
 	t := s.cache.getTaskbyId(taskid)
 	if t == nil {
-		return errNoSuchTask
+		return errTaskNotFound
 	}
 	return s.removeTask(t, 0)
 }
 
 func (s *session) PurgeTask(t *Task) error {
 	if t == nil {
-		return errNoSuchTask
+		return errTaskNotFound
 	}
 	return s.PurgeTaskById(t.Id)
 }
@@ -768,7 +776,7 @@ func (s *session) PurgeTask(t *Task) error {
 func (s *session) PurgeTaskById(taskid string) error {
 	t := s.cache.getTaskbyId(taskid)
 	if t == nil {
-		return errNoSuchTask
+		return errTaskNotFound
 	}
 	if t.deleted() {
 		return s.removeTask(t, 1)
@@ -1116,7 +1124,7 @@ func (s *session) addMagnetTask(link string, oid ...string) error {
 	sub := exp.FindSubmatch(r)
 	if sub == nil {
 		if ok, _ := regexp.Match(`queryUrl\(-1,'[0-9A-Za-z]{40,40}'.*`, r); ok {
-			return errBtTaskAlready
+			return errBtTaskExisted
 		}
 		log.Debugf("bt query response: %s", r)
 		return errInvalidResponse
@@ -1152,13 +1160,21 @@ func (s *session) addMagnetTask(link string, oid ...string) error {
 		if err = json.Unmarshal(sub[1], &submresp); err != nil {
 			return err
 		}
-		if submresp.ErrorMessage != nil {
-			return errors.New(submresp.Message)
+		switch submresp.Progress {
+		case 1:
+			return nil
+		case 2:
+			if submresp.ErrorMessage != nil {
+				return errors.New(submresp.Message)
+			}
+			return errTaskSubmissionFailed
+		case -11, -12:
+			return errTaskNeedVerification
+		default:
+			return errUnexpected
 		}
-	} else {
-		return errInvalidResponse
 	}
-	return nil
+	return errInvalidResponse
 }
 
 func (s *session) addTorrentTask(filename string) (err error) {
@@ -1234,7 +1250,7 @@ func (s *session) addTorrentTask(filename string) (err error) {
 	}
 	// var result _btup_result
 	// json.Unmarshal(sub[1], &result)
-	return errBtTaskAlready
+	return errBtTaskExisted
 }
 
 func (s *session) processTask(callback TaskCallback) error {
@@ -1357,6 +1373,35 @@ func (s *session) tasklistNofresh(tid, page int) ([]byte, error) {
 		return nil, errInvalidResponse
 	}
 	return sub[1], nil
+}
+
+func (s *session) getVerifyImage(t int) (err error) {
+	uri := fmt.Sprintf(verifyBaseURLs[t%len(verifyBaseURLs)], currentTimestamp())
+	log.Debugf("==> %s", uri)
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return
+	}
+	req.Header.Add("User-Agent", userAgent)
+	resp, err := s.routine(req)
+	if err != nil {
+		return
+	}
+	log.Debug(resp.Status)
+	if resp.StatusCode/100 > 3 {
+		err = errors.New(resp.Status)
+		return
+	}
+	img, err := ascii.Decode(resp.Body, ascii.Options{
+		Invert: true,
+		Color:  true,
+	})
+	resp.Body.Close()
+	if err != nil {
+		return
+	}
+	_, err = img.WriteTo(os.Stdout)
+	return
 }
 
 // func verifyLogin() bool {
