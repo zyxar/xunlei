@@ -26,6 +26,7 @@ import (
 
 var (
 	urlXunleiCom                *url.URL
+	urlVipXunleiCom             *url.URL
 	urlDynamicCloudVipXunleiCom *url.URL
 	defaultSession              Session
 	errInvalidSession           = errors.New("invalid session")
@@ -48,6 +49,7 @@ var (
 
 func init() {
 	urlXunleiCom, _ = url.Parse("http://xunlei.com")
+	urlVipXunleiCom, _ = url.Parse("http://vip.xunlei.com")
 	urlDynamicCloudVipXunleiCom, _ = url.Parse("http://dynamic.cloud.vip.xunlei.com")
 	defaultSession = newSession(3000 * time.Millisecond)
 	log.SetHandler(text.New(os.Stderr))
@@ -179,6 +181,7 @@ loop:
 func (s *session) SaveSession(cookieFile string) error {
 	session := [][]*http.Cookie{
 		s.Client.Jar.Cookies(urlXunleiCom),
+		s.Client.Jar.Cookies(urlVipXunleiCom),
 		s.Client.Jar.Cookies(urlDynamicCloudVipXunleiCom)}
 	r, err := json.MarshalIndent(session, "", "  ")
 	if err != nil {
@@ -203,7 +206,8 @@ func (s *session) ResumeSession(cookieFile string) (err error) {
 			return
 		}
 		s.Client.Jar.SetCookies(urlXunleiCom, session[0])
-		s.Client.Jar.SetCookies(urlDynamicCloudVipXunleiCom, session[1])
+		s.Client.Jar.SetCookies(urlVipXunleiCom, session[1])
+		s.Client.Jar.SetCookies(urlDynamicCloudVipXunleiCom, session[2])
 	}
 	if !s.IsOn() {
 		err = errSessionExpired
