@@ -27,17 +27,23 @@ import (
 var (
 	urlXunleiCom                *url.URL
 	urlDynamicCloudVipXunleiCom *url.URL
-	errNoSuchTask               = errors.New("No such TaskId in list")
-	errInvalidResponse          = errors.New("Invalid response")
-	errUnexpected               = errors.New("Unexpected error")
-	errTaskNotCompleted         = errors.New("Task not completed")
-	errInvalidLogin             = errors.New("Invalid login account")
-	errLoginFailed              = errors.New("Login failed")
-	errReuseSession             = errors.New("Previous session exipred")
-	errBtTaskAlready            = errors.New("Bt task already exists")
-	errTaskNoRedownCap          = errors.New("Task not capable for restart")
-	errTimeout                  = errors.New("Request time out")
 	defaultSession              Session
+	errInvalidSession           = errors.New("invalid session")
+	errNoSuchTask               = errors.New("no such taskid in list")
+	errInvalidResponse          = errors.New("invalid response")
+	errUnexpected               = errors.New("unexpected error")
+	errTaskNotCompleted         = errors.New("task not completed")
+	errInvalidAccount           = errors.New("invalid login account")
+	errLoginFailed              = errors.New("login failed")
+	errSessionExpired           = errors.New("previous session exipred")
+	errBtTaskAlready            = errors.New("bt task already exists")
+	errTaskNoRedownCap          = errors.New("task not capable for restart")
+	errTimeout                  = errors.New("request time out")
+	errNoTasksInProgress        = errors.New("no tasks in progress")
+	errInvalidTaskFlag          = errors.New("invalid flag in task")
+	errTaskAlreadyQueued        = errors.New("task already in queue")
+	errTaskAlreadyPurged        = errors.New("task already purged")
+	errTaskAlreadyRemoved       = errors.New("task already deleted")
 )
 
 func init() {
@@ -130,16 +136,15 @@ func newSession(timeout time.Duration) *session {
 func (s *session) Login(id, passhash string) (err error) {
 	var vcode string
 	if len(id) == 0 {
-		err = errInvalidLogin
+		err = errInvalidAccount
 		return
 	}
 	loginURL := fmt.Sprintf("http://login.xunlei.com/check?u=%s&cachetime=%d", id, currentTimestamp())
-	u, _ := url.Parse("http://xunlei.com/")
 loop:
 	if _, err = s.get(loginURL); err != nil {
 		return
 	}
-	cks := s.Client.Jar.Cookies(u)
+	cks := s.Client.Jar.Cookies(urlXunleiCom)
 	for i := range cks {
 		if cks[i].Name == "check_result" {
 			if len(cks[i].Value) < 3 {
@@ -194,14 +199,14 @@ func (s *session) ResumeSession(cookieFile string) (err error) {
 			return
 		}
 		if len(session) < 2 {
-			err = errors.New("invalid session")
+			err = errInvalidSession
 			return
 		}
 		s.Client.Jar.SetCookies(urlXunleiCom, session[0])
 		s.Client.Jar.SetCookies(urlDynamicCloudVipXunleiCom, session[1])
 	}
 	if !s.IsOn() {
-		err = errReuseSession
+		err = errSessionExpired
 	}
 	return
 }
@@ -349,7 +354,7 @@ func (s *session) GetGdriveId() (gid string, err error) {
 		s.gid = resp.Info.User.Cookie
 		s.account = &resp.Info.User
 		s.accountInfo = &resp.UserInfo
-		log.Debugf("gdriveid: %s", gid)
+		log.Debugf("gdriveid: %s", s.gid)
 	}
 	gid = s.gid
 	return
@@ -484,7 +489,7 @@ retry:
 	if err != nil {
 		return nil, err
 	}
-	log.Info(resp.Status)
+	log.Debug(resp.Status)
 	defer resp.Body.Close()
 	r, err := readBody(resp)
 	if err == io.ErrUnexpectedEOF && pgsize == btPageSize {
@@ -595,7 +600,7 @@ func (s *session) GetTorrentByHash(hash string) ([]byte, error) {
 
 func (s *session) GetTorrentFileByHash(hash, file string) error {
 	if stat, err := os.Stat(file); err == nil || stat != nil {
-		return errors.New("Target file already exists.")
+		return os.ErrExist
 	}
 	r, err := s.GetTorrentByHash(hash)
 	if err != nil {
@@ -644,7 +649,7 @@ func (s *session) ReAddTask(t *Task) error {
 		return errNoSuchTask
 	}
 	if t.normal() {
-		return errors.New("Task already in progress.")
+		return errTaskAlreadyQueued
 	}
 	if t.purged() {
 		return s.addSimpleTask(t.URL)
@@ -730,7 +735,7 @@ func (s *session) ResumeTaskById(taskid string) error {
 	if err != nil {
 		return err
 	}
-	log.Debugf("%s\n", r)
+	log.Debugf("resume task: %s", r)
 	return nil
 }
 
@@ -859,7 +864,7 @@ func (s *session) get(dest string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	log.Info(resp.Status)
+	log.Debug(resp.Status)
 	if resp.StatusCode/100 > 3 {
 		return nil, errors.New(resp.Status)
 	}
@@ -880,7 +885,7 @@ func (s *session) post(dest string, data string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	log.Info(resp.Status)
+	log.Debug(resp.Status)
 	if resp.StatusCode/100 > 3 {
 		return nil, errors.New(resp.Status)
 	}
@@ -939,7 +944,7 @@ func (s *session) readExpired() ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	log.Info(resp.Status)
+	log.Debug(resp.Status)
 	return readBody(resp)
 }
 
@@ -965,7 +970,7 @@ func (s *session) readHistory(page int) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	log.Info(resp.Status)
+	log.Debug(resp.Status)
 	return readBody(resp)
 }
 
@@ -984,7 +989,7 @@ func (s *session) redownload(tasks []*Task) error {
 		form = append(form, v.Encode())
 	}
 	if len(form) == 0 {
-		return errors.New("No tasks need to restart.")
+		return errTaskAlreadyQueued
 	}
 	form = append(form, "type=1")
 	form = append(form, "interfrom=task")
@@ -1010,7 +1015,7 @@ func (s *session) fillBtList(taskid, infohash string, page int, pgsize string) (
 	if err != nil {
 		return nil, err
 	}
-	log.Info(resp.Status)
+	log.Debug(resp.Status)
 	r, err := readBody(resp)
 	resp.Body.Close()
 	if err != nil {
@@ -1024,6 +1029,7 @@ func (s *session) fillBtList(taskid, infohash string, page int, pgsize string) (
 		if sub != nil {
 			return nil, errors.New(string(sub[1]))
 		}
+		log.Debugf("fill_bt_list result: %s", r)
 		return nil, errInvalidResponse
 	}
 	var btlist btList
@@ -1058,7 +1064,7 @@ func (s *session) addSimpleTask(uri string, oid ...string) error {
 		} else {
 			taskType = strconv.Itoa(taskTypeOrdinary)
 			// strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "ftp://") || strings.HasPrefix(uri, "https://")
-			// return errors.New("Invalid protocol scheme.")
+			// return errors.New("invalid protocol scheme")
 		}
 		v := url.Values{}
 		v.Add("callback", "ret_task")
@@ -1108,9 +1114,11 @@ func (s *session) addMagnetTask(link string, oid ...string) error {
 		if ok, _ := regexp.Match(`queryUrl\(-1,'[0-9A-Za-z]{40,40}'.*`, r); ok {
 			return errBtTaskAlready
 		}
+		log.Debugf("bt query response: %s", r)
 		return errInvalidResponse
 	}
 	if resp := parseBtQueryResponse(sub[1]); resp != nil {
+		log.Debugf("parsed bt query response: %v", resp)
 		v := url.Values{}
 		v.Add("uid", s.uid)
 		v.Add("btname", resp.Name)
@@ -1127,12 +1135,21 @@ func (s *session) addMagnetTask(link string, oid ...string) error {
 		} else {
 			v.Add("from", "task")
 		}
+		log.Debugf("submit bt: %s", v.Encode())
 		dest := fmt.Sprintf(bttaskcommitURI, currentTimestamp())
 		r, err = s.post(dest, v.Encode())
-		exp = regexp.MustCompile(`jsonp.*\(\{"id":"(\d+)","avail_space":"\d+".*\}\)`)
+		exp = regexp.MustCompile(`jsonp.*\((\{"id":.*,"avail_space":.*\})\)`)
+		log.Debugf("bt submission response: %s", r)
 		sub = exp.FindSubmatch(r)
 		if sub == nil {
 			return errInvalidResponse
+		}
+		var submresp btSumbissionResponse
+		if err = json.Unmarshal(sub[1], &submresp); err != nil {
+			return err
+		}
+		if submresp.ErrorMessage != nil {
+			return errors.New(submresp.Message)
 		}
 	} else {
 		return errInvalidResponse
@@ -1172,7 +1189,7 @@ func (s *session) addTorrentTask(filename string) (err error) {
 	if err != nil {
 		return
 	}
-	log.Info(resp.Status)
+	log.Debug(resp.Status)
 	r, err := readBody(resp)
 	resp.Body.Close()
 	exp := regexp.MustCompile(`<script>document\.domain="xunlei\.com";var btResult =(\{.+\});(var btRtcode = 0)*</script>`)
@@ -1209,7 +1226,7 @@ func (s *session) addTorrentTask(filename string) (err error) {
 	exp = regexp.MustCompile(`parent\.edit_bt_list\((\{.*\}),'`)
 	sub = exp.FindSubmatch(r)
 	if sub == nil {
-		return errors.New("Add bt task failed.")
+		return errUnexpected
 	}
 	// var result _btup_result
 	// json.Unmarshal(sub[1], &result)
@@ -1220,7 +1237,7 @@ func (s *session) processTask(callback TaskCallback) error {
 	tasks := s.cache.Tasks
 	l := len(tasks)
 	if l == 0 {
-		return errors.New("No tasks in progress.")
+		return errNoTasksInProgress
 	}
 	ct := currentTimestamp()
 	v := url.Values{}
@@ -1270,11 +1287,11 @@ func (s *session) processTask(callback TaskCallback) error {
 func (s *session) removeTask(t *Task, flag byte) error {
 	var delType = t.status()
 	if delType == flagInvalid {
-		return errors.New("Invalid flag in task.")
+		return errInvalidTaskFlag
 	} else if delType == flagPurged {
-		return errors.New("Task already purged.")
+		return errTaskAlreadyPurged
 	} else if flag == 0 && delType == flagDeleted {
-		return errors.New("Task already deleted.")
+		return errTaskAlreadyRemoved
 	}
 	ct := currentTimestamp()
 	uri := fmt.Sprintf(taskdeleteURI, ct, delType, ct)
@@ -1287,7 +1304,7 @@ func (s *session) removeTask(t *Task, flag byte) error {
 		return err
 	}
 	if ok, _ := regexp.Match(`\{"result":1,"type":`, r); ok {
-		log.Debugf("%s\n", r)
+		log.Debugf("remove task: %s", r)
 		if t.status() == flagDeleted {
 			t.Flag = "2"
 		} else {
@@ -1324,7 +1341,7 @@ func (s *session) tasklistNofresh(tid, page int) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Info(resp.Status)
+	log.Debug(resp.Status)
 	r, err := readBody(resp)
 	resp.Body.Close()
 	if err != nil {
@@ -1347,13 +1364,13 @@ func (s *session) tasklistNofresh(tid, page int) ([]byte, error) {
 // 	exp := regexp.MustCompile(`.*\((\{.*\})\)`)
 // 	s := exp.FindSubmatch(r)
 // 	if s == nil {
-// 		log.Debugf("Response: %s\n", r)
+// 		log.Debugf("Response: %s", r)
 // 		return false
 // 	}
 // 	var resp loginResponse
 // 	json.Unmarshal(s[1], &resp)
 // 	if resp.Result == 0 {
-// 		log.Debugf("Response: %s\n", s[1])
+// 		log.Debugf("Response: %s", s[1])
 // 		return false
 // 	}
 // 	fmt.Printf(`
