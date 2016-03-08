@@ -47,7 +47,6 @@ var (
 	errTaskAlreadyPurged        = errors.New("task already purged")
 	errTaskAlreadyRemoved       = errors.New("task already deleted")
 	errTaskSubmissionFailed     = errors.New("task submission failed")
-	errTaskNeedVerification     = errors.New("task submission need verification")
 	verifyBaseURLs              = []string{
 		"http://verify2.xunlei.com/image?t=MVA&cachetime=%d",
 		"http://verify.xunlei.com/image?t=MVA&cachetime=%d",
@@ -1413,37 +1412,3 @@ func (s *session) getVerifyImage() (w io.WriterTo, err error) {
 	}
 	return
 }
-
-// func verifyLogin() bool {
-// 	r, err := defaultSession.get(verifyLoginURI)
-// 	if err != nil {
-// 		log.Error(err.Error())
-// 		return false
-// 	}
-// 	exp := regexp.MustCompile(`.*\((\{.*\})\)`)
-// 	s := exp.FindSubmatch(r)
-// 	if s == nil {
-// 		log.Debugf("Response: %s", r)
-// 		return false
-// 	}
-// 	var resp loginResponse
-// 	json.Unmarshal(s[1], &resp)
-// 	if resp.Result == 0 {
-// 		log.Debugf("Response: %s", s[1])
-// 		return false
-// 	}
-// 	fmt.Printf(`
-// -------------+-------------
-//   user id    |  %s
-//   user name  |  %s
-//   user newno |  %s
-//   user type  |  %s
-//   nickname   |  %s
-//   user nick	 |  %s
-//   vip state	 |  %s
-// -------------+-------------
-// `, resp.Data.UserId, resp.Data.UserName,
-// 		resp.Data.UserNewno, resp.Data.UserType,
-// 		resp.Data.Nickname, resp.Data.UserNick, resp.Data.VipState)
-// 	return true
-// }
