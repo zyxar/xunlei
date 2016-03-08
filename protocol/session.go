@@ -1375,8 +1375,8 @@ func (s *session) tasklistNofresh(tid, page int) ([]byte, error) {
 	return sub[1], nil
 }
 
-func (s *session) getVerifyImage(t int) (err error) {
-	uri := fmt.Sprintf(verifyBaseURLs[t%len(verifyBaseURLs)], currentTimestamp())
+func (s *session) getVerifyImage() (w io.WriterTo, err error) {
+	uri := fmt.Sprintf(getVerifyURL(), currentTimestamp())
 	log.Debugf("==> %s", uri)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -1392,7 +1392,7 @@ func (s *session) getVerifyImage(t int) (err error) {
 		err = errors.New(resp.Status)
 		return
 	}
-	img, err := ascii.Decode(resp.Body, ascii.Options{
+	w, err = ascii.Decode(resp.Body, ascii.Options{
 		Invert: true,
 		Color:  true,
 	})
@@ -1400,7 +1400,6 @@ func (s *session) getVerifyImage(t int) (err error) {
 	if err != nil {
 		return
 	}
-	_, err = img.WriteTo(os.Stdout)
 	return
 }
 

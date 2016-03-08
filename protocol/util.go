@@ -228,3 +228,12 @@ func trimHTMLFontTag(raw string) string {
 	}
 	return sub[2]
 }
+
+var getVerifyURL = func() func() string {
+	counter := 0
+	return func() (url string) {
+		url = verifyBaseURLs[counter%len(verifyBaseURLs)]
+		counter++
+		return
+	}
+}()
