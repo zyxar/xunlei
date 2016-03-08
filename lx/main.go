@@ -2,11 +2,9 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -21,112 +19,31 @@ type Term interface {
 	Restore()
 }
 
-var (
-	errInsufficientArg = errors.New("insufficient arguments")
-	errNoSuchTasks     = errors.New("no such tasks")
-)
-
-func query(req string) (map[string]*protocol.Task, error) {
-	if t, ok := protocol.GetTaskById(req); ok {
-		return map[string]*protocol.Task{req: t}, nil
-	}
-	if ok, _ := regexp.MatchString(`(.+=.+)+`, req); ok {
-		return protocol.FindTasks(req)
-	}
-	return protocol.FindTasks("name=" + req)
-}
-
-func find(req []string) (map[string]*protocol.Task, error) {
-	if len(req) == 0 {
-		return nil, errors.New("Empty find query.")
-	} else if len(req) == 1 {
-		return query(req[0])
-	}
-	return query("name=" + strings.Join(req, "|"))
-}
-
-func fixedLengthName(name string, size int) string {
-	l := utf8.RuneCountInString(name)
-	var b bytes.Buffer
-	var i int
-	for i < l && i < size {
-		r, s := utf8.DecodeRuneInString(name)
-		b.WriteRune(r)
-		name = name[s:]
-		if s > 1 {
-			i += 2
-		} else {
-			i++
-		}
-	}
-	for i < size {
-		b.WriteByte(' ')
-		i++
-	}
-	return b.String()
-}
-
 func main() {
 	initConf()
-	flag.BoolVar(&printVer, "version", false, "print version")
-	flag.BoolVar(&isDaemon, "d", false, "run as daemon/server")
-	loop := flag.Bool("loop", false, "start daemon loop in background")
-	closeFds := flag.Bool("close-fds", false, "close stdout,stderr,stdin")
+	printVer := flag.Bool("version", false, "print version")
 	debug := flag.Bool("debug", false, "set log level to debug")
 	flag.Parse()
-	if printVer {
+	if *printVer {
 		printVersion()
 		return
 	}
 	if *debug {
 		log.SetLevel(log.DebugLevel)
 	}
-	var login = func() error {
-		if err := protocol.ResumeSession(cookieFile); err != nil {
+	var err error
+	if err = protocol.ResumeSession(cookieFile); err != nil {
+		log.Warn(err.Error())
+		if err = protocol.Login(conf.Id, conf.Pass); err != nil {
+			os.Exit(1)
+		}
+		if err = protocol.SaveSession(cookieFile); err != nil {
 			log.Warn(err.Error())
-			if err = protocol.Login(conf.Id, conf.Pass); err != nil {
-				return err
-			}
-			if err = protocol.SaveSession(cookieFile); err != nil {
-				return err
-			}
 		}
-		return nil
 	}
 
-	if isDaemon {
-		cmd := exec.Command(os.Args[0], "-loop", "-close-fds")
-		err := cmd.Start()
-		if err != nil {
-			fmt.Println(err)
-		}
-		cmd.Process.Release() // FIXME: find a proper way to detect daemon error and call cmd.Process.Kill().
-		return
-	}
-
-	if *closeFds {
-		os.Stdout.Close()
-		os.Stderr.Close()
-		os.Stdin.Close()
-	}
-
-	if *loop {
-		go func() {
-			if err := login(); err != nil {
-				os.Exit(1)
-			}
-			protocol.GetGdriveId()
-		}()
-		daemonLoop()
-		return
-	}
-
-	if err := login(); err != nil {
-		os.Exit(1)
-	}
 	protocol.GetGdriveId()
 	term := newTerm()
-	var err error
 	var line string
 	var args []string
 	clearscr()
@@ -159,4 +76,44 @@ LOOP:
 		}
 	}
 	term.Restore()
+}
+
+func query(req string) (map[string]*protocol.Task, error) {
+	if t, ok := protocol.GetTaskById(req); ok {
+		return map[string]*protocol.Task{req: t}, nil
+	}
+	if ok, _ := regexp.MatchString(`(.+=.+)+`, req); ok {
+		return protocol.FindTasks(req)
+	}
+	return protocol.FindTasks("name=" + req)
+}
+
+func find(req []string) (map[string]*protocol.Task, error) {
+	if len(req) == 0 {
+		return nil, errTaskNotFound
+	} else if len(req) == 1 {
+		return query(req[0])
+	}
+	return query("name=" + strings.Join(req, "|"))
+}
+
+func fixedLengthName(name string, size int) string {
+	l := utf8.RuneCountInString(name)
+	var b bytes.Buffer
+	var i int
+	for i < l && i < size {
+		r, s := utf8.DecodeRuneInString(name)
+		b.WriteRune(r)
+		name = name[s:]
+		if s > 1 {
+			i += 2
+		} else {
+			i++
+		}
+	}
+	for i < size {
+		b.WriteByte(' ')
+		i++
+	}
+	return b.String()
 }

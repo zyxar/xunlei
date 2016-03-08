@@ -25,6 +25,11 @@ func init() {
 	Cmds["mv"] = Cmds["rename"]
 }
 
+var (
+	errInvalidArgs  = errors.New("invalid arguments")
+	errTaskNotFound = errors.New("no such tasks")
+)
+
 var Cmds = map[string]*Method{
 	"ison": &Method{name: "ison", fn: func(args ...string) (err error) {
 		fmt.Println(protocol.IsOn())
@@ -138,7 +143,7 @@ var Cmds = map[string]*Method{
 			return
 		}
 		if len(ts) == 0 {
-			err = errors.New("Empty task list")
+			err = errTaskNotFound
 			return
 		} else if len(ts) < num {
 			num = len(ts)
@@ -152,7 +157,7 @@ var Cmds = map[string]*Method{
 	}},
 	"cache_clean": &Method{name: "cache_clean", fn: func(args ...string) (err error) {
 		if len(args) < 1 {
-			err = errInsufficientArg
+			err = errInvalidArgs
 			return
 		}
 		switch args[0] {
@@ -173,7 +178,7 @@ var Cmds = map[string]*Method{
 	}},
 	"info": &Method{name: "info", fn: func(args ...string) (err error) {
 		if len(args) < 1 {
-			err = errInsufficientArg
+			err = errInvalidArgs
 			return
 		}
 		ts, err := find(args)
@@ -223,7 +228,7 @@ var Cmds = map[string]*Method{
 	}},
 	"submit": &Method{name: "submit", fn: func(args ...string) (err error) {
 		if len(args) < 1 {
-			err = errInsufficientArg
+			err = errInvalidArgs
 			return
 		}
 		pay := make(map[string]*struct {
@@ -261,7 +266,7 @@ var Cmds = map[string]*Method{
 	}},
 	"verify": &Method{name: "verify", fn: func(args ...string) (err error) {
 		if len(args) < 1 {
-			err = errInsufficientArg
+			err = errInvalidArgs
 			return
 		}
 		ts, err := find(args)
@@ -279,7 +284,7 @@ var Cmds = map[string]*Method{
 	}},
 	"download": &Method{name: "download", fn: func(args ...string) (err error) {
 		if len(args) < 1 {
-			err = errInsufficientArg
+			err = errInvalidArgs
 			return
 		}
 		pay := make(map[string]*struct {
@@ -343,7 +348,7 @@ var Cmds = map[string]*Method{
 				err = nil
 			}
 		} else {
-			err = errInsufficientArg
+			err = errInvalidArgs
 		}
 		return
 	}},
@@ -368,13 +373,13 @@ var Cmds = map[string]*Method{
 				err = nil
 			}
 		} else {
-			err = errInsufficientArg
+			err = errInvalidArgs
 		}
 		return
 	}},
 	"add": &Method{name: "add", fn: func(args ...string) (err error) {
 		if len(args) < 1 {
-			err = errInsufficientArg
+			err = errInvalidArgs
 			return
 		}
 		for i := range args {
@@ -387,7 +392,7 @@ var Cmds = map[string]*Method{
 	}},
 	"rm": &Method{name: "rm", fn: func(args ...string) (err error) {
 		if len(args) < 1 {
-			err = errInsufficientArg
+			err = errInvalidArgs
 			return
 		}
 		ts, err := find(args)
@@ -403,7 +408,7 @@ var Cmds = map[string]*Method{
 	}},
 	"purge": &Method{name: "purge", fn: func(args ...string) (err error) {
 		if len(args) < 1 {
-			err = errInsufficientArg
+			err = errInvalidArgs
 			return
 		}
 		ts, err := find(args)
@@ -424,7 +429,7 @@ var Cmds = map[string]*Method{
 				protocol.ReAddTasks(ts)
 			}
 		} else {
-			err = errInsufficientArg
+			err = errInvalidArgs
 		}
 		return
 	}},
@@ -444,7 +449,7 @@ var Cmds = map[string]*Method{
 				err = nil
 			}
 		} else {
-			err = errInsufficientArg
+			err = errInvalidArgs
 		}
 		return
 	}},
@@ -460,7 +465,7 @@ var Cmds = map[string]*Method{
 				err = nil
 			}
 		} else {
-			err = errInsufficientArg
+			err = errInvalidArgs
 		}
 		return
 	}},
@@ -470,16 +475,16 @@ var Cmds = map[string]*Method{
 			if t, ok := protocol.GetTaskById(args[0]); ok {
 				err = protocol.RenameTask(t, strings.Join(args[1:], " "))
 			} else {
-				err = errNoSuchTasks
+				err = errTaskNotFound
 			}
 		} else {
-			err = errInsufficientArg
+			err = errInvalidArgs
 		}
 		return
 	}},
 	"delay": &Method{name: "delay", fn: func(args ...string) (err error) {
 		if len(args) < 1 {
-			err = errInsufficientArg
+			err = errInvalidArgs
 		} else {
 			ts, err := find(args)
 			if err == nil {
@@ -516,7 +521,7 @@ var Cmds = map[string]*Method{
 				}
 			}
 		} else {
-			err = errInsufficientArg
+			err = errInvalidArgs
 		}
 		return
 	}},
@@ -532,7 +537,7 @@ var Cmds = map[string]*Method{
 			}
 		} else {
 			fmt.Println(`pattern == "name=abc&group=completed&status=normal&type=bt"`)
-			err = errInsufficientArg
+			err = errInvalidArgs
 		}
 		return
 	}},

@@ -47,8 +47,6 @@ func (id *configure) load(cf string) (b []byte, err error) {
 	return
 }
 
-var printVer bool
-
 func printVersion() {
 	if len(hashes) > 0 {
 		fmt.Printf("[%s]\nversions:\n", binaryName)
