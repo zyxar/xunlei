@@ -33,6 +33,7 @@ LDFLAGS="-X main.hashes=${HASHES}"
 
 pushd lx >/dev/null
 if [[ -z $1 ]]; then
+  touch main.go
   go install -v -ldflags "${LDFLAGS}"
 else
   for target in darwin/amd64 linux/amd64 windows/amd64 linux/arm;do
