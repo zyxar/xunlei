@@ -1147,9 +1147,9 @@ func (s *session) addMagnetTask(link string, oid ...string) error {
 		} else {
 			v.Add("from", "task")
 		}
+	retry:
 		log.Debugf("submit bt: %s", v.Encode())
-		dest := fmt.Sprintf(bttaskcommitURI, currentTimestamp())
-		r, err = s.post(dest, v.Encode())
+		r, err = s.post(fmt.Sprintf(bttaskcommitURI, currentTimestamp()), v.Encode())
 		exp = regexp.MustCompile(`jsonp.*\((\{"id":.*,"avail_space":.*\})\)`)
 		log.Debugf("bt submission response: %s", r)
 		sub = exp.FindSubmatch(r)
@@ -1169,7 +1169,18 @@ func (s *session) addMagnetTask(link string, oid ...string) error {
 			}
 			return errTaskSubmissionFailed
 		case -11, -12:
-			return errTaskNeedVerification
+			var w io.WriterTo
+			w, err = s.getVerifyImage()
+			os.Stdout.WriteString("\n")
+			w.WriteTo(os.Stdout)
+			os.Stdout.WriteString("input verify_code: ")
+			b := make([]byte, 4)
+			_, err = os.Stdin.Read(b)
+			if err != nil {
+				return err
+			}
+			v.Set("verify_code", string(b))
+			goto retry
 		default:
 			return errUnexpected
 		}
