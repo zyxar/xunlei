@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"os/signal"
 	"regexp"
 	"strings"
+	"syscall"
 	"unicode/utf8"
 
 	"github.com/apex/log"
@@ -44,15 +47,33 @@ func main() {
 
 	protocol.GetGdriveId()
 	term := newTerm()
+	var quit = func(code int) {
+		term.Restore()
+		os.Exit(code)
+	}
+
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1)
+		for s := range c {
+			fmt.Printf("%v caught, exit\n", s)
+			quit(1)
+			break
+		}
+	}()
+
 	var line string
 	var args []string
 	clearscr()
 	rpcc.SetNotifier(&rpc.DummyNotifier{})
-LOOP:
+
 	for {
 		line, err = term.ReadLine()
-		if err != nil {
-			break
+		if err == io.EOF {
+			quit(0)
+		} else if err != nil {
+			fmt.Println(err)
+			continue
 		}
 		args = strings.Fields(line)
 		if len(args) == 0 {
@@ -62,7 +83,7 @@ LOOP:
 		case "version":
 			printVersion()
 		case "quit", "exit":
-			break LOOP
+			quit(0)
 		default:
 			if cmd, ok := Cmds[args[0]]; ok {
 				err = cmd.fn(args[1:]...)
