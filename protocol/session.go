@@ -69,7 +69,7 @@ type Session interface {
 	ResumeSession(cookieFile string) (err error)
 	Account() (ua *UserAccount)
 	IsOn() bool
-	GetTasks() ([]*Task, error)
+	GetTasks(limit ...int) ([]*Task, error)
 	GetCompletedTasks() ([]*Task, error)
 	GetIncompletedTasks() ([]*Task, error)
 	GetGdriveId() (gid string, err error)
@@ -244,7 +244,7 @@ func (s *session) IsOn() bool {
 	return true
 }
 
-func (s *session) GetTasks() ([]*Task, error) {
+func (s *session) GetTasks(limit ...int) ([]*Task, error) {
 	accumulated := 0
 	page := 1
 	var ts []*Task
@@ -271,7 +271,7 @@ round:
 		ts = append(ts, &resp.Info.Tasks[i])
 	}
 	accumulated += len(ts)
-	if accumulated < total {
+	if accumulated < total && (len(limit) == 0 || accumulated < limit[0]) {
 		page++
 		goto round
 	}

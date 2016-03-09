@@ -138,7 +138,7 @@ var Cmds = map[string]*Method{
 				num = 10
 			}
 		}
-		ts, err := protocol.GetTasks()
+		ts, err := protocol.GetTasks(num)
 		if err != nil {
 			return
 		}

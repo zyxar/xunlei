@@ -5,7 +5,7 @@ func SaveSession(cookieFile string) error         { return defaultSession.SaveSe
 func ResumeSession(cookieFile string) (err error) { return defaultSession.ResumeSession(cookieFile) }
 func GetAccount() *UserAccount                    { return defaultSession.Account() }
 func IsOn() bool                                  { return defaultSession.IsOn() }
-func GetTasks() ([]*Task, error)                  { return defaultSession.GetTasks() }
+func GetTasks(limit ...int) ([]*Task, error)      { return defaultSession.GetTasks(limit...) }
 func GetCompletedTasks() ([]*Task, error)         { return defaultSession.GetCompletedTasks() }
 func GetIncompletedTasks() ([]*Task, error)       { return defaultSession.GetIncompletedTasks() }
 func GetGdriveId() (gid string, err error)        { return defaultSession.GetGdriveId() }
