@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/zyxar/argo/rpc"
 	"github.com/zyxar/xunlei/protocol"
@@ -36,4 +37,80 @@ func rpcAddTask(uri, filename string) (string, error) {
 		return "", err
 	}
 	return rpcc.AddURI(uri, lxhead)
+}
+
+type notifier struct {
+}
+
+func (*notifier) OnStart(es []rpc.Event) {
+	var info []rpc.FileInfo
+	var err error
+	for e := range es {
+		info, err = rpcc.GetFiles(es[e].Gid)
+		if err != nil {
+			fmt.Println(es[e].Gid, err)
+			continue
+		}
+		fmt.Printf("\r(%s) %s started.\n", es[e].Gid, info[0].Path)
+	}
+}
+func (*notifier) OnPause(es []rpc.Event) {
+	var info []rpc.FileInfo
+	var err error
+	for e := range es {
+		info, err = rpcc.GetFiles(es[e].Gid)
+		if err != nil {
+			fmt.Println(es[e].Gid, err)
+			continue
+		}
+		fmt.Printf("\r(%s) %s paused.\n", es[e].Gid, info[0].Path)
+	}
+}
+func (*notifier) OnStop(es []rpc.Event) {
+	var info []rpc.FileInfo
+	var err error
+	for e := range es {
+		info, err = rpcc.GetFiles(es[e].Gid)
+		if err != nil {
+			fmt.Println(es[e].Gid, err)
+			continue
+		}
+		fmt.Printf("\r(%s) %s stopped.\n", es[e].Gid, info[0].Path)
+	}
+}
+func (*notifier) OnComplete(es []rpc.Event) {
+	var info []rpc.FileInfo
+	var err error
+	for e := range es {
+		info, err = rpcc.GetFiles(es[e].Gid)
+		if err != nil {
+			fmt.Println(es[e].Gid, err)
+			continue
+		}
+		fmt.Printf("\r(%s) %s completed.\n", es[e].Gid, info[0].Path)
+	}
+}
+func (*notifier) OnError(es []rpc.Event) {
+	var info []rpc.FileInfo
+	var err error
+	for e := range es {
+		info, err = rpcc.GetFiles(es[e].Gid)
+		if err != nil {
+			fmt.Println(es[e].Gid, err)
+			continue
+		}
+		fmt.Printf("\r(%s) %s error.\n", es[e].Gid, info[0].Path)
+	}
+}
+func (*notifier) OnBtComplete(es []rpc.Event) {
+	var info []rpc.FileInfo
+	var err error
+	for e := range es {
+		info, err = rpcc.GetFiles(es[e].Gid)
+		if err != nil {
+			fmt.Println(es[e].Gid, err)
+			continue
+		}
+		fmt.Printf("\r(%s) %s completed.\n", es[e].Gid, info[0].Path)
+	}
 }
