@@ -37,6 +37,7 @@ func main() {
 	if err = protocol.ResumeSession(cookieFile); err != nil {
 		log.Warn(err.Error())
 		if err = protocol.Login(conf.Id, conf.Pass); err != nil {
+			log.Warn(err.Error())
 			os.Exit(1)
 		}
 		if err = protocol.SaveSession(cookieFile); err != nil {

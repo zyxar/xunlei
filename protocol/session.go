@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -1149,7 +1150,7 @@ func (s *session) addMagnetTask(link string, oid ...string) error {
 	retry:
 		log.Debugf("submit bt: %s", v.Encode())
 		r, err = s.post(fmt.Sprintf(bttaskcommitURI, currentTimestamp()), v.Encode())
-		exp = regexp.MustCompile(`jsonp.*\((\{"id":.*,"avail_space":.*\})\)`)
+		exp = regexp.MustCompile(`jsonp.*\((\{.*\})\)`)
 		log.Debugf("bt submission response: %s", r)
 		sub = exp.FindSubmatch(r)
 		if sub == nil {
@@ -1173,12 +1174,15 @@ func (s *session) addMagnetTask(link string, oid ...string) error {
 			os.Stdout.WriteString("\n")
 			w.WriteTo(os.Stdout)
 			os.Stdout.WriteString("input verify_code: ")
-			b := make([]byte, 4)
-			_, err = os.Stdin.Read(b)
+			reader := bufio.NewReader(os.Stdin)
+			line, err := reader.ReadString('\n')
 			if err != nil {
 				return err
 			}
-			v.Set("verify_code", string(b))
+			if len(line) > 4 {
+				line = line[:4]
+			}
+			v.Set("verify_code", line)
 			goto retry
 		default:
 			return errUnexpected
