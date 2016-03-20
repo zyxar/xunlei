@@ -133,7 +133,7 @@ var Cmds = map[string]*Method{
 	"head": &Method{name: "head", fn: func(args ...string) (err error) {
 		var num = 10
 		if len(args) > 0 {
-			num, err = strconv.Atoi(args[1])
+			num, err = strconv.Atoi(args[0])
 			if err != nil {
 				num = 10
 			}
