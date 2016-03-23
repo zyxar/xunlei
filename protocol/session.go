@@ -39,6 +39,7 @@ var (
 	errTimeout                  = errors.New("request time out")
 	errSessionExpired           = errors.New("previous session exipred")
 	errBtTaskExisted            = errors.New("bt task already exists")
+	errImageVerification        = errors.New("image verification failed")
 	errNoTasksInProgress        = errors.New("no tasks in progress")
 	errInvalidTaskFlag          = errors.New("invalid flag in task")
 	errTaskNoRedownCap          = errors.New("task not capable for restart")
@@ -1147,6 +1148,7 @@ func (s *session) addMagnetTask(link string, oid ...string) error {
 		} else {
 			v.Add("from", "task")
 		}
+		retryTimes := 10
 	retry:
 		log.Debugf("submit bt: %s", v.Encode())
 		r, err = s.post(fmt.Sprintf(bttaskcommitURI, currentTimestamp()), v.Encode())
@@ -1169,6 +1171,9 @@ func (s *session) addMagnetTask(link string, oid ...string) error {
 			}
 			return errTaskSubmissionFailed
 		case -11, -12:
+			if retryTimes <= 0 {
+				return errImageVerification
+			}
 			var w io.WriterTo
 			w, err = s.getVerifyImage()
 			os.Stdout.WriteString("\n")
@@ -1183,6 +1188,7 @@ func (s *session) addMagnetTask(link string, oid ...string) error {
 				line = line[:4]
 			}
 			v.Set("verify_code", line)
+			retryTimes--
 			goto retry
 		default:
 			return errUnexpected
@@ -1245,16 +1251,51 @@ func (s *session) addTorrentTask(filename string) (err error) {
 		v.Add("findex", strings.Join(findex, "_"))
 		v.Add("size", strings.Join(size, "_"))
 		v.Add("from", "0")
-		dest = fmt.Sprintf(bttaskcommitURI, currentTimestamp())
-		r, err = s.post(dest, v.Encode())
-		exp = regexp.MustCompile(`jsonp.*\(\{"id":"(\d+)","avail_space":"\d+".*\}\)`)
+		retryTimes := 10
+	retry:
+		log.Debugf("submit bt: %s", v.Encode())
+		r, err = s.post(fmt.Sprintf(bttaskcommitURI, currentTimestamp()), v.Encode())
+		exp = regexp.MustCompile(`jsonp.*\((\{.*\})\)`)
+		log.Debugf("bt submission response: %s", r)
 		sub = exp.FindSubmatch(r)
 		if sub == nil {
-			fmt.Printf("%s\n", r)
 			return errInvalidResponse
 		}
-		// s.tasklistNofresh(4, 1)
-		// FillBtList(string(sub[1]))
+		var submresp btSumbissionResponse
+		if err = json.Unmarshal(sub[1], &submresp); err != nil {
+			return err
+		}
+		switch submresp.Progress {
+		case 1:
+			return nil
+		case 2:
+			if submresp.ErrorMessage != nil {
+				return errors.New(submresp.Message)
+			}
+			return errTaskSubmissionFailed
+		case -11, -12:
+			if retryTimes <= 0 {
+				return errImageVerification
+			}
+			var w io.WriterTo
+			w, err = s.getVerifyImage()
+			os.Stdout.WriteString("\n")
+			w.WriteTo(os.Stdout)
+			os.Stdout.WriteString("input verify_code: ")
+			reader := bufio.NewReader(os.Stdin)
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				return err
+			}
+			if len(line) > 4 {
+				line = line[:4]
+			}
+			v.Set("verify_code", line)
+			retryTimes--
+			goto retry
+		default:
+			return errUnexpected
+		}
 		return nil
 	}
 	exp = regexp.MustCompile(`parent\.edit_bt_list\((\{.*\}),'`)
